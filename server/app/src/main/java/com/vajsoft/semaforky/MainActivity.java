@@ -16,9 +16,15 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Date;
 import java.util.Enumeration;
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity extends AppCompatActivity {
+
+    private MainController mainController;
+    private Scheduler scheduler;
+    private Settings settings;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,29 +32,14 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-    }
 
-
-    private ServerSocket serverSocket;
-    private Socket server;
-
-    public void StartServer() throws IOException {
-        serverSocket = new ServerSocket(8888);
-        serverSocket.setSoTimeout(10000);
-        System.out.println("IP: " + serverSocket.getLocalSocketAddress().toString());
-        server = serverSocket.accept();
-    }
-
-    private void SendControlChunk() throws IOException {
-        DataOutputStream out = new DataOutputStream(server.getOutputStream());
-        ByteBuffer buf = ByteBuffer.allocate(8);
-        buf.order(ByteOrder.BIG_ENDIAN);
-        buf.putInt(123);
-        buf.putInt(321);
-        out.write(buf.array());
+        settings = new Settings();
+        mainController = new MainController(this);
+        scheduler = new Scheduler(mainController, this, settings);
     }
 
     public void DumpLocalIpAddress() {
+        /*
         try {
             for (Enumeration<NetworkInterface> en = NetworkInterface.getNetworkInterfaces(); en.hasMoreElements();) {
                 NetworkInterface intf = en.nextElement();
@@ -64,27 +55,45 @@ public class MainActivity extends AppCompatActivity {
         } catch (SocketException ex) {
             System.out.println( ex.toString());
         }
+        */
     }
 
-    public void onButton1Click(View view) {
-        System.out.println("onButton1Click");
-        try {
-            StartServer();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void LogMessage(final String message) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                EditText editText = (EditText) findViewById(R.id.etLog);
+                editText.append(message);
+                editText.append("\n");
+                System.out.println(message);
+            }
+        });
     }
 
-    public void onButton2Click(View view) {
-        System.out.println("onButton2Click");
-        try {
-            SendControlChunk();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void UpdateClocks(final Date setStart) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Date now = new Date();
+                EditText editText = (EditText) findViewById(R.id.tvSetTime);
+                long diff = now.getTime() - setStart.getTime();//as given
+                long milliseconds = diff % 1000;
+                long seconds = TimeUnit.MILLISECONDS.toSeconds(diff) % 60;
+                long minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60;
+                editText.setText(String.format("%1$02d:%2$02d:%3$03d", minutes, seconds, milliseconds));
+            }
+        });
     }
 
-    public void onButton3Click(View view) {
-        DumpLocalIpAddress();
+    public void onStartSetClick(View view) {
+        scheduler.StartSet();
+    }
+
+    public void onStopSetClick(View view) {
+        scheduler.StopSet();
+    }
+
+    public void onCancelSetClick(View view) {
+        scheduler.CancelSet();
     }
 }

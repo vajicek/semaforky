@@ -24,26 +24,121 @@
             android:layout_height="wrap_content">
 
             <Button
-                android:text="Button"
+                android:text="Begin Round"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/button2"
-                android:layout_weight="1"
-                android:onClick="onButton1Click" />
+                android:id="@+id/btnBeginRound"
+                android:layout_weight="1" />
 
             <Button
-                android:text="Button"
+                android:text="End Round"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/button3"
-                android:layout_weight="1"
-                android:onClick="onButton2Click" />
+                android:id="@+id/btnEndRound"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <TableLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:text="Set:"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/textView2"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:text="-"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/tvSet"
+                    android:textSize="24sp"
+                    android:textAlignment="textEnd"
+                    android:layout_weight="1" />
+            </TableRow>
+
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" >
+
+                <TextView
+                    android:text="Round time:"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/textView4"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:text="--:--:--"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/textView3"
+                    android:textSize="24sp"
+                    android:layout_weight="1"
+                    android:textAlignment="textEnd" />
+            </TableRow>
+
+        </TableLayout>
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:text="--:--:--"
+            android:ems="10"
+            android:id="@+id/tvSetTime"
+            android:textSize="36sp"
+            android:typeface="monospace"
+            android:textAlignment="center" />
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
             <Button
-                android:text="Button"
+                android:text="Start Set"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/button"
+                android:id="@+id/btnStartSet"
+                android:layout_weight="1"
+                android:onClick="onStartSetClick" />
+
+            <Button
+                android:text="Stop Set"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnStopSet"
+                android:layout_weight="1"
+                android:onClick="onStopSetClick" />
+
+            <Button
+                android:text="Cancel Set"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnCancelSet"
+                android:layout_weight="1"
+                android:onClick="onCancelSetClick"
+                android:elevation="0dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <Button
+                android:text="Settings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/btnSettings"
                 android:layout_weight="1"
                 android:onClick="onButton3Click" />
         </LinearLayout>
@@ -53,7 +148,7 @@
             android:layout_height="match_parent"
             android:inputType="textMultiLine"
             android:ems="10"
-            android:id="@+id/editText"
+            android:id="@+id/etLog"
             android:selectAllOnFocus="false"
             android:textAlignment="textStart"
             android:gravity="top" />
