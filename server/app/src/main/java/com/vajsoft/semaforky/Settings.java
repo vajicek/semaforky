@@ -8,4 +8,16 @@ public class Settings {
     public int yellowTime = 0;
     public int greenTime = 5;
     public int redTime = 10;
+    // parameters
+    public int setTime = 120;
+
+    //
+    public int doubleSet = 240;
+
+    //
+    public int preparationTim = 10;
+
+    //
+    public int warningTime = 30;
+
 }

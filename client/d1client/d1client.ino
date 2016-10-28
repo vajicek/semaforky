@@ -219,8 +219,8 @@ void ConnectWiFiAP() {
 
 /// global instance
 //Process global;
-//SemaphoreProcess global;
-ClockProcess global;
+SemaphoreProcess global;
+//ClockProcess global;
 
 void setup() {
   Serial.begin(115200);

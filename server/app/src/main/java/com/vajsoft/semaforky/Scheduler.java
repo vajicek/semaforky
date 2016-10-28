@@ -74,7 +74,7 @@ public class Scheduler {
                 events.remove();
             } else if (events.peek() instanceof ClockEvent) {
                 mainActivity.LogMessage("clock event!");
-                mainController.SetupClocks((int)(now / 1000));
+                mainController.SetupClocks(Math.max(settings.setTime - (int)(now / 1000), 0));
                 events.remove();
                 events.add(new ClockEvent((now / 1000 + 1) * 1000, 666));
             }
