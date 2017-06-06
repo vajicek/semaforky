@@ -24,18 +24,20 @@
             android:layout_height="wrap_content">
 
             <Button
-                android:text="Begin Round"
+                android:id="@+id/btnBeginRound"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/btnBeginRound"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:onClick="onBeginRoundClicked"
+                android:text="@string/beginRound" />
 
             <Button
-                android:text="End Round"
+                android:id="@+id/btnEndRound"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/btnEndRound"
-                android:layout_weight="1" />
+                android:layout_weight="1"
+                android:onClick="onEndRoundClicked"
+                android:text="@string/endRound" />
         </LinearLayout>
 
         <TableLayout
@@ -47,20 +49,21 @@
                 android:layout_height="match_parent">
 
                 <TextView
-                    android:text="Set:"
+                    android:id="@+id/textView2"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/textView2"
+                    android:text="@string/set"
                     android:textSize="24sp" />
 
                 <TextView
-                    android:text="-"
+                    android:id="@+id/tvSet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/tvSet"
-                    android:textSize="24sp"
+                    android:layout_weight="1"
+                    android:gravity="right"
+                    android:text="-"
                     android:textAlignment="textEnd"
-                    android:layout_weight="1" />
+                    android:textSize="24sp" />
             </TableRow>
 
             <TableRow
@@ -68,34 +71,35 @@
                 android:layout_height="match_parent" >
 
                 <TextView
-                    android:text="Round time:"
+                    android:id="@+id/textView4"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:id="@+id/textView4"
+                    android:text="@string/roundTime"
                     android:textSize="24sp" />
 
                 <TextView
-                    android:text="--:--:--"
+                    android:id="@+id/tvRoundTime"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:id="@+id/textView3"
-                    android:textSize="24sp"
                     android:layout_weight="1"
-                    android:textAlignment="textEnd" />
+                    android:gravity="right"
+                    android:text="--:--:--"
+                    android:textAlignment="textEnd"
+                    android:textSize="24sp" />
+
             </TableRow>
 
         </TableLayout>
 
-        <EditText
+        <TextView
+            android:id="@+id/tvSetTime"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="textPersonName"
-            android:text="--:--:--"
-            android:ems="10"
-            android:id="@+id/tvSetTime"
-            android:textSize="36sp"
-            android:typeface="monospace"
-            android:textAlignment="center" />
+            android:gravity="center"
+            android:text="---"
+            android:textAlignment="center"
+            android:textSize="120sp"
+            tools:fontFamily="monospace" />
 
         <LinearLayout
             android:orientation="horizontal"
@@ -103,29 +107,29 @@
             android:layout_height="wrap_content">
 
             <Button
-                android:text="Start Set"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
                 android:id="@+id/btnStartSet"
-                android:layout_weight="1"
-                android:onClick="onStartSetClick" />
-
-            <Button
-                android:text="Stop Set"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:onClick="onStartSetClick"
+                android:text="@string/startSet" />
+
+            <Button
                 android:id="@+id/btnStopSet"
-                android:layout_weight="1"
-                android:onClick="onStopSetClick" />
-
-            <Button
-                android:text="Cancel Set"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/btnCancelSet"
                 android:layout_weight="1"
+                android:onClick="onStopSetClick"
+                android:text="@string/stopSet" />
+
+            <Button
+                android:id="@+id/btnCancelSet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:elevation="0dp"
                 android:onClick="onCancelSetClick"
-                android:elevation="0dp" />
+                android:text="@string/cancelSet" />
 
         </LinearLayout>
 
@@ -135,12 +139,12 @@
             android:layout_height="wrap_content">
 
             <Button
-                android:text="Settings"
+                android:id="@+id/btnSettings"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:id="@+id/btnSettings"
                 android:layout_weight="1"
-                android:onClick="onButton3Click" />
+                android:onClick="onSettingsClick"
+                android:text="@string/gotoSettings" />
         </LinearLayout>
 
         <EditText

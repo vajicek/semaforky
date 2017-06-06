@@ -94,16 +94,11 @@ public class MainController {
     }
 
     public void StartClocks() {
+
     }
 
     public void SetupSemaphores(int status) {
-        for (int i = 0; i < controllers.size(); ++i) {
-            Controller controller = controllers.get(i);
-            if (controller instanceof SemaphoreController) {
-                mainActivity.LogMessage("Setting semaphore!");
-                ((SemaphoreController)controller).Send(status);
-            }
-        }
+
     }
 
     public void SetupClocks(int seconds) {
@@ -114,5 +109,11 @@ public class MainController {
                 ((ClockController)controller).Send(seconds);
             }
         }
+    }
+
+    public void StartRound() {
+    }
+
+    public void EndRound() {
     }
 }

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">semaforky</string>
+    <string name="rounds">Kola</string>
+    <string name="setTime">Čas sady</string>
+    <string name="preparationTime">Čas přípravy</string>
+    <string name="warningTime">Čas varování</string>
+    <string name="lines">Řady</string>
+    <string name="gotoSettings">Nastavení</string>
+    <string name="beginRound">Začátek kola</string>
+    <string name="endRound">Konec kola</string>
+    <string name="set">Sada</string>
+    <string name="roundTime">Čas kola</string>
+    <string name="startSet">Začátek sady</string>
+    <string name="stopSet">Konec sady</string>
+    <string name="cancelSet">Zrušit sadu</string>
+    <string name="language">Jazyk</string>
+</resources>

@@ -1,3 +1,21 @@
 <resources>
     <string name="app_name">semaforky</string>
+    <string name="rounds">Rounds</string>
+    <string name="setTime">Set Time</string>
+    <string name="preparationTime">Preparation Time</string>
+    <string name="warningTime">Warning Time</string>
+    <string name="lines">Lines</string>
+    <string name="gotoSettings">Settings</string>
+    <string name="beginRound">Begin Round</string>
+    <string name="endRound">End Round</string>
+    <string name="set">Set</string>
+    <string name="roundTime">Round time</string>
+    <string name="startSet">Start Set</string>
+    <string name="stopSet">Stop Set</string>
+    <string name="cancelSet">Cancel Set</string>
+    <string name="language">Language</string>
+    <string-array name="languages_array">
+        <item>English</item>
+        <item>Česky</item>
+    </string-array>
 </resources>
