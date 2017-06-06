@@ -2,9 +2,15 @@ package com.vajsoft.semaforky;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -45,7 +51,42 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
+
+        HandleSemaphore();
     }
+
+    private void RedrawSemaphore() {
+        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.svSemaphore);
+        SurfaceHolder holder = surfaceView.getHolder();
+        Canvas c = holder.lockCanvas(null);
+        int h = c.getHeight();
+        int w = c.getWidth();
+        int[] colors = new int[]{Color.RED, Color.GREEN, Color.YELLOW};
+        float circle_diameter = w / colors.length;
+        float circle_radius = circle_diameter / 2.0f;
+        for(int i = 0; i < colors.length; i++) {
+            Paint paint = new Paint();
+            paint.setStyle(Paint.Style.FILL);
+            paint.setColor(colors[i]);
+            c.drawCircle(circle_radius + i * circle_diameter, h / 2.0f, circle_radius, paint);
+        }
+        holder.unlockCanvasAndPost(c);
+    }
+
+    private void HandleSemaphore() {
+        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.svSemaphore);
+        surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceDestroyed(SurfaceHolder holder) { }
+
+            @Override
+            public void surfaceCreated(SurfaceHolder holder) { RedrawSemaphore(); }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
+        });
+    }
+
 
     public void DumpLocalIpAddress() {
         /*
@@ -147,8 +188,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onEndRoundClicked(View view) {
-        scheduler.EndRound();;
-        mainController.EndRound();
+        //scheduler.EndRound();;
+        //mainController.EndRound();
+        RedrawSemaphore();
     }
 
     @Override
