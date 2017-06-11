@@ -1,4 +1,4 @@
-package com.vajsoft.semaforky;
+package com.vajsoft.semaforky.activities;
 
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -8,26 +8,18 @@ import android.graphics.Paint;
 import android.os.StrictMode;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.net.InetAddress;
-import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import com.vajsoft.semaforky.R;
+import com.vajsoft.semaforky.data.Settings;
+import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.scheduler.Scheduler;
+
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
@@ -37,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Scheduler scheduler;
     private Settings settings;
     private int currentSet = 0;
+    private SemaphoreWidget semaphoreWidget;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,38 +45,15 @@ public class MainActivity extends AppCompatActivity {
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
 
-        HandleSemaphore();
+        semaphoreWidget = new SemaphoreWidget((SurfaceView) findViewById(R.id.svSemaphore));
     }
 
-    private void RedrawSemaphore() {
-        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.svSemaphore);
-        SurfaceHolder holder = surfaceView.getHolder();
-        Canvas c = holder.lockCanvas(null);
-        int h = c.getHeight();
-        int w = c.getWidth();
-        int[] colors = new int[]{Color.RED, Color.GREEN, Color.YELLOW};
-        float circle_diameter = w / colors.length;
-        float circle_radius = circle_diameter / 2.0f;
-        for(int i = 0; i < colors.length; i++) {
-            Paint paint = new Paint();
-            paint.setStyle(Paint.Style.FILL);
-            paint.setColor(colors[i]);
-            c.drawCircle(circle_radius + i * circle_diameter, h / 2.0f, circle_radius, paint);
-        }
-        holder.unlockCanvasAndPost(c);
-    }
-
-    private void HandleSemaphore() {
-        SurfaceView surfaceView = (SurfaceView) findViewById(R.id.svSemaphore);
-        surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+    public void SetSemaphore(final int status) {
+        runOnUiThread(new Runnable() {
             @Override
-            public void surfaceDestroyed(SurfaceHolder holder) { }
-
-            @Override
-            public void surfaceCreated(SurfaceHolder holder) { RedrawSemaphore(); }
-
-            @Override
-            public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) { }
+            public void run() {
+                semaphoreWidget.UpdateStatus(status);
+            }
         });
     }
 
@@ -125,23 +95,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run() {
                 long diff = (new Date()).getTime() - roundStart.getTime();
-                long milliseconds = diff % 1000;
                 long seconds = TimeUnit.MILLISECONDS.toSeconds(diff) % 60;
                 long minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60;
                 ((TextView) findViewById(R.id.tvRoundTime)).setText(
-                        String.format("%1$02d:%2$02d:%3$03d", minutes, seconds, milliseconds)
+                        String.format("%1$02d:%2$02d", minutes, seconds)
                 );
             }
         });
     }
 
-    public void UpdateClocks(final Date setStart) {
+    public void UpdateClocks(final int remainingSeconds) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                long diff = (new Date()).getTime() - setStart.getTime();
                 ((TextView) findViewById(R.id.tvSetTime)).setText(
-                        String.format("%1$03d", TimeUnit.MILLISECONDS.toSeconds(diff))
+                        String.format("%1$03d", remainingSeconds)
                 );
             }
         });
@@ -188,9 +156,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onEndRoundClicked(View view) {
-        //scheduler.EndRound();;
-        //mainController.EndRound();
-        RedrawSemaphore();
     }
 
     @Override

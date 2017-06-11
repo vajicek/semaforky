@@ -1,4 +1,4 @@
-package com.vajsoft.semaforky;
+package com.vajsoft.semaforky.controllers;
 
 import java.io.IOException;
 

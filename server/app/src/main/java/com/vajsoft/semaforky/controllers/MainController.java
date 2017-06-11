@@ -1,7 +1,8 @@
-package com.vajsoft.semaforky;
+package com.vajsoft.semaforky.controllers;
+
+import com.vajsoft.semaforky.activities.MainActivity;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -9,7 +10,6 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by vajicek on 10/21/2016.
@@ -98,15 +98,15 @@ public class MainController {
     }
 
     public void SetupSemaphores(int status) {
-
+        mainActivity.SetSemaphore(status);
     }
 
-    public void SetupClocks(int seconds) {
+    public void SetupClocks(int remainingSeconds) {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof ClockController) {
                 mainActivity.LogMessage("Setting clock!");
-                ((ClockController)controller).Send(seconds);
+                ((ClockController)controller).Send(remainingSeconds);
             }
         }
     }

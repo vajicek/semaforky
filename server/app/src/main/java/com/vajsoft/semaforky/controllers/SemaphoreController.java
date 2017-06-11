@@ -1,4 +1,4 @@
-package com.vajsoft.semaforky;
+package com.vajsoft.semaforky.controllers;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -11,7 +11,7 @@ import java.nio.ByteOrder;
  * Created by vajicek on 10/21/2016.
  */
 
-public class SemaphoreController implements Controller  {
+public class SemaphoreController implements Controller {
     private Socket socket;
     private boolean interrupted = false;
 
