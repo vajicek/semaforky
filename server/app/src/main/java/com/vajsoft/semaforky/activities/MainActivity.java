@@ -29,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private Scheduler scheduler;
     private Settings settings;
     private int currentSet = 0;
+    private int currentLine = -1;
     private SemaphoreWidget semaphoreWidget;
 
     @Override
@@ -117,6 +118,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void UpdateSet() {
         ((TextView) findViewById(R.id.tvSet)).setText(Integer.toString(currentSet));
+
+        if (settings.GetLines() == 1) {
+            ((TextView) findViewById(R.id.tvLine)).setText("AB");
+        } else  if (settings.GetLines() == 2) {
+            ((TextView) findViewById(R.id.tvLine)).setText(currentLine == 0 ? "AB" : "CD");
+        }
     }
 
     public void UpdateLocale() {
@@ -129,7 +136,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void onStartSetClick(View view) {
         scheduler.StartSet();
-        currentSet++;
+        if ((currentLine + 1) < settings.GetLines()) {
+            currentLine++;
+        } else {
+            currentSet++;
+            currentLine = 0;
+        }
         UpdateSet();
     }
 

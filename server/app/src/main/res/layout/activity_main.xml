@@ -65,6 +65,7 @@
                     android:text="-"
                     android:textAlignment="textEnd"
                     android:textSize="24sp" />
+
             </TableRow>
 
             <TableRow
@@ -90,6 +91,29 @@
 
             </TableRow>
 
+            <TableRow
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <TextView
+                    android:id="@+id/textView3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/line"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:id="@+id/tvLine"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:gravity="right"
+                    android:text="-"
+                    android:textAlignment="textEnd"
+                    android:textSize="24sp" />
+
+            </TableRow>
+
         </TableLayout>
 
         <TextView
@@ -99,7 +123,7 @@
             android:gravity="center"
             android:text="---"
             android:textAlignment="center"
-            android:textSize="120sp"
+            android:textSize="100sp"
             tools:fontFamily="monospace" />
 
         <SurfaceView

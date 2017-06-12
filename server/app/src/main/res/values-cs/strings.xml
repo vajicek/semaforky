@@ -15,4 +15,5 @@
     <string name="stopSet">Konec sady</string>
     <string name="cancelSet">Zrušit sadu</string>
     <string name="language">Jazyk</string>
+    <string name="line">Řada</string>
 </resources>

@@ -14,6 +14,7 @@
     <string name="stopSet">Stop Set</string>
     <string name="cancelSet">Cancel Set</string>
     <string name="language">Language</string>
+    <string name="line">Line</string>
     <string-array name="languages_array">
         <item>English</item>
         <item>Česky</item>
