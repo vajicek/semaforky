@@ -33,15 +33,32 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:entries="@array/languages_array"
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp"
                 android:spinnerMode="dropdown" />
 
         </TableRow>
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:divider="?attr/dividerHorizontal"
-            android:showDividers="middle" />
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/textView6"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TextView" />
+
+            <Spinner
+                android:id="@+id/spinnerLineRotation"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:dropDownWidth="wrap_content"
+                android:entries="@array/line_rotation_array"
+                android:paddingBottom="10dp"
+                android:paddingTop="10dp"
+                android:spinnerMode="dropdown" />
+        </TableRow>
 
         <TableRow
             android:layout_width="match_parent"

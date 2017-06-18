@@ -7,10 +7,8 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-/**
- * Created by vajicek on 10/21/2016.
- */
-
+/** Clock controller. Implements sending binary data to the device.
+ * */
 public class ClockController implements Controller {
     private Socket socket;
     private boolean interrupted = false;

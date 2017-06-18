@@ -1,15 +1,20 @@
 package com.vajsoft.semaforky.data;
 
-/**
- * Created by vajicek on 10/21/2016.
- */
+import android.content.Context;
+import android.content.SharedPreferences;
 
 import java.io.Serializable;
 
-/**
- * Holds. store, load setting of the application.
- */
+/** Singleton class. Holds, store, load setting of the application.
+ * */
 public class Settings implements Serializable {
+
+    public static String PREFS_NAME = "semaforkySettings";
+
+    public enum LinesRotation {
+        SIMPLE,
+        ALTERNATING
+    };
 
     private static Settings instance = null;
 
@@ -29,6 +34,7 @@ public class Settings implements Serializable {
     private int preparationTime = 10;
     private int warningTime = 30;
     private int lines = 1;
+    private LinesRotation linesRotation = LinesRotation.SIMPLE;
 
     public int GetLines() {
         return lines;
@@ -47,6 +53,10 @@ public class Settings implements Serializable {
         }
     }
 
+    public LinesRotation GetLinesRotation() {
+        return linesRotation;
+    }
+
     public int GetRoundSets() {
         return roundSets;
     }
@@ -63,12 +73,32 @@ public class Settings implements Serializable {
         return warningTime;
     }
 
-    public void LoadSetting() {
-        //TODO: common vay to store app configuration
+    public void LoadSetting(Context applicationContext) {
+        SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, 0);
+        language = settings.getInt("homeScore", language);;
+        roundSets = settings.getInt("roundSets", roundSets);;
+        setTime = settings.getInt("setTime", setTime);;
+        preparationTime = settings.getInt("preparationTime", preparationTime);;
+        warningTime = settings.getInt("warningTime", warningTime);;
+        lines = settings.getInt("lines", lines);;
+        linesRotation = LinesRotation.values()[settings.getInt("linesRotation", linesRotation.ordinal())];
     }
 
-    public void SaveSetting() {
-        //TODO:
+    public void SaveSetting(Context applicationContext) {
+        SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putInt("language", language);
+        editor.putInt("roundSets", roundSets);
+        editor.putInt("setTime", setTime);
+        editor.putInt("preparationTime", preparationTime);
+        editor.putInt("warningTime", warningTime);
+        editor.putInt("lines", lines);
+        editor.putInt("linesRotation", linesRotation.ordinal());
+        editor.apply();
+    }
+
+    public void SetLinesRotation(LinesRotation linesRotation) {
+        this.linesRotation = linesRotation;
     }
 
     public void SetLanguage(int selectedLanguageNo) {

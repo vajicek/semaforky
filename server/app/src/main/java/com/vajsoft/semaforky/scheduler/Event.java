@@ -2,16 +2,13 @@ package com.vajsoft.semaforky.scheduler;
 
 import java.util.Date;
 
-/**
- * Created by vajicek on 11.6.17.
- */
-
+/** Abstract base class for events which can be added to prioritized (by time) event queue.
+ * Run method is executed when event is fired.
+ * */
 abstract class Event implements Comparable {
     public Date time;
-    public int status;
-    Event(Date time, int status) {
+    Event(Date time) {
         this.time = time;
-        this.status = status;
     }
 
     public abstract void run();

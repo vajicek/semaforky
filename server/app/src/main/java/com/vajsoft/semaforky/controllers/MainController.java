@@ -11,10 +11,9 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
 
-/**
- * Created by vajicek on 10/21/2016.
- */
-
+/** Main controller which implements server, creates client listeners and macro operation for
+ *  sending messages to clients.
+ * */
 public class MainController {
 
     private ServerSocket serverSocket;
@@ -93,15 +92,7 @@ public class MainController {
         }).start();
     }
 
-    public void StartClocks() {
-
-    }
-
-    public void SetupSemaphores(int status) {
-        mainActivity.SetSemaphore(status);
-    }
-
-    public void SetupClocks(int remainingSeconds) {
+    public void UpdateClocks(int remainingSeconds) {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof ClockController) {
@@ -111,9 +102,7 @@ public class MainController {
         }
     }
 
-    public void StartRound() {
-    }
-
-    public void EndRound() {
+    public MainActivity GetMainActivity() {
+        return mainActivity;
     }
 }

@@ -1,5 +1,7 @@
 package com.vajsoft.semaforky.activities;
 
+import android.app.AlertDialog;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -9,13 +11,11 @@ import android.widget.TextView;
 import com.vajsoft.semaforky.R;
 import com.vajsoft.semaforky.data.Settings;
 
-/**
+/** Setting activity/dialog.
  * */
 public class SettingsActivity extends AppCompatActivity {
 
     private Settings settings;
-
-    private final String SETTINGS_EXTRA_ID = "settings";
 
     static final int SETTINGS_UPDATED = 1;
 
@@ -23,17 +23,35 @@ public class SettingsActivity extends AppCompatActivity {
         settings = Settings.getInstance();
     }
 
+    private int GetSetTimeFromGui() {
+        return Integer.parseInt(((TextView)findViewById(R.id.editSetTime)).getText().toString());
+    }
+
+    private int GetPreparationTimeFromGui() {
+        return Integer.parseInt(((TextView)findViewById(R.id.editPreparationTime)).getText().toString());
+    }
+
+    private int GetWarningTimeFromGui() {
+        return Integer.parseInt(((TextView)findViewById(R.id.editWarningTime)).getText().toString());
+    }
+
+    private int GetLinesFromGui() {
+        return Integer.parseInt(((TextView) findViewById(R.id.editLines)).getText().toString());
+    }
+
     private void UpdateDataFromGui() {
         settings.SetLanguage(((Spinner)findViewById(R.id.spinnerLanguage)).getSelectedItemPosition());
-        settings.SetLines(Integer.parseInt(((TextView)findViewById(R.id.editLines)).getText().toString()));
+        settings.SetLinesRotation(Settings.LinesRotation.values()[((Spinner)findViewById(R.id.spinnerLineRotation)).getSelectedItemPosition()]);
+        settings.SetLines(GetLinesFromGui());
         settings.SetRoundSets(Integer.parseInt(((TextView)findViewById(R.id.editRounds)).getText().toString()));
-        settings.SetSetTime(Integer.parseInt(((TextView)findViewById(R.id.editSetTime)).getText().toString()));
-        settings.SetPreparationTimeTime(Integer.parseInt(((TextView)findViewById(R.id.editPreparationTime)).getText().toString()));
-        settings.SetWarningTimeTime(Integer.parseInt(((TextView)findViewById(R.id.editWarningTime)).getText().toString()));
+        settings.SetSetTime(GetSetTimeFromGui());
+        settings.SetPreparationTimeTime(GetPreparationTimeFromGui());
+        settings.SetWarningTimeTime(GetWarningTimeFromGui());
     }
 
     private void UpdateGuiFromData() {
         ((Spinner)findViewById(R.id.spinnerLanguage)).setSelection(settings.GetLanguage());
+        ((Spinner)findViewById(R.id.spinnerLineRotation)).setSelection(settings.GetLinesRotation().ordinal());
         ((TextView)findViewById(R.id.editLines)).setText(Integer.toString(settings.GetLines()));
         ((TextView)findViewById(R.id.editRounds)).setText(Integer.toString(settings.GetRoundSets()));
         ((TextView)findViewById(R.id.editSetTime)).setText(Integer.toString(settings.GetSetTime()));
@@ -48,14 +66,41 @@ public class SettingsActivity extends AppCompatActivity {
         UpdateGuiFromData();
     }
 
+    private AlertDialog.Builder GetDialogBuilder() {
+        AlertDialog.Builder builder;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            builder = new AlertDialog.Builder(this, android.R.style.Theme_Material_Dialog_Alert);
+        } else {
+            builder = new AlertDialog.Builder(this);
+        }
+        return builder;
+    }
+
+    public void MessageBox(String message) {
+        GetDialogBuilder().setTitle(getResources().getString(R.string.warningTitle))
+            .setMessage(message)
+            .show();
+    }
+
     boolean ValidateTime() {
+        if (GetWarningTimeFromGui() > GetSetTimeFromGui()) {
+            MessageBox(getResources().getString(R.string.warningTimeInvalid));
+            return false;
+        }
+        if (GetLinesFromGui() > 2) {
+            MessageBox(getResources().getString(R.string.lineCountInvalid));
+            return false;
+        }
         return true;
     }
 
     public void onOkClicked(View view) {
-        UpdateDataFromGui();
-        setResult(SETTINGS_UPDATED, null);
-        finish();
+        if (ValidateTime()) {
+            UpdateDataFromGui();
+            setResult(SETTINGS_UPDATED, null);
+            settings.SaveSetting(getApplicationContext());
+            finish();
+        }
     }
 
     public void onCancelClicked(View view) {

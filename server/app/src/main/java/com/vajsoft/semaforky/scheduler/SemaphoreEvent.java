@@ -1,23 +1,21 @@
 package com.vajsoft.semaforky.scheduler;
 
-import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.controllers.SemaforkyMachine;
 
 import java.util.Date;
 
-/**
- * Created by vajicek on 11.6.17.
- */
 
+/** Semaphore event, move state machine to the next state.
+ * */
 class SemaphoreEvent extends Event {
-    public static final int YELLOW = 3;
-    public static final int GREEN = 2;
-    public static final int RED = 1;
-    private MainController mainController;
-    SemaphoreEvent(Date time, int status, MainController mco) {
-        super(time, status);
-        mainController = mco;
+    private SemaforkyMachine machine;
+    private String nextStateName;
+    SemaphoreEvent(Date time, String nextStateName, SemaforkyMachine machine) {
+        super(time);
+        this.machine = machine;
+        this.nextStateName = nextStateName;
     }
     public void run() {
-        mainController.SetupSemaphores(status);
+        machine.MoveTo(nextStateName);
     }
 };

@@ -2,10 +2,8 @@ package com.vajsoft.semaforky.controllers;
 
 import java.io.IOException;
 
-/**
- * Created by vajicek on 4.6.17.
- */
-
+/** Sirene device controller.
+ * */
 public class SireneController implements Controller {
     @Override
     public void run() throws IOException {

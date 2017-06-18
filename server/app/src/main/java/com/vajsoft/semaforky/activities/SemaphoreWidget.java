@@ -6,16 +6,19 @@ import android.graphics.Paint;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-import com.vajsoft.semaforky.R;
-
-/**
- * Created by vajicek on 11.6.17.
- */
-
+/** Wrapper for SurfaceView which is responsible for plotting semaphore lights.
+ * */
 public class SemaphoreWidget implements  SurfaceHolder.Callback {
 
+    public enum SemaphoreLight {
+        NONE,
+        RED,
+        GREEN,
+        YELLOW
+    };
+
     private SurfaceView target;
-    private int status = 0;
+    private SemaphoreLight light = SemaphoreLight.NONE;
 
     public SemaphoreWidget(SurfaceView t) {
         target = t;
@@ -25,14 +28,17 @@ public class SemaphoreWidget implements  SurfaceHolder.Callback {
     private void RedrawSemaphore() {
         SurfaceHolder holder = target.getHolder();
         Canvas c = holder.lockCanvas(null);
+        if (c == null) {
+            return;
+        }
         c.drawColor(Color.WHITE);
         int h = c.getHeight();
         int w = c.getWidth();
         int[] colors = new int[]{Color.RED, Color.GREEN, Color.YELLOW};
         float circle_diameter = w / colors.length;
         float circle_radius = circle_diameter / 2.0f;
-        for(int i = 0; i < colors.length; i++) {
-            if ((i + 1) != status) {
+        for (int i = 0; i < colors.length; i++) {
+            if ((i + 1) != light.ordinal()) {
                 continue;
             }
             Paint paint = new Paint();
@@ -57,8 +63,8 @@ public class SemaphoreWidget implements  SurfaceHolder.Callback {
         RedrawSemaphore();
     }
 
-    public void UpdateStatus(int newStatus){
-        status = newStatus;
+    public void UpdateStatus(SemaphoreLight newStatus) {
+        light = newStatus;
         RedrawSemaphore();
     }
 }

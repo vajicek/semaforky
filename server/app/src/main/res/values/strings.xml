@@ -15,8 +15,16 @@
     <string name="cancelSet">Cancel Set</string>
     <string name="language">Language</string>
     <string name="line">Line</string>
+    <string name="warningTitle">Warning</string>
+    <string name="warningTimeInvalid">Warning time is longer then set time!</string>
+    <string name="lineCountInvalid">More than two lines not supported!</string>
     <string-array name="languages_array">
         <item>English</item>
         <item>Česky</item>
+    </string-array>
+    <string name="lineRotation">Line Rotation</string>
+    <string-array name="line_rotation_array">
+        <item>Simple</item>
+        <item>Alternating</item>
     </string-array>
 </resources>
