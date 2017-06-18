@@ -24,7 +24,7 @@ public class Scheduler {
             public void run() {
                 UpdateControllers();
             }
-        }, 0, 100);
+        }, 0, 50);
     }
 
     Timer setTimer = null;

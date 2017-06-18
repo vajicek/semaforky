@@ -38,6 +38,6 @@ class SetClockEvent extends Event {
         mainActivity.LogMessage("clock event!");
         mainController.UpdateClocks(remaining_seconds);
         mainActivity.UpdateSetClocks(remaining_seconds);
-        scheduler.AddEvent(new SetClockEvent(new Date(now.getTime() + 200), mainController, setStart, scheduler));
+        scheduler.AddEvent(new SetClockEvent(new Date(now.getTime() + 100), mainController, setStart, scheduler));
     }
 };
