@@ -1,5 +1,8 @@
 package com.vajsoft.semaforky.activities;
 
+/// Copyright (C) 2017, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
+
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;

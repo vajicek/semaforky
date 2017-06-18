@@ -1,5 +1,8 @@
 package com.vajsoft.semaforky.controllers;
 
+/// Copyright (C) 2017, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
+
 import com.vajsoft.semaforky.activities.MainActivity;
 
 import java.io.DataInputStream;

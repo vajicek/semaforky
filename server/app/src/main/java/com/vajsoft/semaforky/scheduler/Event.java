@@ -1,5 +1,8 @@
 package com.vajsoft.semaforky.scheduler;
 
+/// Copyright (C) 2017, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
+
 import java.util.Date;
 
 /** Abstract base class for events which can be added to prioritized (by time) event queue.

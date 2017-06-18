@@ -1,5 +1,8 @@
 package com.vajsoft.semaforky.data;
 
+/// Copyright (C) 2017, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
+
 import android.content.Context;
 import android.content.SharedPreferences;
 

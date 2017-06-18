@@ -1,5 +1,8 @@
 package com.vajsoft.semaforky.utils;
 
+/// Copyright (C) 2017, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
+
 import java.util.List;
 
 /** Search array according to given comparator functor value.

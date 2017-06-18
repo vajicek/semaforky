@@ -1,18 +1,15 @@
 package com.vajsoft.semaforky.controllers;
 
-import android.content.Intent;
+/// Copyright (C) 2017, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-import com.vajsoft.semaforky.activities.SettingsActivity;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.scheduler.Scheduler;
 import com.vajsoft.semaforky.utils.State;
 import com.vajsoft.semaforky.utils.StateMachine;
 
-/**
- * Created by vajicek on 17.6.17.
- */
-
-
+/** Semaforky state machine. Defines sttate names and state change implementation.
+ * */
 public class SemaforkyMachine extends StateMachine {
     public static String STARTED = "started";
     public static String ROUND_STARTED = "round started";

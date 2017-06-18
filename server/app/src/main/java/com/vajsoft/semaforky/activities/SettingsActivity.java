@@ -1,5 +1,8 @@
 package com.vajsoft.semaforky.activities;
 
+/// Copyright (C) 2017, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
+
 import android.app.AlertDialog;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;

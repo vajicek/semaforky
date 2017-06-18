@@ -1,5 +1,8 @@
 package com.vajsoft.semaforky.utils;
 
+/// Copyright (C) 2017, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
+
 import android.util.Log;
 
 import java.util.ArrayList;
