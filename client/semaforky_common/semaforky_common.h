@@ -1,27 +1,17 @@
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-#include <ESP8266WiFi.h>
-#include <SPI.h>
-#include <Wire.h>    // for some strange reasons, Wire.h must be included here
-#include <cool_SAA1064.h> // enable I2C bus
-
-// connection properties
-const char* ssid = "semaforky";
-const char* password = "semaforky";
-const char servername[] = "192.168.43.1";
-const int port = 8888;
+#include "wifi.h"
+#include "saa1064_i2c.h"
 
 const int SEMAPHORE_CLIENT = 1;
 const int CLOCK_CLIENT = 2;
-
-bool wifi_disabled = false;
 
 /// data chunk
 struct ControlChunk {
   int light;
   int status;
-  ControlChunk() : light(0), status(0) {   
+  ControlChunk() : light(0), status(0) {
   }
 };
 
@@ -60,7 +50,7 @@ struct Process {
   Process();
 };
 
-Process::Process() : 
+Process::Process() :
   is_connected(false) {
 }
 
@@ -77,7 +67,7 @@ void Process::OnConnect() {
 }
 
 void Process::Connect() {
-  if (client.connect(servername, port)) {  //starts client connection, checks for connection
+  if (client.connect(ESPWifiUtils::servername, ESPWifiUtils::port)) {  //starts client connection, checks for connection
     Serial.println("connected");
     is_connected = true;
     OnConnect();
@@ -95,9 +85,9 @@ void Process::Disconnect() {
 
 void Process::SetLights() {
 }
-  
+
 void Process::Execute() {
-  if (!is_connected && !wifi_disabled) {
+  if (!is_connected && !ESPWifiUtils::wifi_disabled) {
     Connect();
   } else  {
     if (client.connected()) {
@@ -192,7 +182,7 @@ void ClockProcess::SetLights() {
     }
     delay(4);
     digitalWrite(digit_pin[i], HIGH);
-  }  
+  }
 }
 
 void ClockProcess::Init() {
@@ -214,7 +204,11 @@ struct SAA1064ClockProcess : public Process {
   virtual void Init();
   virtual void SetLights();
   virtual void OnConnect();
+  SAA1064ClockProcess();
 };
+
+SAA1064ClockProcess::SAA1064ClockProcess() : saa1064 (100, 2, 3) {
+}
 
 void SAA1064ClockProcess::OnConnect() {
   RegisterChunk chunk{2};
@@ -224,32 +218,14 @@ void SAA1064ClockProcess::OnConnect() {
 void SAA1064ClockProcess::SetLights() {
   int digits[4];
   ComputeDigits(digits, digit_count, last_chunk.status);
-  saa1064.say(digits[0], digits[1], digits[2], digits[3]);
+  //saa1064.say(digits[0], digits[1], digits[2], digits[3]);
 }
 
 void SAA1064ClockProcess::Init() {
   Process::Init();
-  saa1064.setStatic();
+  //saa1064.setStatic();
 }
 
-void PrintWiFiInfo() {
-  Serial.println("Connected!");
-  Serial.print("localIP: ");
-  Serial.println(WiFi.localIP().toString());
-  Serial.print("gatewayIP: ");
-  Serial.println(WiFi.gatewayIP().toString());
-  Serial.print("macAddress: ");
-  Serial.println(WiFi.macAddress());
-}
+//-------------------------------------------------------------------------------
 
-void ConnectWiFiAP() {
-  Serial.print("Connecting to ");
-  Serial.println(ssid);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(50);
-    Serial.print(".");
-  }
-  Serial.println("");
-}
 
