@@ -3,6 +3,7 @@ package com.vajsoft.semaforky.activities;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.StrictMode;
@@ -19,6 +20,7 @@ import com.vajsoft.semaforky.controllers.SemaforkyMachine;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.controllers.MainController;
 import com.vajsoft.semaforky.scheduler.Scheduler;
+import com.vajsoft.semaforky.utils.SoundManager;
 
 import java.util.Date;
 import java.util.Locale;
@@ -33,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private Settings settings;
     private SemaphoreWidget semaphoreWidget;
     private SemaforkyMachine machine;
+    private SoundManager soundManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
         mainController = new MainController(this);
         scheduler = new Scheduler(mainController);
         machine = new SemaforkyMachine(mainController, scheduler);
+        soundManager = new SoundManager(this.getApplicationContext());
 
         settings.LoadSetting(getApplicationContext());
 
@@ -201,4 +205,6 @@ public class MainActivity extends AppCompatActivity {
     public SemaforkyMachine GetMachine() {
         return machine;
     }
+
+    public SoundManager GetSoundManager() { return soundManager; }
 }

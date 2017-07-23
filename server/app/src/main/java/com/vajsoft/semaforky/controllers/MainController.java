@@ -4,6 +4,7 @@ package com.vajsoft.semaforky.controllers;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import com.vajsoft.semaforky.activities.MainActivity;
+import com.vajsoft.semaforky.utils.SoundManager;
 
 import java.io.DataInputStream;
 import java.io.IOException;

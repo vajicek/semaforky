@@ -50,6 +50,7 @@ public class SemaforkyMachine extends StateMachine {
             @Override public void run(State previous) {
                 scheduler.StartRound();
                 mainController.GetMainActivity().UpdateGui();
+                mainController.GetMainActivity().GetSoundManager().Play("buzzer", 1);
                 currentSet = 1;
                 currentLine = 0;
             }
@@ -57,6 +58,7 @@ public class SemaforkyMachine extends StateMachine {
         AddState(new State(SET_STARTED, new String[] {READY}){
             @Override public void run(State previous) {
                 mainController.GetMainActivity().UpdateGui();
+                mainController.GetMainActivity().GetSoundManager().Play("buzzer", 1);
                 scheduler.StartSet();
             }
         });
@@ -68,6 +70,7 @@ public class SemaforkyMachine extends StateMachine {
         AddState(new State(FIRE, new String[] {SET_STOPPED, SET_CANCELED, WARNING}){
             @Override public void run(State previous) {
                 mainController.GetMainActivity().UpdateGui();
+                mainController.GetMainActivity().GetSoundManager().Play("buzzer", 1);
             }
         });
         AddState(new State(WARNING, new String[] {SET_CANCELED, SET_STOPPED}){
@@ -85,17 +88,20 @@ public class SemaforkyMachine extends StateMachine {
                     currentLine = 0;
                 }
                 mainController.GetMainActivity().UpdateGui();
+                mainController.GetMainActivity().GetSoundManager().Play("buzzer", 2);
             }
         });
-        AddState(new State(SET_CANCELED, new String[] {ROUND_STOPPED, SET_STARTED}){
+        AddState(new State(SET_CANCELED, new String[] {ROUND_STOPPED, SET_STARTED}) {
             @Override public void run(State previous) {
                 scheduler.CancelSet();
                 mainController.GetMainActivity().UpdateGui();
+                mainController.GetMainActivity().GetSoundManager().Play("buzzer", 2);
             }
         });
         AddState(new State(ROUND_STOPPED, new String[] {SETTINGS, ROUND_STARTED}){
             @Override public void run(State previous) {
                 mainController.GetMainActivity().UpdateGui();
+                mainController.GetMainActivity().GetSoundManager().Play("buzzer", 3);
                 scheduler.EndRound();
             }
         });
