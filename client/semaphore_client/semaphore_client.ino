@@ -7,9 +7,9 @@ SemaphoreProcess global;
 
 void setup() {
   global.Init();
-  if (!wifi_disabled) {
-    ConnectWiFiAP();
-    PrintWiFiInfo();
+  if (!ESPWifiUtils::wifi_disabled) {
+    ESPWifiUtils::ConnectWiFiAP();
+    ESPWifiUtils::PrintWiFiInfo();
   }
 }
 

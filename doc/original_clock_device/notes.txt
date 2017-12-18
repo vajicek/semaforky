@@ -1,0 +1,5 @@
+SAA 1064
+GS9526 / GD75189A - quadruple line receiver
+SN7406N - hex inverter
+BD 675 - NPN Darlington Bipolar Power Transistor
+BS-A606RD - LED display

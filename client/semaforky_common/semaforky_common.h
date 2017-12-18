@@ -167,7 +167,11 @@ void ClockProcess::OnConnect() {
 void ComputeDigits(int* digits, int digit_count, int value) {
   int divider = 1;
   for (int i = 0; i < digit_count; i++) {
-    digits[digit_count - i - 1] = (value / divider) % 10;
+    if (value / divider == 0) {
+      digits[digit_count - i - 1] = - 1;
+    } else {
+      digits[digit_count - i - 1] = (value / divider) % 10;
+    }
     divider *= 10;
   }
 }
@@ -207,7 +211,7 @@ struct SAA1064ClockProcess : public Process {
   SAA1064ClockProcess();
 };
 
-SAA1064ClockProcess::SAA1064ClockProcess() : saa1064 (100, 2, 3) {
+SAA1064ClockProcess::SAA1064ClockProcess() : saa1064 (100, 1, 2) {
 }
 
 void SAA1064ClockProcess::OnConnect() {
@@ -218,14 +222,14 @@ void SAA1064ClockProcess::OnConnect() {
 void SAA1064ClockProcess::SetLights() {
   int digits[4];
   ComputeDigits(digits, digit_count, last_chunk.status);
-  //saa1064.say(digits[0], digits[1], digits[2], digits[3]);
+  Serial.print(digits[1]);
+  Serial.print(digits[2]);
+  Serial.println(digits[3]);
+  saa1064.digits(digits[1], digits[2], digits[3], 0);
 }
 
 void SAA1064ClockProcess::Init() {
   Process::Init();
-  //saa1064.setStatic();
 }
 
 //-------------------------------------------------------------------------------
-
-

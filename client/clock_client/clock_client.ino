@@ -3,7 +3,7 @@
 
 #include <semaforky_common.h>
 
-ClockProcess global;
+SAA1064ClockProcess global;
 
 void setup() {
   global.Init();
@@ -15,7 +15,6 @@ void setup() {
 
 void loop() {
   global.Execute();
+  delay(100);
 }
-
-
 
