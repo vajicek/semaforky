@@ -1,9 +1,9 @@
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-#include <semaforky_common.h>
+#include "semaforky_common.h"
 
-SAA1064ClockProcess global;
+SirenProcess global;
 
 void setup() {
   global.Init();

@@ -3,18 +3,17 @@
 
 #include <Arduino.h>
 
-/*
-#define i2c_sda_lo() digitalWrite(sda_pin_, LOW);
-#define i2c_scl_lo() digitalWrite(scl_pin_, LOW);
-#define i2c_sda_hi() digitalWrite(sda_pin_, HIGH);
-#define i2c_scl_hi() digitalWrite(scl_pin_, HIGH);
-*/
-
-#define i2c_sda_lo() digitalWrite(sda_pin_, HIGH);
-#define i2c_scl_lo() digitalWrite(scl_pin_, HIGH);
-#define i2c_sda_hi() digitalWrite(sda_pin_, LOW);
-#define i2c_scl_hi() digitalWrite(scl_pin_, LOW);
-
+#ifdef INVERTED_WIRE_LOGIC
+  #define i2c_sda_lo() digitalWrite(sda_pin_, HIGH);
+  #define i2c_scl_lo() digitalWrite(scl_pin_, HIGH);
+  #define i2c_sda_hi() digitalWrite(sda_pin_, LOW);
+  #define i2c_scl_hi() digitalWrite(scl_pin_, LOW);
+#else
+  #define i2c_sda_lo() digitalWrite(sda_pin_, LOW);
+  #define i2c_scl_lo() digitalWrite(scl_pin_, LOW);
+  #define i2c_sda_hi() digitalWrite(sda_pin_, HIGH);
+  #define i2c_scl_hi() digitalWrite(scl_pin_, HIGH);
+#endif
 
 class I2C_BitBanging {
 public:
