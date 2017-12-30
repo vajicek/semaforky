@@ -7,8 +7,7 @@ import com.vajsoft.semaforky.activities.MainActivity;
 
 import java.util.Date;
 
-/** Round clock event. Updates GUI clock control on main activity.
- * */
+/** Round clock event. Updates GUI clock control on main activity. */
 public class RoundClockEvent extends Event {
     private MainActivity mainActivity;
     private Date roundStart;
@@ -20,9 +19,10 @@ public class RoundClockEvent extends Event {
         roundStart = rs;
         scheduler = sche;
     }
+
     public void run() {
         Date now = new Date();
-        mainActivity.UpdateRoundClocks(roundStart);
-        scheduler.AddEvent(new RoundClockEvent(new Date(now.getTime() + 200), mainActivity,  roundStart, scheduler));
+        mainActivity.updateRoundClocks(roundStart);
+        scheduler.AddEvent(new RoundClockEvent(new Date(now.getTime() + 200), mainActivity, roundStart, scheduler));
     }
 }

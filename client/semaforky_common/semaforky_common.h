@@ -8,6 +8,7 @@
 
 const int SEMAPHORE_CLIENT = 1;
 const int CLOCK_CLIENT = 2;
+const int SIREN_CLIENT = 3;
 
 /// data chunk
 struct ControlChunk {
@@ -119,8 +120,6 @@ void Process::Init() {
 #define SEMAPHORE_YELLOW_PIN 4
 #define SEMAPHORE_GREEN_PIN 0
 
-#define SEMAPHORE_TYPE_ID 1
-
 /// Semaphore client specialization.
 struct SemaphoreProcess : public Process {
   virtual void Init();
@@ -129,7 +128,7 @@ struct SemaphoreProcess : public Process {
 };
 
 void SemaphoreProcess::OnConnect() {
-  RegisterChunk chunk{SEMAPHORE_TYPE_ID};
+  RegisterChunk chunk{SEMAPHORE_CLIENT};
   client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
 }
 
@@ -147,8 +146,6 @@ void SemaphoreProcess::Init() {
 }
 
 //-------------------------------------------------------------------------------
-
-#define CLOCK_TYPE_ID 2
 
 /// Clock client specialization.
 struct ClockProcess : public Process {
@@ -175,7 +172,7 @@ struct ClockProcess : public Process {
 };
 
 void ClockProcess::OnConnect() {
-  RegisterChunk chunk{CLOCK_TYPE_ID};
+  RegisterChunk chunk{CLOCK_CLIENT};
   client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
 }
 
@@ -234,7 +231,7 @@ SAA1064ClockProcess::SAA1064ClockProcess() : saa1064 (100, SAA1064_CLOCK_CLOCK_P
 }
 
 void SAA1064ClockProcess::OnConnect() {
-  RegisterChunk chunk{CLOCK_TYPE_ID};
+  RegisterChunk chunk{CLOCK_CLIENT};
   client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
 }
 
@@ -250,7 +247,6 @@ void SAA1064ClockProcess::Init() {
 
 //-------------------------------------------------------------------------------
 
-#define SIREN_TYPE_ID 3
 #define SIREN_TONE_LENGTH 500
 #define SIREN_TONE_VALUE 1000
 
@@ -269,7 +265,7 @@ SirenProcess::SirenProcess() {
 }
 
 void SirenProcess::OnConnect() {
-  RegisterChunk chunk{SIREN_TYPE_ID};
+  RegisterChunk chunk{SIREN_CLIENT};
   client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
 }
 

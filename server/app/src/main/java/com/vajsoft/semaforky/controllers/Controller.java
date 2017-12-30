@@ -5,8 +5,8 @@ package com.vajsoft.semaforky.controllers;
 
 import java.io.IOException;
 
-/** Controller base.
- * */
+/** Controller base. */
 public interface Controller {
     void run() throws IOException;
+    void send(int value);
 }

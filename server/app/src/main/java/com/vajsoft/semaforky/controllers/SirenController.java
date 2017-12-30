@@ -5,9 +5,9 @@ package com.vajsoft.semaforky.controllers;
 
 import java.net.Socket;
 
-/** Clock controller. Implements sending binary data to the device. */
-public class ClockController extends AbstractController {
-    public ClockController(Socket socket) {
+/** Siren device controller. */
+public class SirenController extends AbstractController {
+    public SirenController(Socket socket) {
         super(socket);
     }
 }

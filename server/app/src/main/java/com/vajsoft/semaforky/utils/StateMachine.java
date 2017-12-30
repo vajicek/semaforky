@@ -8,31 +8,33 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-/** State machine base. Holds state lists, current state and perform state transition.
- * */
-public class StateMachine {
-    ArrayList<State> states = new ArrayList<State>();
-    State currentState = null;
-    public State AddState(State state)  {
+/** State machine base. Holds state lists, current state and perform state transition. */
+public class StateMachine<T> {
+    private ArrayList<State<T>> states = new ArrayList<>();
+    private State<T> currentState = null;
+
+    public State<T> addState(State<T> state) {
         states.add(state);
         return state;
     }
-    public void SetCurrent(State state) {
-        assert(states.contains(state));
+
+    public void setCurrent(State<T> state) {
+        assert (states.contains(state));
         currentState = state;
     }
-    public State GetCurrenState() {
+
+    public State getCurrenState() {
         return currentState;
     }
-    public boolean MoveTo(String stateName) {
-        if(!Arrays.asList(currentState.next).contains(stateName))
-        {
+
+    public boolean moveTo(T stateName) {
+        if (!Arrays.asList(currentState.next).contains(stateName)) {
             Log.d("Failed to change state from " + currentState.name + " to " + stateName, "");
             return false;
         }
-        State state = SearchArray.findFirst(states, stateName,
-                new SearchArray.Comparator<State, String>() {
-                    public boolean isEqual(State item, String value) {
+        State<T> state = SearchArray.findFirst(states, stateName,
+                new SearchArray.Comparator<State<T>, T>() {
+                    public boolean isEqual(State<T> item, T value) {
                         return item.name.equals(value);
                     }
                 }

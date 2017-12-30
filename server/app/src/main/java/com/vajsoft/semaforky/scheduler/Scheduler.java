@@ -6,6 +6,7 @@ package com.vajsoft.semaforky.scheduler;
 import com.vajsoft.semaforky.activities.MainActivity;
 import com.vajsoft.semaforky.controllers.MainController;
 import com.vajsoft.semaforky.controllers.SemaforkyMachine;
+import com.vajsoft.semaforky.controllers.SemaforkyState;
 import com.vajsoft.semaforky.data.Settings;
 
 import java.util.Date;
@@ -13,9 +14,10 @@ import java.util.PriorityQueue;
 import java.util.Timer;
 import java.util.TimerTask;
 
-/** Plans events in time and control main controller and main activity using settings.
- * */
+/** Plans events in time and control main controller and main activity using settings. */
 public class Scheduler {
+    private Timer setTimer = null;
+    private PriorityQueue<Event> events = new PriorityQueue<>();
     private MainController mainController;
 
     public Scheduler(MainController mainController) {
@@ -30,8 +32,59 @@ public class Scheduler {
         }, 0, 50);
     }
 
-    Timer setTimer = null;
-    PriorityQueue<Event> events = new PriorityQueue<Event>();
+    public void StartRound() {
+        AddEvent(new RoundClockEvent(new Date(), mainController.getMainActivity(), new Date(), this));
+    }
+
+    public void AddEvent(Event event) {
+        events.add(event);
+    }
+
+    public void EndRound() {
+        CancelSetEvents();
+        RemoveAllEventsByClass(RoundClockEvent.class);
+    }
+
+    public void RemoveAllEventsByClass(Class eventType) {
+        Object[] eventsArray = events.toArray();
+        for (int i = 0; i < eventsArray.length; i++) {
+            if (eventsArray[i].getClass().equals(eventType)) {
+                events.remove(eventsArray[i]);
+            }
+        }
+    }
+
+    /// Plan events for set start
+    public void StartSet() {
+        CancelSetEvents();
+        Date now = new Date();
+
+        Settings settings = Settings.getInstance();
+        MainActivity mainActivity = mainController.getMainActivity();
+        SemaforkyMachine machine = mainActivity.getMachine();
+
+        AddEvent(new SemaphoreEvent(now,
+                SemaforkyState.READY,
+                machine));
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + settings.GetPreparationTimeTime() * 1000),
+                SemaforkyState.FIRE,
+                machine));
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.GetPreparationTimeTime() + settings.GetSetTime() - settings.GetWarningTimeTime()) * 1000),
+                SemaforkyState.WARNING,
+                machine));
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.GetPreparationTimeTime() + settings.GetSetTime()) * 1000 + 500),
+                SemaforkyState.SET_STOPPED,
+                machine));
+        AddEvent(new SetClockEvent(new Date(), mainController, new Date(), this));
+    }
+
+    public void StopSet() {
+        CancelSetEvents();
+    }
+
+    public void CancelSet() {
+        CancelSetEvents();
+    }
 
     /// Timer event handler
     protected void UpdateControllers() {
@@ -44,55 +97,8 @@ public class Scheduler {
         }
     }
 
-    public void AddEvent(Event event) {
-        events.add(event);
-    }
-
-    public void RemoveAllEventsByClass(Class eventType) {
-        Object[] eventsArray = events.toArray();
-        for(int i = 0; i < eventsArray.length; i++) {
-            if(eventsArray[i].getClass().equals(eventType)) {
-                events.remove(eventsArray[i]);
-            }
-        }
-    }
-
-    public void StartRound() {
-        AddEvent(new RoundClockEvent(new Date(), mainController.GetMainActivity(),  new Date(), this));
-    }
-
-    public void EndRound() {
-        CancelSetEvents();
-        RemoveAllEventsByClass(RoundClockEvent.class);
-    }
-
     private void CancelSetEvents() {
         RemoveAllEventsByClass(SemaphoreEvent.class);
         RemoveAllEventsByClass(SetClockEvent.class);
-    }
-
-    /// Plan events for set start
-    public void StartSet() {
-        CancelSetEvents();
-        Date now = new Date();
-
-        Settings settings = Settings.getInstance();
-        MainActivity mainActivity = mainController.GetMainActivity();
-        SemaforkyMachine machine = mainActivity.GetMachine();
-
-        AddEvent(new SemaphoreEvent(now, SemaforkyMachine.READY, machine));
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + settings.GetPreparationTimeTime() * 1000), SemaforkyMachine.FIRE, machine));
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.GetPreparationTimeTime() + settings.GetSetTime() - settings.GetWarningTimeTime()) * 1000), SemaforkyMachine.WARNING, machine));
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.GetPreparationTimeTime() + settings.GetSetTime()) * 1000 + 500), SemaforkyMachine.SET_STOPPED, machine));
-        AddEvent(new SetClockEvent(new Date(), mainController, new Date(), this));
-
-    }
-
-    public void StopSet() {
-        CancelSetEvents();
-    }
-
-    public void CancelSet() {
-        CancelSetEvents();
     }
 }

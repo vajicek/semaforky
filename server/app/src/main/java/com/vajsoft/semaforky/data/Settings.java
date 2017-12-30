@@ -8,29 +8,15 @@ import android.content.SharedPreferences;
 
 import java.io.Serializable;
 
-/** Singleton class. Holds, store, load setting of the application.
- * */
+/**
+ * Singleton class. Holds, store, load setting of the application.
+ */
 public class Settings implements Serializable {
 
     public static String PREFS_NAME = "semaforkySettings";
-
-    public enum LinesRotation {
-        SIMPLE,
-        ALTERNATING
-    };
-
     private static Settings instance = null;
 
-    protected Settings() {
-    }
-
-    public static Settings getInstance() {
-        if(instance == null) {
-            instance = new Settings();
-        }
-        return instance;
-    }
-
+    ;
     private int language = 0;
     private int roundSets = 10;
     private int setTime = 120;
@@ -38,6 +24,15 @@ public class Settings implements Serializable {
     private int warningTime = 30;
     private int lines = 1;
     private LinesRotation linesRotation = LinesRotation.SIMPLE;
+    protected Settings() {
+    }
+
+    public static Settings getInstance() {
+        if (instance == null) {
+            instance = new Settings();
+        }
+        return instance;
+    }
 
     public int GetLines() {
         return lines;
@@ -78,12 +73,18 @@ public class Settings implements Serializable {
 
     public void LoadSetting(Context applicationContext) {
         SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, 0);
-        language = settings.getInt("homeScore", language);;
-        roundSets = settings.getInt("roundSets", roundSets);;
-        setTime = settings.getInt("setTime", setTime);;
-        preparationTime = settings.getInt("preparationTime", preparationTime);;
-        warningTime = settings.getInt("warningTime", warningTime);;
-        lines = settings.getInt("lines", lines);;
+        language = settings.getInt("homeScore", language);
+        ;
+        roundSets = settings.getInt("roundSets", roundSets);
+        ;
+        setTime = settings.getInt("setTime", setTime);
+        ;
+        preparationTime = settings.getInt("preparationTime", preparationTime);
+        ;
+        warningTime = settings.getInt("warningTime", warningTime);
+        ;
+        lines = settings.getInt("lines", lines);
+        ;
         linesRotation = LinesRotation.values()[settings.getInt("linesRotation", linesRotation.ordinal())];
     }
 
@@ -126,5 +127,10 @@ public class Settings implements Serializable {
 
     public void SetWarningTimeTime(int warningTime) {
         this.warningTime = warningTime;
+    }
+
+    public enum LinesRotation {
+        SIMPLE,
+        ALTERNATING
     }
 }

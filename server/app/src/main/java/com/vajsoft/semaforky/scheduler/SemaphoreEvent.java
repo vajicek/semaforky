@@ -3,22 +3,24 @@ package com.vajsoft.semaforky.scheduler;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import com.vajsoft.semaforky.controllers.MainController;
 import com.vajsoft.semaforky.controllers.SemaforkyMachine;
+import com.vajsoft.semaforky.controllers.SemaforkyState;
 
 import java.util.Date;
 
-
-/** Semaphore event, move state machine to the next state.
- * */
+/** Semaphore event, move state machine to the next state. */
 class SemaphoreEvent extends Event {
     private SemaforkyMachine machine;
-    private String nextStateName;
-    SemaphoreEvent(Date time, String nextStateName, SemaforkyMachine machine) {
+    private SemaforkyState nextStateName;
+
+    SemaphoreEvent(Date time, SemaforkyState nextStateName, SemaforkyMachine machine) {
         super(time);
         this.machine = machine;
         this.nextStateName = nextStateName;
     }
+
     public void run() {
-        machine.MoveTo(nextStateName);
+        machine.moveTo(nextStateName);
     }
 };

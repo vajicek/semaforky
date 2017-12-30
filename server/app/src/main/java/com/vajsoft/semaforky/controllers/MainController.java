@@ -4,83 +4,106 @@ package com.vajsoft.semaforky.controllers;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import com.vajsoft.semaforky.activities.MainActivity;
-import com.vajsoft.semaforky.utils.SoundManager;
 
 import java.io.DataInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-/** Main controller which implements server, creates client listeners and macro operation for
- *  sending messages to clients.
- * */
+/**
+ * Main controller which implements server, creates client listeners and macro operation for sending
+ * messages to clients.
+ */
 public class MainController {
-
-    private ServerSocket serverSocket;
-
     public static final int SEMAPHORE_CLIENT = 1;
     public static final int CLOCK_CLIENT = 2;
-
+    public static final int SIREN_CLIENT = 3;
+    public static final int SERVER_PORT = 8888;
+    private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
     private MainActivity mainActivity;
+    private ServerSocket serverSocket;
+    private ArrayList<Controller> controllers = new ArrayList<Controller>();
 
     public MainController(MainActivity mainActivity) {
         this.mainActivity = mainActivity;
-        StartServer();
+        startServer();
     }
 
-    private ArrayList<Controller> controllers = new ArrayList<Controller>();
+    public ArrayList<Controller> getControllers() {
+        return controllers;
+    }
 
-    private void StartupController(Socket server) {
-        try {
-            DataInputStream in = new DataInputStream(server.getInputStream());
-            ByteBuffer buf = ByteBuffer.allocate(4);
-            buf.order(ByteOrder.LITTLE_ENDIAN);
-            in.read(buf.array());
-            int clientType = buf.getInt();
-            Controller controller = null;
-            switch (clientType) {
-                case SEMAPHORE_CLIENT:
-                    mainActivity.LogMessage("Semaphore connected!");
-                    controller = new SemaphoreController(server);
-                    break;
-                case CLOCK_CLIENT:
-                    mainActivity.LogMessage("Clock connected!");
-                    controller = new ClockController(server);
-                    break;
-                default:
-                    mainActivity.LogMessage(String.format("Unknown client connected! (clientType=%1$d)", clientType));
+    public void updateClocks(int remainingSeconds) {
+        for (int i = 0; i < controllers.size(); ++i) {
+            Controller controller = controllers.get(i);
+            if (controller instanceof ClockController) {
+                mainActivity.logMessage("Setting clock!");
+                controller.send(remainingSeconds);
             }
-            if (controller != null) {
-                controllers.add(controller);
-                controller.run();
-                controllers.remove(controller);
-                mainActivity.LogMessage("Client disconnected!");
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    private void ServerLoop() {
+    public void updateSemaphores(int state) {
+        for (int i = 0; i < controllers.size(); ++i) {
+            Controller controller = controllers.get(i);
+            if (controller instanceof SemaphoreController) {
+                mainActivity.logMessage("Setting semaphore state!");
+                controller.send(state);
+            }
+        }
+    }
+
+    public void playSiren(int count) {
+        mainActivity.getSoundManager().Play("buzzer", count);
+
+        for (int i = 0; i < controllers.size(); ++i) {
+            Controller controller = controllers.get(i);
+            if (controller instanceof SirenController) {
+                mainActivity.logMessage("Play siren!");
+                controller.send(count);
+            }
+        }
+    }
+
+    public MainActivity getMainActivity() {
+        return mainActivity;
+    }
+
+    private void startServer() {
+        LOGGER.entering(this.getClass().getName(), "startServer");
+        new Thread(new Runnable() {
+            public void run() {
+                serverLoop();
+            }
+        }).start();
+    }
+
+    private void serverLoop() {
+        LOGGER.entering(this.getClass().getName(), "serverLoop");
         try {
-            serverSocket = new ServerSocket(8888);
-            serverSocket.setSoTimeout(10000);
-            mainActivity.LogMessage("IP: " + serverSocket.getLocalSocketAddress().toString());
+            serverSocket = new ServerSocket(SERVER_PORT);
+            mainActivity.logMessage("IP: " + serverSocket.getLocalSocketAddress().toString());
+            int clientsConnected = 0;
             while (true) {
                 try {
                     final Socket server = serverSocket.accept();
-                    mainActivity.LogMessage("Client connected!");
+                    clientsConnected++;
+                    LOGGER.log(Level.INFO, "Client no. {0} connected!", clientsConnected);
                     new Thread(new Runnable() {
                         public void run() {
-                            StartupController(server);
+                            startupController(server);
                         }
                     }).start();
                 } catch (SocketTimeoutException e) {
                     //SWALLOW EXCEPTION
+                    mainActivity.logMessage("SocketTimeoutException");
                 }
             }
         } catch (IOException e) {
@@ -88,57 +111,60 @@ public class MainController {
         }
     }
 
-    private void StartServer() {
-        new Thread(new Runnable() {
-            public void run() {
-                ServerLoop();
-            }
-        }).start();
+    private RegisterChunk readRegisterChunk(InputStream inputStream) throws IOException {
+        DataInputStream dataInputStream = new DataInputStream(inputStream);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+        byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        dataInputStream.read(byteBuffer.array());
+        int clientType = byteBuffer.getInt();
+        return new RegisterChunk(clientType);
     }
 
-    public void UpdateClocks(int remainingSeconds) {
-        for (int i = 0; i < controllers.size(); ++i) {
-            Controller controller = controllers.get(i);
-            if (controller instanceof ClockController) {
-                mainActivity.LogMessage("Setting clock!");
-                ((ClockController)controller).Send(remainingSeconds);
+    private void startupController(Socket server) {
+        LOGGER.entering(this.getClass().getName(), "startupController");
+        try {
+            RegisterChunk registerChunk = readRegisterChunk(server.getInputStream());
+            Controller controller = null;
+            switch (registerChunk.getType()) {
+                case SEMAPHORE_CLIENT:
+                    mainActivity.logMessage("Semaphore connected!");
+                    controller = new SemaphoreController(server);
+                    break;
+                case CLOCK_CLIENT:
+                    mainActivity.logMessage("Clock connected!");
+                    controller = new ClockController(server);
+                    break;
+                case SIREN_CLIENT:
+                    mainActivity.logMessage("Siren connected!");
+                    controller = new SirenController(server);
+                    break;
+                default:
+                    mainActivity.logMessage(String.format("Unknown client connected! (clientType=%1$d)", registerChunk.getType()));
             }
+            if (controller != null) {
+                LOGGER.info("run()");
+                controllers.add(controller);
+                controller.run();
+                controllers.remove(controller);
+                mainActivity.logMessage("Client disconnected!");
+                LOGGER.log(Level.INFO, "Client disconnected!");
+            } else {
+                LOGGER.log(Level.SEVERE, "Unknown client!");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
-    public MainActivity GetMainActivity() {
-        return mainActivity;
+    private class RegisterChunk {
+        int type;
+
+        RegisterChunk(int type) {
+            this.type = type;
+        }
+
+        public int getType() {
+            return type;
+        }
     }
-
-    /*
-if(wifiManager.isWifiEnabled())
-{
-    wifiManager.setWifiEnabled(false);
-}
-
-WifiConfiguration netConfig = new WifiConfiguration();
-
-netConfig.SSID = "MyAP";
-netConfig.allowedAuthAlgorithms.set(WifiConfiguration.AuthAlgorithm.OPEN);
-netConfig.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-netConfig.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-netConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-
-try{
-    Method setWifiApMethod = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
-    boolean apstatus=(Boolean) setWifiApMethod.invoke(wifiManager, netConfig,true);
-
-    Method isWifiApEnabledmethod = wifiManager.getClass().getMethod("isWifiApEnabled");
-    while(!(Boolean)isWifiApEnabledmethod.invoke(wifiManager)){};
-    Method getWifiApStateMethod = wifiManager.getClass().getMethod("getWifiApState");
-    int apstate=(Integer)getWifiApStateMethod.invoke(wifiManager);
-    Method getWifiApConfigurationMethod = wifiManager.getClass().getMethod("getWifiApConfiguration");
-    netConfig=(WifiConfiguration)getWifiApConfigurationMethod.invoke(wifiManager);
-    Log.e("CLIENT", "\nSSID:"+netConfig.SSID+"\nPassword:"+netConfig.preSharedKey+"\n");
-
-} catch (Exception e) {
-    Log.e(this.getClass().toString(), "", e);
-}
-     */
-
 }
