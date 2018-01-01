@@ -13,13 +13,15 @@ import android.widget.TextView;
 
 import com.vajsoft.semaforky.R;
 import com.vajsoft.semaforky.data.Settings;
+import com.vajsoft.semaforky.utils.HotspotManager;
 
-/**
- * Setting activity/dialog.
- */
+import java.util.logging.Logger;
+
+/** Setting activity/dialog. */
 public class SettingsActivity extends AppCompatActivity {
 
-    static final int SETTINGS_UPDATED = 1;
+    public static final int SETTINGS_UPDATED = 1;
+    private static final Logger LOGGER = Logger.getLogger(HotspotManager.class.getName());
     private Settings settings;
 
     public SettingsActivity() {
@@ -30,6 +32,22 @@ public class SettingsActivity extends AppCompatActivity {
         finish();
     }
 
+    public void onOkClicked(View view) {
+        if (validateTime()) {
+            updateDataFromGui();
+            setResult(SETTINGS_UPDATED, null);
+            settings.saveSetting(getApplicationContext());
+            finish();
+        }
+    }
+
+    public void showMessageBox(String message) {
+        LOGGER.info("showMessageBox: " + message);
+        getDialogBuilder().setTitle(getResources().getString(R.string.warningTitle))
+                .setMessage(message)
+                .show();
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,22 +56,13 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void updateGuiFromData() {
-        ((Spinner) findViewById(R.id.spinnerLanguage)).setSelection(settings.GetLanguage());
-        ((Spinner) findViewById(R.id.spinnerLineRotation)).setSelection(settings.GetLinesRotation().ordinal());
-        ((TextView) findViewById(R.id.editLines)).setText(Integer.toString(settings.GetLines()));
-        ((TextView) findViewById(R.id.editRounds)).setText(Integer.toString(settings.GetRoundSets()));
-        ((TextView) findViewById(R.id.editSetTime)).setText(Integer.toString(settings.GetSetTime()));
-        ((TextView) findViewById(R.id.editPreparationTime)).setText(Integer.toString(settings.GetPreparationTimeTime()));
-        ((TextView) findViewById(R.id.editWarningTime)).setText(Integer.toString(settings.GetWarningTimeTime()));
-    }
-
-    public void onOkClicked(View view) {
-        if (validateTime()) {
-            updateDataFromGui();
-            setResult(SETTINGS_UPDATED, null);
-            settings.SaveSetting(getApplicationContext());
-            finish();
-        }
+        ((Spinner) findViewById(R.id.spinnerLanguage)).setSelection(settings.getLanguage());
+        ((Spinner) findViewById(R.id.spinnerLineRotation)).setSelection(settings.getLinesRotation().ordinal());
+        ((TextView) findViewById(R.id.editLines)).setText(Integer.toString(settings.getLines()));
+        ((TextView) findViewById(R.id.editRounds)).setText(Integer.toString(settings.getRoundSets()));
+        ((TextView) findViewById(R.id.editSetTime)).setText(Integer.toString(settings.getSetTime()));
+        ((TextView) findViewById(R.id.editPreparationTime)).setText(Integer.toString(settings.getPreparationTimeTime()));
+        ((TextView) findViewById(R.id.editWarningTime)).setText(Integer.toString(settings.getWarningTimeTime()));
     }
 
     private boolean validateTime() {
@@ -69,13 +78,13 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void updateDataFromGui() {
-        settings.SetLanguage(((Spinner) findViewById(R.id.spinnerLanguage)).getSelectedItemPosition());
-        settings.SetLinesRotation(Settings.LinesRotation.values()[((Spinner) findViewById(R.id.spinnerLineRotation)).getSelectedItemPosition()]);
-        settings.SetLines(getLinesFromGui());
-        settings.SetRoundSets(Integer.parseInt(((TextView) findViewById(R.id.editRounds)).getText().toString()));
-        settings.SetSetTime(getSetTimeFromGui());
-        settings.SetPreparationTimeTime(getPreparationTimeFromGui());
-        settings.SetWarningTimeTime(getWarningTimeFromGui());
+        settings.setLanguage(((Spinner) findViewById(R.id.spinnerLanguage)).getSelectedItemPosition());
+        settings.setLinesRotation(Settings.LinesRotation.values()[((Spinner) findViewById(R.id.spinnerLineRotation)).getSelectedItemPosition()]);
+        settings.setLines(getLinesFromGui());
+        settings.setRoundSets(Integer.parseInt(((TextView) findViewById(R.id.editRounds)).getText().toString()));
+        settings.setSetTime(getSetTimeFromGui());
+        settings.setPreparationTimeTime(getPreparationTimeFromGui());
+        settings.setWarningTimeTime(getWarningTimeFromGui());
     }
 
     private int getWarningTimeFromGui() {
@@ -84,12 +93,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     private int getSetTimeFromGui() {
         return Integer.parseInt(((TextView) findViewById(R.id.editSetTime)).getText().toString());
-    }
-
-    public void showMessageBox(String message) {
-        getDialogBuilder().setTitle(getResources().getString(R.string.warningTitle))
-                .setMessage(message)
-                .show();
     }
 
     private int getLinesFromGui() {

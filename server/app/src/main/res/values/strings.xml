@@ -18,6 +18,7 @@
     <string name="warningTitle">Warning</string>
     <string name="warningTimeInvalid">Warning time is longer then set time!</string>
     <string name="lineCountInvalid">More than two lines not supported!</string>
+    <string name="wifiAp">Wifi AP</string>
     <string-array name="languages_array">
         <item>English</item>
         <item>Česky</item>

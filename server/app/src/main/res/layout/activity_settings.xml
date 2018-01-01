@@ -191,6 +191,20 @@
 
             </LinearLayout>
         </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_span="2">
+
+            </LinearLayout>
+
+        </TableRow>
     </TableLayout>
 
 </RelativeLayout>

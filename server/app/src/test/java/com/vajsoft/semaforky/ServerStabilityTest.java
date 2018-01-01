@@ -7,6 +7,7 @@ import com.vajsoft.semaforky.activities.MainActivity;
 import com.vajsoft.semaforky.controllers.MainController;
 
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -20,12 +21,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.logging.Logger;
 
+@Ignore
 public class ServerStabilityTest {
     private static final Logger LOGGER = Logger.getLogger(ServerStabilityTest.class.getName());
 
     @Test
     public void serverWorkingTest() throws Exception {
-        MainController mainController = new MainController(Mockito.mock(MainActivity.class));
+        MainController mainController = new MainController(Mockito.mock(Semaforky.class));
         sync();
         runClient(1);
         sync();
@@ -34,7 +36,7 @@ public class ServerStabilityTest {
 
     @Test
     public void serverStabilityTest() throws Exception {
-        MainController mainController = new MainController(Mockito.mock(MainActivity.class));
+        MainController mainController = new MainController(Mockito.mock(Semaforky.class));
         sync();
 
         // connect first client

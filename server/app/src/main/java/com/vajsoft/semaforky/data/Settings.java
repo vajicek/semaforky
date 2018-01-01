@@ -14,9 +14,10 @@ import java.io.Serializable;
 public class Settings implements Serializable {
 
     public static String PREFS_NAME = "semaforkySettings";
+    public static final String SEMAFORKY_ESSID = "semaforky";
+    public static final String SEMAFORKY_PASSWORD = "semaforky";
     private static Settings instance = null;
 
-    ;
     private int language = 0;
     private int roundSets = 10;
     private int setTime = 120;
@@ -34,15 +35,15 @@ public class Settings implements Serializable {
         return instance;
     }
 
-    public int GetLines() {
+    public int getLines() {
         return lines;
     }
 
-    public int GetLanguage() {
+    public int getLanguage() {
         return language;
     }
 
-    public String GetLanguageCode() {
+    public String getLanguageCode() {
         switch (language) {
             case 1:
                 return "cs";
@@ -51,27 +52,27 @@ public class Settings implements Serializable {
         }
     }
 
-    public LinesRotation GetLinesRotation() {
+    public LinesRotation getLinesRotation() {
         return linesRotation;
     }
 
-    public int GetRoundSets() {
+    public int getRoundSets() {
         return roundSets;
     }
 
-    public int GetSetTime() {
+    public int getSetTime() {
         return setTime;
     }
 
-    public int GetPreparationTimeTime() {
+    public int getPreparationTimeTime() {
         return preparationTime;
     }
 
-    public int GetWarningTimeTime() {
+    public int getWarningTimeTime() {
         return warningTime;
     }
 
-    public void LoadSetting(Context applicationContext) {
+    public void loadSetting(Context applicationContext) {
         SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, 0);
         language = settings.getInt("homeScore", language);
         ;
@@ -88,7 +89,7 @@ public class Settings implements Serializable {
         linesRotation = LinesRotation.values()[settings.getInt("linesRotation", linesRotation.ordinal())];
     }
 
-    public void SaveSetting(Context applicationContext) {
+    public void saveSetting(Context applicationContext) {
         SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, 0);
         SharedPreferences.Editor editor = settings.edit();
         editor.putInt("language", language);
@@ -101,31 +102,31 @@ public class Settings implements Serializable {
         editor.apply();
     }
 
-    public void SetLinesRotation(LinesRotation linesRotation) {
+    public void setLinesRotation(LinesRotation linesRotation) {
         this.linesRotation = linesRotation;
     }
 
-    public void SetLanguage(int selectedLanguageNo) {
+    public void setLanguage(int selectedLanguageNo) {
         language = selectedLanguageNo;
     }
 
-    public void SetLines(int lines) {
+    public void setLines(int lines) {
         this.lines = lines;
     }
 
-    public void SetRoundSets(int roundSets) {
+    public void setRoundSets(int roundSets) {
         this.roundSets = roundSets;
     }
 
-    public void SetSetTime(int setTime) {
+    public void setSetTime(int setTime) {
         this.setTime = setTime;
     }
 
-    public void SetPreparationTimeTime(int preparationTime) {
+    public void setPreparationTimeTime(int preparationTime) {
         this.preparationTime = preparationTime;
     }
 
-    public void SetWarningTimeTime(int warningTime) {
+    public void setWarningTimeTime(int warningTime) {
         this.warningTime = warningTime;
     }
 

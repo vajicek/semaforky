@@ -3,6 +3,7 @@ package com.vajsoft.semaforky.controllers;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.activities.MainActivity;
 
 import java.io.DataInputStream;
@@ -27,12 +28,12 @@ public class MainController {
     public static final int SIREN_CLIENT = 3;
     public static final int SERVER_PORT = 8888;
     private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
-    private MainActivity mainActivity;
+    private Semaforky semaforky;
     private ServerSocket serverSocket;
     private ArrayList<Controller> controllers = new ArrayList<Controller>();
 
-    public MainController(MainActivity mainActivity) {
-        this.mainActivity = mainActivity;
+    public MainController(Semaforky semaforky) {
+        this.semaforky = semaforky;
         startServer();
     }
 
@@ -44,7 +45,7 @@ public class MainController {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof ClockController) {
-                mainActivity.logMessage("Setting clock!");
+                semaforky.logMessage("Setting clock!");
                 controller.send(remainingSeconds);
             }
         }
@@ -54,26 +55,26 @@ public class MainController {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof SemaphoreController) {
-                mainActivity.logMessage("Setting semaphore state!");
+                semaforky.logMessage("Setting semaphore state!");
                 controller.send(state);
             }
         }
     }
 
     public void playSiren(int count) {
-        mainActivity.getSoundManager().Play("buzzer", count);
+        semaforky.getSoundManager().Play("buzzer", count);
 
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof SirenController) {
-                mainActivity.logMessage("Play siren!");
+                semaforky.logMessage("Play siren!");
                 controller.send(count);
             }
         }
     }
 
-    public MainActivity getMainActivity() {
-        return mainActivity;
+    public Semaforky getSemaforky() {
+        return semaforky;
     }
 
     private void startServer() {
@@ -89,7 +90,7 @@ public class MainController {
         LOGGER.entering(this.getClass().getName(), "serverLoop");
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
-            mainActivity.logMessage("IP: " + serverSocket.getLocalSocketAddress().toString());
+            semaforky.logMessage("IP: " + serverSocket.getLocalSocketAddress().toString());
             int clientsConnected = 0;
             while (true) {
                 try {
@@ -103,7 +104,7 @@ public class MainController {
                     }).start();
                 } catch (SocketTimeoutException e) {
                     //SWALLOW EXCEPTION
-                    mainActivity.logMessage("SocketTimeoutException");
+                    semaforky.logMessage("SocketTimeoutException");
                 }
             }
         } catch (IOException e) {
@@ -127,26 +128,26 @@ public class MainController {
             Controller controller = null;
             switch (registerChunk.getType()) {
                 case SEMAPHORE_CLIENT:
-                    mainActivity.logMessage("Semaphore connected!");
+                    semaforky.logMessage("Semaphore connected!");
                     controller = new SemaphoreController(server);
                     break;
                 case CLOCK_CLIENT:
-                    mainActivity.logMessage("Clock connected!");
+                    semaforky.logMessage("Clock connected!");
                     controller = new ClockController(server);
                     break;
                 case SIREN_CLIENT:
-                    mainActivity.logMessage("Siren connected!");
+                    semaforky.logMessage("Siren connected!");
                     controller = new SirenController(server);
                     break;
                 default:
-                    mainActivity.logMessage(String.format("Unknown client connected! (clientType=%1$d)", registerChunk.getType()));
+                    semaforky.logMessage(String.format("Unknown client connected! (clientType=%1$d)", registerChunk.getType()));
             }
             if (controller != null) {
                 LOGGER.info("run()");
                 controllers.add(controller);
                 controller.run();
                 controllers.remove(controller);
-                mainActivity.logMessage("Client disconnected!");
+                semaforky.logMessage("Client disconnected!");
                 LOGGER.log(Level.INFO, "Client disconnected!");
             } else {
                 LOGGER.log(Level.SEVERE, "Unknown client!");
