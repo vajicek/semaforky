@@ -80,6 +80,7 @@ public:
 
 /// 0-9 digit to data byte mapping.
 byte digit_to_data[] = {
+  64,  //-
   0,   //blank
   63,  //0
   6,
@@ -118,10 +119,10 @@ public:
     i2c_start();
     i2c_address(0x70);
     i2c_write(1); // instruction byte + autonicrement
-    i2c_write(digit_to_data[p1 + 1]);
-    i2c_write(digit_to_data[p2 + 1]);
-    i2c_write(digit_to_data[p3 + 1]);
-    i2c_write(digit_to_data[p4 + 1]);
+    i2c_write(digit_to_data[p1 + 2]);
+    i2c_write(digit_to_data[p2 + 2]);
+    i2c_write(digit_to_data[p3 + 2]);
+    i2c_write(digit_to_data[p4 + 2]);
     i2c_stop();
   }
 };

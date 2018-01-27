@@ -17,6 +17,6 @@ mklink /D semaforky_common semaforky_github\client\semaforky_common
 ON LINUX:
 ---------
 cd Arduino\libraries
-ln -s semaforky_common semaforky_github/client/semaforky_common
+ln -s semaforky_github/client/semaforky_common
 
 +restart Arduino Studio

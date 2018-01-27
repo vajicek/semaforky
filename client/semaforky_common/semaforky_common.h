@@ -10,6 +10,10 @@ const int SEMAPHORE_CLIENT = 1;
 const int CLOCK_CLIENT = 2;
 const int SIREN_CLIENT = 3;
 
+// Wemos D1 mini - common pins
+#define POWER_ON_PIN 0
+#define CONNECTED_PIN 4
+
 /// data chunk
 struct ControlChunk {
   int light;
@@ -36,7 +40,7 @@ struct Process {
   virtual void OnConnect();
 
   /// disconnect
-  void Disconnect();
+  virtual void Disconnect();
 
   /// non blocking processing of states
   void Execute();
@@ -151,9 +155,9 @@ void SemaphoreProcess::Init() {
 struct ClockProcess : public Process {
   const static int digit_count = 4;
   const static int segment_count = 7;
-  int segment_pin[7] = {2,4,5,12,13,14,15};
+  int segment_pin[7] = {2, 4, 5, 12, 13, 14, 15};
   int digit_pin[digit_count] = {3, 1, 16, 0};
-  bool digit_configuration[11][7] = {
+  bool digit_configuration[12][7] = {
     {true, true, true, true, true, true, false},      //0
     {false, true, true, false, false, false, false},  //1
     {true, true, false, true, true, false, true},
@@ -164,7 +168,8 @@ struct ClockProcess : public Process {
     {true, true, true, false, false, false, false},   //7
     {true, true, true, true, true, true, true},       //8
     {true, true, true, true, false, true, true},      //9
-    {false, false, false, false, false, false, false} //off
+    {false, false, false, false, false, false, false},//off
+    {false, false, false, false, false, false, true}  //-
   };
   virtual void Init();
   virtual void SetLights();
@@ -179,7 +184,9 @@ void ClockProcess::OnConnect() {
 void ComputeDigits(int* digits, int digit_count, int value) {
   int divider = 1;
   for (int i = 0; i < digit_count; i++) {
-    if (value / divider == 0) {
+    if (value / divider == 0 && divider > 1) {
+      // value is lower than order represented by i-th digit
+      // does not apply for 1st order, i.e. if value=0
       digits[digit_count - i - 1] = - 1;
     } else {
       digits[digit_count - i - 1] = (value / divider) % 10;
@@ -236,12 +243,26 @@ void SAA1064ClockProcess::OnConnect() {
 }
 
 void SAA1064ClockProcess::SetLights() {
-  int digits[4];
-  ComputeDigits(digits, digit_count, last_chunk.status);
-  saa1064.digits(digits[1], digits[2], digits[3], -1);
+  digitalWrite(CONNECTED_PIN, is_connected ? HIGH : LOW);
+
+  if (last_chunk.status == -1) {
+    saa1064.digits(-2, -2, -2, -1);
+  } else {
+    int digits[4];
+    ComputeDigits(digits, digit_count, last_chunk.status);
+    saa1064.digits(digits[1], digits[2], digits[3], -1);
+  }
 }
 
 void SAA1064ClockProcess::Init() {
+  // setup common pins
+  pinMode(CONNECTED_PIN, OUTPUT);
+  pinMode(POWER_ON_PIN, OUTPUT);
+
+  // power on
+  digitalWrite(POWER_ON_PIN, HIGH);
+  digitalWrite(CONNECTED_PIN, LOW);
+
   Process::Init();
 }
 
