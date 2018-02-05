@@ -19,8 +19,12 @@
     <string name="warningTitle">Varování</string>
     <string name="warningTimeInvalid">Pozor! Ćas varování je delší než čas sady!</string>
     <string name="lineCountInvalid">Víc než dvě řady nejsou podporovány!</string>
-    <string name="lineRotation">Točení řad</string>
     <string name="wifiAp">Wifi AP</string>
+    <string-array name="languages_array">
+        <item>English</item>
+        <item>Česky</item>
+    </string-array>
+    <string name="lineRotation">Točení řad</string>
     <string-array name="line_rotation_array">
         <item>Netočit řady</item>
         <item>Točení řad</item>
