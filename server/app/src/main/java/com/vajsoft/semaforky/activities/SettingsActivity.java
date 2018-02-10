@@ -8,6 +8,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.widget.CheckBox;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -63,6 +64,8 @@ public class SettingsActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.editSetTime)).setText(Integer.toString(settings.getSetTime()));
         ((TextView) findViewById(R.id.editPreparationTime)).setText(Integer.toString(settings.getPreparationTimeTime()));
         ((TextView) findViewById(R.id.editWarningTime)).setText(Integer.toString(settings.getWarningTimeTime()));
+        ((CheckBox) findViewById(R.id.cbContinuous)).setChecked(settings.getContinuous());
+        ((TextView) findViewById(R.id.editNumberOfSets)).setText(Integer.toString(settings.getNumberOfSets()));
     }
 
     private boolean validateTime() {
@@ -85,6 +88,8 @@ public class SettingsActivity extends AppCompatActivity {
         settings.setSetTime(getSetTimeFromGui());
         settings.setPreparationTimeTime(getPreparationTimeFromGui());
         settings.setWarningTimeTime(getWarningTimeFromGui());
+        settings.setContinuous(getContinuousFromGui());
+        settings.setNumberOfSets(getNumberOfSetsGui());
     }
 
     private int getWarningTimeFromGui() {
@@ -93,6 +98,14 @@ public class SettingsActivity extends AppCompatActivity {
 
     private int getSetTimeFromGui() {
         return Integer.parseInt(((TextView) findViewById(R.id.editSetTime)).getText().toString());
+    }
+
+    private int getNumberOfSetsGui() {
+        return Integer.parseInt(((TextView) findViewById(R.id.editNumberOfSets)).getText().toString());
+    }
+
+    private boolean getContinuousFromGui() {
+        return ((CheckBox) findViewById(R.id.cbContinuous)).isChecked();
     }
 
     private int getLinesFromGui() {

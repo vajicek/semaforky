@@ -20,6 +20,8 @@
     <string name="warningTimeInvalid">Pozor! Ćas varování je delší než čas sady!</string>
     <string name="lineCountInvalid">Víc než dvě řady nejsou podporovány!</string>
     <string name="wifiAp">Wifi AP</string>
+    <string name="autoSet">Automat</string>
+    <string name="numberOfSets">Počet sad</string>
     <string-array name="languages_array">
         <item>English</item>
         <item>Česky</item>

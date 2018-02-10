@@ -24,6 +24,8 @@ public class Settings implements Serializable {
     private int preparationTime = 10;
     private int warningTime = 30;
     private int lines = 1;
+    private boolean continuous = false;
+    private int numberOfSets = 10;
     private LinesRotation linesRotation = LinesRotation.SIMPLE;
     protected Settings() {
     }
@@ -75,18 +77,14 @@ public class Settings implements Serializable {
     public void loadSetting(Context applicationContext) {
         SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, 0);
         language = settings.getInt("homeScore", language);
-        ;
         roundSets = settings.getInt("roundSets", roundSets);
-        ;
         setTime = settings.getInt("setTime", setTime);
-        ;
         preparationTime = settings.getInt("preparationTime", preparationTime);
-        ;
         warningTime = settings.getInt("warningTime", warningTime);
-        ;
         lines = settings.getInt("lines", lines);
-        ;
         linesRotation = LinesRotation.values()[settings.getInt("linesRotation", linesRotation.ordinal())];
+        numberOfSets = settings.getInt("numberOfSets", numberOfSets);
+        continuous = settings.getBoolean("continuous", continuous);
     }
 
     public void saveSetting(Context applicationContext) {
@@ -99,6 +97,8 @@ public class Settings implements Serializable {
         editor.putInt("warningTime", warningTime);
         editor.putInt("lines", lines);
         editor.putInt("linesRotation", linesRotation.ordinal());
+        editor.putBoolean("continuous", continuous);
+        editor.putInt("numberOfSets", numberOfSets);
         editor.apply();
     }
 
@@ -134,4 +134,16 @@ public class Settings implements Serializable {
         SIMPLE,
         ALTERNATING
     }
+
+    public boolean getContinuous() {
+        return continuous;
+    }
+
+    public void setContinuous(boolean continuous) {
+        this.continuous = continuous;
+    }
+
+    public int getNumberOfSets() { return numberOfSets; }
+
+    public void setNumberOfSets(int numberOfSets) { this.numberOfSets = numberOfSets; }
 }

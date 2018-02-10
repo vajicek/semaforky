@@ -5,21 +5,16 @@ package com.vajsoft.semaforky.activities;
 
 import android.content.Intent;
 import android.content.res.Configuration;
-import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Switch;
 import android.widget.TextView;
 
-import com.google.android.gms.appindexing.Action;
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.appindexing.Thing;
-import com.google.android.gms.common.api.GoogleApiClient;
 import com.vajsoft.semaforky.R;
 import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.controllers.MainController;
@@ -43,11 +38,6 @@ public class MainActivity extends AppCompatActivity {
     private Settings settings;
     private SemaforkyMachine machine;
     private MainController mainController;
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API. See
-     * https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    private GoogleApiClient client;
 
     public void updateRoundClocks(final Date roundStart) {
         runOnUiThread(new Runnable() {
@@ -96,8 +86,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onSettingsClick(View view) {
         machine.moveTo(SemaforkyState.SETTINGS);
-        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-        startActivityForResult(intent, 0);
+        startActivityForResult(new Intent(getApplicationContext(), SettingsActivity.class), 0);
     }
 
     public void onWifiApSwitchClick(View view) throws HotspotManager.HotspotManagerException {
@@ -110,10 +99,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateGui() {
+        Log.d(MainActivity.class.getName(), "updateGui() called");
         runOnUiThread(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.ICE_CREAM_SANDWICH)
             @Override
             public void run() {
+                Log.d(MainActivity.class.getName(), "updateGui().run() called");
                 updateSet();
 
                 ((Button) findViewById(R.id.btnBeginRound)).setEnabled(
@@ -134,8 +124,11 @@ public class MainActivity extends AppCompatActivity {
                         machine.getCurrenState().name.equals(SemaforkyState.READY) ||
                                 machine.getCurrenState().name.equals(SemaforkyState.FIRE) ||
                                 machine.getCurrenState().name.equals(SemaforkyState.WARNING));
-                ((Switch) findViewById(R.id.switchWifiAp)).
-                        setChecked(new HotspotManager(getApplicationContext()).isApOn(Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD));
+                ((Button) findViewById(R.id.btnSettings)).setEnabled(
+                        machine.getCurrenState().name.equals(SemaforkyState.ROUND_STOPPED) ||
+                                machine.getCurrenState().name.equals(SemaforkyState.STARTED));
+                ((Switch) findViewById(R.id.switchWifiAp)).setChecked(
+                        new HotspotManager(getApplicationContext()).isApOn(Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD));
 
                 if (machine.getCurrenState().name.equals(SemaforkyState.READY)) {
                     setSemaphore(SemaphoreWidget.SemaphoreLight.RED);
@@ -150,44 +143,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API. See
-     * https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    public Action getIndexApiAction() {
-        Thing object = new Thing.Builder()
-                .setName("Main Page") // TODO: Define a title for the content shown.
-                // TODO: Make sure this auto-generated URL is correct.
-                .setUrl(Uri.parse("http://[ENTER-YOUR-URL-HERE]"))
-                .build();
-        return new Action.Builder(Action.TYPE_VIEW)
-                .setObject(object)
-                .setActionStatus(Action.STATUS_TYPE_COMPLETED)
-                .build();
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client.connect();
-        AppIndex.AppIndexApi.start(client, getIndexApiAction());
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        AppIndex.AppIndexApi.end(client, getIndexApiAction());
-        client.disconnect();
-    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        machine.moveTo(SemaforkyState.STARTED);
         if (resultCode == SettingsActivity.SETTINGS_UPDATED) {
             finish();
             startActivity(getIntent());
@@ -208,10 +166,8 @@ public class MainActivity extends AppCompatActivity {
         updateLocale();
         setContentView(R.layout.activity_main);
         semaphoreWidget = new SemaphoreWidget((SurfaceView) findViewById(R.id.svSemaphore));
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         updateGui();
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
     }
 
     private void updateLocale() {

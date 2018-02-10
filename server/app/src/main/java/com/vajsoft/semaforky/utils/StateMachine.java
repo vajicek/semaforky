@@ -20,16 +20,18 @@ public class StateMachine<T> {
 
     public void setCurrent(State<T> state) {
         assert (states.contains(state));
+        Log.d(StateMachine.class.getName(), "setCurrent(" + state.name.toString() + ")");
         currentState = state;
     }
 
     public State getCurrenState() {
+        Log.d(StateMachine.class.getName(), "getCurrenState() = " + currentState.name.toString());
         return currentState;
     }
 
     public boolean moveTo(T stateName) {
         if (!Arrays.asList(currentState.next).contains(stateName)) {
-            Log.d("Failed to change state from " + currentState.name + " to " + stateName, "");
+            Log.d(StateMachine.class.getName(), "Failed to change state from " + currentState.name + " to " + stateName);
             return false;
         }
         State<T> state = SearchArray.findFirst(states, stateName,
@@ -41,7 +43,7 @@ public class StateMachine<T> {
         );
         if (state != null) {
             State previousState = currentState;
-            currentState = state;
+            setCurrent(state);
             state.run(previousState);
             return true;
         }

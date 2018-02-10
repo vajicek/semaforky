@@ -3,6 +3,9 @@ package com.vajsoft.semaforky.controllers;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import android.content.Context;
+import android.os.PowerManager;
+
 import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.scheduler.Scheduler;
@@ -68,18 +71,29 @@ public class SemaforkyMachine extends StateMachine {
             @Override
             public void run(State previous) {
                 semaforky.getScheduler().StopSet();
+
                 if ((currentLine + 1) < Settings.getInstance().getLines()) {
+                    // if number of line is higher than current line, increase line
                     currentLine++;
                 } else {
+                    // otherwise, increase set
                     currentSet++;
                     currentLine = 0;
                 }
                 semaforky.getMainActivity().updateGui();
 
+                // if number of line was increased from zero, go on
                 if (currentLine > 0) {
                     moveTo(SET_STARTED);
                 } else {
                     semaforky.getMainController().playSiren(3);
+                    if(Settings.getInstance().getContinuous()) {
+                        if (currentSet <= Settings.getInstance().getNumberOfSets()) {
+                            moveTo(SET_STARTED);
+                        } else {
+                            moveTo(ROUND_STOPPED);
+                        }
+                    }
                 }
             }
         });
