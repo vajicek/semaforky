@@ -5,6 +5,7 @@ package com.vajsoft.semaforky.activities;
 
 import android.content.Intent;
 import android.content.res.Configuration;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -90,6 +91,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void onWifiApSwitchClick(View view) throws HotspotManager.HotspotManagerException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!android.provider.Settings.System.canWrite(getApplicationContext())) {
+                // if settings write is not enabled, it must be enabled manually by the user in a different activity
+                // NOTE(vajicek): this appeared to be a problem since Android 6.0
+                startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS));
+                ((Switch) findViewById(R.id.switchWifiAp)).setChecked(false);
+                return;
+            }
+        }
+        // else wifi can be controlled directly
         HotspotManager hotspotManager = new HotspotManager(getApplicationContext());
         if (((Switch) findViewById(R.id.switchWifiAp)).isChecked()) {
             hotspotManager.configApState(true, Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD);
