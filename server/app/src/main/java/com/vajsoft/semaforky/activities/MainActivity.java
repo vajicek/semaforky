@@ -13,9 +13,11 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.vajsoft.semaforky.BuildConfig;
 import com.vajsoft.semaforky.R;
 import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.controllers.MainController;
@@ -178,6 +180,9 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         semaphoreWidget = new SemaphoreWidget((SurfaceView) findViewById(R.id.svSemaphore));
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+
+        setTitle(getString(R.string.app_name_build, BuildConfig.GitHash));
+
         updateGui();
     }
 
