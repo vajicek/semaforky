@@ -11,14 +11,14 @@ def getGitHash = { ->
 }
 
 android {
-    //signingConfigs {
-    //    config {
-    //        keyAlias 'semaforky'
-    //        keyPassword 'semaforky'
-    //        storeFile file('/home/vajicek/Android/keystore.jks')
-    //        storePassword 'semaforky'
-    //    }
-    //}
+    signingConfigs {
+        config {
+            keyAlias 'semaforky'
+            keyPassword 'semaforky'
+            storeFile file("${System.properties['user.home']}/Android/keystore.jks")
+            storePassword 'semaforky'
+        }
+    }
     compileSdkVersion 24
     buildToolsVersion '25.0.0'
     defaultConfig {
@@ -35,6 +35,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
+        }
+        debug {
+            signingConfig signingConfigs.config
         }
     }
 }
