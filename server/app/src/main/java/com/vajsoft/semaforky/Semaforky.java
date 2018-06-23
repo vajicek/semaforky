@@ -34,12 +34,12 @@ public class Semaforky extends Application {
         mainController = new MainController(this);
         scheduler = new Scheduler(this);
         machine = new SemaforkyMachine(this, settings);
-        soundManager = new SoundManager(getApplicationContext());
     }
 
     @Override
     public void onCreate() {
         super.onCreate();
+        soundManager = new SoundManager(getApplicationContext());
         settings.loadSetting(getApplicationContext());
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
