@@ -60,7 +60,7 @@ public class Scheduler {
         CancelSetEvents();
         Date now = new Date();
 
-        Settings settings = Settings.getInstance();
+        Settings settings = semaforky.getSettings();
         SemaforkyMachine machine = semaforky.getMachine();
 
         AddEvent(new SemaphoreEvent(now,

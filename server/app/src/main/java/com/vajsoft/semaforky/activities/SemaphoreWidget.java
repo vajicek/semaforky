@@ -12,16 +12,36 @@ import android.view.SurfaceView;
 /** Wrapper for SurfaceView which is responsible for plotting semaphore lights. */
 public class SemaphoreWidget implements SurfaceHolder.Callback {
 
+    public enum SemaphoreLight {
+        NONE,
+        RED,
+        GREEN,
+        YELLOW
+    }
     private SurfaceView target;
     private SemaphoreLight light = SemaphoreLight.NONE;
 
-    public SemaphoreWidget(SurfaceView t) {
-        target = t;
-        t.getHolder().addCallback(this);
+    public SemaphoreWidget(SurfaceView target) {
+        this.target = target;
+        this.target.getHolder().addCallback(this);
     }
 
     @Override
     public void surfaceCreated(SurfaceHolder holder) {
+        redrawSemaphore();
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        redrawSemaphore();
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+    }
+
+    public void updateStatus(SemaphoreLight newStatus) {
+        light = newStatus;
         redrawSemaphore();
     }
 
@@ -47,26 +67,5 @@ public class SemaphoreWidget implements SurfaceHolder.Callback {
             c.drawCircle(circle_radius + i * circle_diameter, h / 2.0f, circle_radius, paint);
         }
         holder.unlockCanvasAndPost(c);
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-        redrawSemaphore();
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-    }
-
-    public void updateStatus(SemaphoreLight newStatus) {
-        light = newStatus;
-        redrawSemaphore();
-    }
-
-    public enum SemaphoreLight {
-        NONE,
-        RED,
-        GREEN,
-        YELLOW
     }
 }

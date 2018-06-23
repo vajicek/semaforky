@@ -26,24 +26,6 @@ public class SoundManager {
     }
 
     /**
-     * Initialized sample list and also initialized loading.
-     */
-    private void Init(Context context) {
-        sounds.put("buzzer", new SoundEffect(R.raw.buzzer, -1));
-
-        for (Map.Entry<String, SoundEffect> entry : sounds.entrySet()) {
-            entry.getValue().sampleId = soundPool.load(context, R.raw.buzzer, 1);
-        }
-
-        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
-            @Override
-            public void onLoadComplete(SoundPool soundPool, final int sampleId, int status) {
-                FindBySampleId(sounds.values(), sampleId).loaded = true;
-            }
-        });
-    }
-
-    /**
      * Find sample by sound id.
      */
     public static SoundEffect FindBySampleId(Collection<SoundEffect> collection, int sampleId) {
@@ -71,6 +53,24 @@ public class SoundManager {
                 soundPool.play(soundEffect.sampleId, 1, 1, 1, loop - 1, 2);
             }
         }
+    }
+
+    /**
+     * Initialized sample list and also initialized loading.
+     */
+    private void Init(Context context) {
+        sounds.put("buzzer", new SoundEffect(R.raw.buzzer, -1));
+
+        for (Map.Entry<String, SoundEffect> entry : sounds.entrySet()) {
+            entry.getValue().sampleId = soundPool.load(context, R.raw.buzzer, 1);
+        }
+
+        soundPool.setOnLoadCompleteListener(new SoundPool.OnLoadCompleteListener() {
+            @Override
+            public void onLoadComplete(SoundPool soundPool, final int sampleId, int status) {
+                FindBySampleId(sounds.values(), sampleId).loaded = true;
+            }
+        });
     }
 
     /**

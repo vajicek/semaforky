@@ -24,7 +24,7 @@ android {
     defaultConfig {
         applicationId "com.vajsoft.semaforky"
         minSdkVersion 14
-        targetSdkVersion 24
+        targetSdkVersion 14
         versionCode 1
         versionName "1.0"
         // Add git hash variable to generated file with build config

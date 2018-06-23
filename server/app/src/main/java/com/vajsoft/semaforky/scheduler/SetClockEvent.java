@@ -13,13 +13,13 @@ import java.util.Date;
 
 /** Set Clock event. Sets GUI and device controllers values. */
 class SetClockEvent extends Event {
-    private Settings settings;
     private Semaforky semaforky;
+    private Settings settings;
     private Date setStart;
 
     SetClockEvent(Date time, Date start, Semaforky semaforky) {
         super(time);
-        this.settings = Settings.getInstance();
+        this.settings = semaforky.getSettings();
         this.setStart = start;
         this.semaforky = semaforky;
     }

@@ -20,9 +20,23 @@ public class SemaforkyMachine extends StateMachine {
     private int currentSet = 1;
     private int currentLine = 0;
     private Semaforky semaforky;
+    private Settings settings;
 
-    public SemaforkyMachine(Semaforky sem) {
-        this.semaforky = sem;
+    public SemaforkyMachine(Semaforky semaforky, final Settings settings) {
+        this.semaforky = semaforky;
+        this.settings = settings;
+        initializeStates();
+    }
+
+    public int getCurrentLine() {
+        return currentLine;
+    }
+
+    public int getCurrentSet() {
+        return currentSet;
+    }
+
+    private void initializeStates() {
 
         setCurrent(addState(new State<SemaforkyState>(STARTED, new SemaforkyState[]{ROUND_STARTED, SETTINGS}) {
             @Override
@@ -72,7 +86,7 @@ public class SemaforkyMachine extends StateMachine {
             public void run(State previous) {
                 semaforky.getScheduler().StopSet();
 
-                if ((currentLine + 1) < Settings.getInstance().getLines()) {
+                if ((currentLine + 1) < settings.getLines()) {
                     // if number of line is higher than current line, increase line
                     currentLine++;
                 } else {
@@ -87,8 +101,8 @@ public class SemaforkyMachine extends StateMachine {
                     moveTo(SET_STARTED);
                 } else {
                     semaforky.getMainController().playSiren(3);
-                    if(Settings.getInstance().getContinuous()) {
-                        if (currentSet <= Settings.getInstance().getNumberOfSets()) {
+                    if (settings.getContinuous()) {
+                        if (currentSet <= settings.getNumberOfSets()) {
                             moveTo(SET_STARTED);
                         } else {
                             moveTo(ROUND_STOPPED);
@@ -119,13 +133,5 @@ public class SemaforkyMachine extends StateMachine {
                 semaforky.getMainActivity().updateGui();
             }
         });
-    }
-
-    public int getCurrentLine() {
-        return currentLine;
-    }
-
-    public int getCurrentSet() {
-        return currentSet;
     }
 };

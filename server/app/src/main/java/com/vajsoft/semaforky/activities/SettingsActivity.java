@@ -25,8 +25,8 @@ public class SettingsActivity extends AppCompatActivity {
     private static final Logger LOGGER = Logger.getLogger(HotspotManager.class.getName());
     private Settings settings;
 
-    public SettingsActivity() {
-        settings = Settings.getInstance();
+    public SettingsActivity(Settings settings) {
+        this.settings = settings;
     }
 
     public void onCancelClicked(View view) {

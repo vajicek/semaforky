@@ -1,24 +1,16 @@
 package com.vajsoft.semaforky.utils;
 
-import android.content.Context;
-import android.content.Intent;
-import android.net.wifi.WifiConfiguration;
-import android.net.wifi.WifiManager;
-import android.os.Build;
-import android.provider.Settings;
-import android.support.annotation.RequiresApi;
-
-import java.lang.reflect.Method;
-
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import android.content.Context;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
+import java.lang.reflect.Method;
+
 public class HotspotManager {
 
-    public class HotspotManagerException extends Exception {
-    }
-
-    Context context;
+    private Context context;
 
     public HotspotManager(Context context) {
         this.context = context;
@@ -77,5 +69,8 @@ public class HotspotManager {
             e.printStackTrace();
             throw new HotspotManagerException();
         }
+    }
+
+    public class HotspotManagerException extends Exception {
     }
 }

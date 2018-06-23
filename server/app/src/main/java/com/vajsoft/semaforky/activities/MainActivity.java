@@ -36,7 +36,6 @@ import java.util.logging.Logger;
 /** Main activity wrapper. Handle GUI interactions. */
 public class MainActivity extends AppCompatActivity {
     private static final Logger LOGGER = Logger.getLogger(MainActivity.class.getName());
-
     private SemaphoreWidget semaphoreWidget;
     private Settings settings;
     private SemaforkyMachine machine;

@@ -13,11 +13,14 @@ import java.io.Serializable;
  */
 public class Settings implements Serializable {
 
-    public static String PREFS_NAME = "semaforkySettings";
+    public enum LinesRotation {
+        SIMPLE,
+        ALTERNATING
+    }
     public static final String SEMAFORKY_ESSID = "semaforky";
     public static final String SEMAFORKY_PASSWORD = "semaforky";
+    public static String PREFS_NAME = "semaforkySettings";
     private static Settings instance = null;
-
     private int language = 0;
     private int roundSets = 10;
     private int setTime = 120;
@@ -27,22 +30,21 @@ public class Settings implements Serializable {
     private boolean continuous = false;
     private int numberOfSets = 10;
     private LinesRotation linesRotation = LinesRotation.SIMPLE;
-    protected Settings() {
-    }
-
-    public static Settings getInstance() {
-        if (instance == null) {
-            instance = new Settings();
-        }
-        return instance;
-    }
 
     public int getLines() {
         return lines;
     }
 
+    public void setLines(int lines) {
+        this.lines = lines;
+    }
+
     public int getLanguage() {
         return language;
+    }
+
+    public void setLanguage(int selectedLanguageNo) {
+        language = selectedLanguageNo;
     }
 
     public String getLanguageCode() {
@@ -58,20 +60,40 @@ public class Settings implements Serializable {
         return linesRotation;
     }
 
+    public void setLinesRotation(LinesRotation linesRotation) {
+        this.linesRotation = linesRotation;
+    }
+
     public int getRoundSets() {
         return roundSets;
+    }
+
+    public void setRoundSets(int roundSets) {
+        this.roundSets = roundSets;
     }
 
     public int getSetTime() {
         return setTime;
     }
 
+    public void setSetTime(int setTime) {
+        this.setTime = setTime;
+    }
+
     public int getPreparationTimeTime() {
         return preparationTime;
     }
 
+    public void setPreparationTimeTime(int preparationTime) {
+        this.preparationTime = preparationTime;
+    }
+
     public int getWarningTimeTime() {
         return warningTime;
+    }
+
+    public void setWarningTimeTime(int warningTime) {
+        this.warningTime = warningTime;
     }
 
     public void loadSetting(Context applicationContext) {
@@ -100,39 +122,6 @@ public class Settings implements Serializable {
         editor.putBoolean("continuous", continuous);
         editor.putInt("numberOfSets", numberOfSets);
         editor.apply();
-    }
-
-    public void setLinesRotation(LinesRotation linesRotation) {
-        this.linesRotation = linesRotation;
-    }
-
-    public void setLanguage(int selectedLanguageNo) {
-        language = selectedLanguageNo;
-    }
-
-    public void setLines(int lines) {
-        this.lines = lines;
-    }
-
-    public void setRoundSets(int roundSets) {
-        this.roundSets = roundSets;
-    }
-
-    public void setSetTime(int setTime) {
-        this.setTime = setTime;
-    }
-
-    public void setPreparationTimeTime(int preparationTime) {
-        this.preparationTime = preparationTime;
-    }
-
-    public void setWarningTimeTime(int warningTime) {
-        this.warningTime = warningTime;
-    }
-
-    public enum LinesRotation {
-        SIMPLE,
-        ALTERNATING
     }
 
     public boolean getContinuous() {

@@ -29,21 +29,20 @@ public class Semaforky extends Application {
         LOGGER.info(message);
     }
 
+    public Semaforky() {
+        settings = new Settings();
+        mainController = new MainController(this);
+        scheduler = new Scheduler(this);
+        machine = new SemaforkyMachine(this, settings);
+        soundManager = new SoundManager(getApplicationContext());
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
-
-        settings = Settings.getInstance();
         settings.loadSetting(getApplicationContext());
-
-        mainController = new MainController(this);
-        scheduler = new Scheduler(this);
-        machine = new SemaforkyMachine(this);
-        soundManager = new SoundManager(getApplicationContext());
-
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-
     }
 
     public void updateMainActivity(MainActivity mainActivity) {
@@ -73,4 +72,5 @@ public class Semaforky extends Application {
     public Scheduler getScheduler() {
         return scheduler;
     }
+
 }
