@@ -4,7 +4,6 @@ package com.vajsoft.semaforky.scheduler;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import com.vajsoft.semaforky.Semaforky;
-import com.vajsoft.semaforky.activities.MainActivity;
 
 import java.util.Date;
 

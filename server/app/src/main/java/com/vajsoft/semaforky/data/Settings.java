@@ -17,6 +17,7 @@ public class Settings implements Serializable {
         SIMPLE,
         ALTERNATING
     }
+
     public static final String SEMAFORKY_ESSID = "semaforky";
     public static final String SEMAFORKY_PASSWORD = "semaforky";
     public static String PREFS_NAME = "semaforkySettings";
@@ -132,7 +133,11 @@ public class Settings implements Serializable {
         this.continuous = continuous;
     }
 
-    public int getNumberOfSets() { return numberOfSets; }
+    public int getNumberOfSets() {
+        return numberOfSets;
+    }
 
-    public void setNumberOfSets(int numberOfSets) { this.numberOfSets = numberOfSets; }
+    public void setNumberOfSets(int numberOfSets) {
+        this.numberOfSets = numberOfSets;
+    }
 }

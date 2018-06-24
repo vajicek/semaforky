@@ -18,6 +18,7 @@ public class SemaphoreWidget implements SurfaceHolder.Callback {
         GREEN,
         YELLOW
     }
+
     private SurfaceView target;
     private SemaphoreLight light = SemaphoreLight.NONE;
 

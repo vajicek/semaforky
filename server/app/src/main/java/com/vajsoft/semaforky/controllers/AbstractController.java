@@ -5,7 +5,6 @@ package com.vajsoft.semaforky.controllers;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.Socket;

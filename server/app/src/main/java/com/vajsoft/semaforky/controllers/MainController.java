@@ -4,7 +4,6 @@ package com.vajsoft.semaforky.controllers;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import com.vajsoft.semaforky.Semaforky;
-import com.vajsoft.semaforky.activities.MainActivity;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -45,7 +44,7 @@ public class MainController {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof ClockController) {
-                semaforky.logMessage("Setting clock!");
+                LOGGER.fine("Setting clock!");
                 controller.send(remainingSeconds);
             }
         }
@@ -55,19 +54,20 @@ public class MainController {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof SemaphoreController) {
-                semaforky.logMessage("Setting semaphore state!");
+                LOGGER.fine("Setting semaphore state!");
                 controller.send(state);
             }
         }
     }
 
     public void playSiren(int count) {
-        semaforky.getSoundManager().Play("buzzer", count);
+        LOGGER.info("play siren! count: " + count);
+        semaforky.getSoundManager().play("buzzer", count);
 
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof SirenController) {
-                semaforky.logMessage("Play siren!");
+                LOGGER.info("play siren controller!");
                 controller.send(count);
             }
         }
@@ -90,7 +90,7 @@ public class MainController {
         LOGGER.entering(this.getClass().getName(), "serverLoop");
         try {
             serverSocket = new ServerSocket(SERVER_PORT);
-            semaforky.logMessage("IP: " + serverSocket.getLocalSocketAddress().toString());
+            LOGGER.log(Level.CONFIG, "IP: {0}", serverSocket.getLocalSocketAddress().toString());
             int clientsConnected = 0;
             while (true) {
                 try {
@@ -104,7 +104,7 @@ public class MainController {
                     }).start();
                 } catch (SocketTimeoutException e) {
                     //SWALLOW EXCEPTION
-                    semaforky.logMessage("SocketTimeoutException");
+                    LOGGER.severe("SocketTimeoutException");
                 }
             }
         } catch (IOException e) {
@@ -128,29 +128,29 @@ public class MainController {
             Controller controller = null;
             switch (registerChunk.getType()) {
                 case SEMAPHORE_CLIENT:
-                    semaforky.logMessage("Semaphore connected!");
+                    LOGGER.info("Semaphore connected!");
                     controller = new SemaphoreController(server);
                     break;
                 case CLOCK_CLIENT:
-                    semaforky.logMessage("Clock connected!");
+                    LOGGER.info("Clock connected!");
                     controller = new ClockController(server);
                     break;
                 case SIREN_CLIENT:
-                    semaforky.logMessage("Siren connected!");
+                    LOGGER.info("Siren connected!");
                     controller = new SirenController(server);
                     break;
                 default:
-                    semaforky.logMessage(String.format("Unknown client connected! (clientType=%1$d)", registerChunk.getType()));
+                    LOGGER.info(String.format("Unknown client connected! (clientType=%1$d)", registerChunk.getType()));
             }
             if (controller != null) {
                 LOGGER.info("run()");
                 controllers.add(controller);
                 controller.run();
                 controllers.remove(controller);
-                semaforky.logMessage("Client disconnected!");
-                LOGGER.log(Level.INFO, "Client disconnected!");
+                LOGGER.info("Client disconnected!");
+                LOGGER.info("Client disconnected!");
             } else {
-                LOGGER.log(Level.SEVERE, "Unknown client!");
+                LOGGER.severe("Unknown client!");
             }
         } catch (IOException e) {
             e.printStackTrace();

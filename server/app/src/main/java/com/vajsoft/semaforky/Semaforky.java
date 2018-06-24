@@ -13,21 +13,17 @@ import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.scheduler.Scheduler;
 import com.vajsoft.semaforky.utils.SoundManager;
 
-import java.util.logging.Logger;
+import java.io.InputStream;
+import java.util.logging.LogManager;
 
 /** Application object. Allocates and holds all infrastructure objects. */
 public class Semaforky extends Application {
-    private static final Logger LOGGER = Logger.getLogger(MainActivity.class.getName());
     private MainController mainController;
     private Scheduler scheduler;
     private Settings settings;
     private SemaforkyMachine machine;
     private SoundManager soundManager;
     private MainActivity mainActivity;
-
-    public void logMessage(final String message) {
-        LOGGER.info(message);
-    }
 
     public Semaforky() {
         settings = new Settings();
@@ -39,6 +35,7 @@ public class Semaforky extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        initLogging();
         soundManager = new SoundManager(getApplicationContext());
         settings.loadSetting(getApplicationContext());
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
@@ -73,4 +70,13 @@ public class Semaforky extends Application {
         return scheduler;
     }
 
+    private void initLogging() {
+        try {
+            final LogManager logManager = LogManager.getLogManager();
+            InputStream is = getResources().getAssets().open("logging.properties");
+            logManager.readConfiguration(is);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

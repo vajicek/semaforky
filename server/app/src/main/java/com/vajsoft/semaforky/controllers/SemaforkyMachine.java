@@ -3,16 +3,21 @@ package com.vajsoft.semaforky.controllers;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-import android.content.Context;
-import android.os.PowerManager;
-
 import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.data.Settings;
-import com.vajsoft.semaforky.scheduler.Scheduler;
 import com.vajsoft.semaforky.utils.State;
 import com.vajsoft.semaforky.utils.StateMachine;
 
-import static com.vajsoft.semaforky.controllers.SemaforkyState.*;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.FIRE;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.READY;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.ROUND_STARTED;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.ROUND_STOPPED;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.SETTINGS;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.SET_CANCELED;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.SET_STARTED;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.SET_STOPPED;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.STARTED;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.WARNING;
 
 /** Semaforky state machine. Defines sttate names and state change implementation. */
 public class SemaforkyMachine extends StateMachine {

@@ -3,7 +3,6 @@ package com.vajsoft.semaforky.scheduler;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-import com.vajsoft.semaforky.controllers.MainController;
 import com.vajsoft.semaforky.controllers.SemaforkyMachine;
 import com.vajsoft.semaforky.controllers.SemaforkyState;
 

@@ -6,6 +6,7 @@ package com.vajsoft.semaforky.utils;
 import android.content.Context;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
+
 import java.lang.reflect.Method;
 
 public class HotspotManager {
@@ -28,7 +29,7 @@ public class HotspotManager {
             }
 
             // test configured
-            Method getWifiApConfigurationMethod  = wifiManager.getClass().getDeclaredMethod("getWifiApConfiguration");
+            Method getWifiApConfigurationMethod = wifiManager.getClass().getDeclaredMethod("getWifiApConfiguration");
             getWifiApConfigurationMethod.setAccessible(true);
             WifiConfiguration wifiConfiguration = (WifiConfiguration) getWifiApConfigurationMethod.invoke(wifiManager);
             if (!wifiConfiguration.SSID.equals(ssid) || !wifiConfiguration.preSharedKey.equals(ssid)) {

@@ -8,12 +8,10 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -111,11 +109,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void updateGui() {
-        Log.d(MainActivity.class.getName(), "updateGui() called");
+        LOGGER.entering(this.getClass().getName(), "updateGui() called");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                Log.d(MainActivity.class.getName(), "updateGui().run() called");
+                LOGGER.entering(this.getClass().getName(), "updateGui().run() called");
                 updateSet();
 
                 ((Button) findViewById(R.id.btnBeginRound)).setEnabled(
@@ -167,6 +165,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         LOGGER.info("MainActivity.onCreate() called");
 
         Semaforky semaforky = (Semaforky) getApplication();

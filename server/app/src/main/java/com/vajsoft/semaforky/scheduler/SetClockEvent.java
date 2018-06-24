@@ -4,8 +4,6 @@ package com.vajsoft.semaforky.scheduler;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import com.vajsoft.semaforky.Semaforky;
-import com.vajsoft.semaforky.activities.MainActivity;
-import com.vajsoft.semaforky.controllers.MainController;
 import com.vajsoft.semaforky.controllers.SemaforkyState;
 import com.vajsoft.semaforky.data.Settings;
 

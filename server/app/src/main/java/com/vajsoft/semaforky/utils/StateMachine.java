@@ -3,13 +3,14 @@ package com.vajsoft.semaforky.utils;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-import android.util.Log;
-
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** State machine base. Holds state lists, current state and perform state transition. */
 public class StateMachine<T> {
+    private static final Logger LOGGER = Logger.getLogger(StateMachine.class.getName());
     private ArrayList<State<T>> states = new ArrayList<>();
     private State<T> currentState = null;
 
@@ -20,18 +21,18 @@ public class StateMachine<T> {
 
     public void setCurrent(State<T> state) {
         assert (states.contains(state));
-        Log.d(StateMachine.class.getName(), "setCurrent(" + state.name.toString() + ")");
+        LOGGER.log(Level.CONFIG, "setCurrent({0})", state.name.toString());
         currentState = state;
     }
 
     public State getCurrenState() {
-        Log.d(StateMachine.class.getName(), "getCurrenState() = " + currentState.name.toString());
+        LOGGER.log(Level.CONFIG, "getCurrenState() = {0})", currentState.name.toString());
         return currentState;
     }
 
     public boolean moveTo(T stateName) {
         if (!Arrays.asList(currentState.next).contains(stateName)) {
-            Log.d(StateMachine.class.getName(), "Failed to change state from " + currentState.name + " to " + stateName);
+            LOGGER.log(Level.CONFIG, "Failed to change state from {0} to {1}", new Object[]{currentState.name, stateName});
             return false;
         }
         State<T> state = SearchArray.findFirst(states, stateName,

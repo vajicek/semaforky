@@ -8,5 +8,6 @@ import java.io.IOException;
 /** Controller base. */
 public interface Controller {
     void run() throws IOException;
+
     void send(int value);
 }
