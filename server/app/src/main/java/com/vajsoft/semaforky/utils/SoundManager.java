@@ -19,8 +19,8 @@ import java.util.logging.Logger;
  */
 public class SoundManager {
     private static final Logger LOGGER = Logger.getLogger(SoundManager.class.getName());
-    SoundThread soundThread;
-    private SoundPool soundPool = new SoundPool(5, AudioManager.STREAM_MUSIC, 0);
+    private static final int MAX_STREAMS = 1;
+    private SoundPool soundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, 0);
     private HashMap<String, SoundEffect> sounds = new HashMap<String, SoundEffect>();
 
     public SoundManager(Context context) {
@@ -53,15 +53,9 @@ public class SoundManager {
         if (sounds.containsKey(soundName)) {
             SoundEffect soundEffect = sounds.get(soundName);
             if (soundEffect.loaded) {
-                soundThread.queueToPlay(soundEffect.sampleId, loop);
+                soundPool.play(soundEffect.sampleId , 1 ,1 ,99 ,loop - 1, 1);
             }
         }
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        soundThread.dispose();
     }
 
     /**
@@ -80,9 +74,6 @@ public class SoundManager {
                 findBySampleId(sounds.values(), sampleId).loaded = true;
             }
         });
-
-        soundThread = new SoundThread(soundPool);
-        soundThread.start();
     }
 
     /**
