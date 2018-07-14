@@ -1,0 +1,27 @@
+Build from command-line
+=======================
+
+
+Build release apk
+-----------------
+
+./gradlew assembleRelease
+
+
+Build debug apk
+---------------
+
+./gradlew assembleDebug
+./gradlew installDebug
+
+
+Install to Android device
+-------------------------
+
+adb install app/build/outputs/apk/app-release.apk
+
+
+Uninstall semaforky from Android device
+---------------------------------------
+
+adb shell pm uninstall -k com.vajsoft.semaforky
