@@ -25,10 +25,6 @@ public class SettingsActivity extends AppCompatActivity {
     private static final Logger LOGGER = Logger.getLogger(HotspotManager.class.getName());
     private Settings settings;
 
-    public SettingsActivity(Settings settings) {
-        this.settings = settings;
-    }
-
     public void onCancelClicked(View view) {
         finish();
     }
@@ -52,6 +48,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        this.settings = (Settings) getIntent().getParcelableExtra("settings");
         setContentView(R.layout.activity_settings);
         updateGuiFromData();
     }
