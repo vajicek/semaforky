@@ -86,7 +86,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void onSettingsClick(View view) {
         machine.moveTo(SemaforkyState.SETTINGS);
-        startActivityForResult(new Intent(getApplicationContext(), SettingsActivity.class), 0);
+        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
+        intent.putExtra("settings", settings);
+        startActivityForResult(intent, 0);
     }
 
     public void onWifiApSwitchClick(View view) throws HotspotManager.HotspotManagerException {
