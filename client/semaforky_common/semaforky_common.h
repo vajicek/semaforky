@@ -269,7 +269,7 @@ void SAA1064ClockProcess::Init() {
 //-------------------------------------------------------------------------------
 
 #define SIREN_TONE_LENGTH 500
-#define SIREN_TONE_VALUE 1000
+#define SIREN_PAUSE_LENGTH 500
 
 // Wemos D1 mini
 #define SIREN_AUDIO_PIN 5
@@ -292,12 +292,15 @@ void SirenProcess::OnConnect() {
 
 void SirenProcess::SetLights() {
   for (int i = 0; i < last_chunk.status; i++) {
-    tone(SIREN_AUDIO_PIN, SIREN_TONE_VALUE, SIREN_TONE_LENGTH);
+    digitalWrite(SIREN_AUDIO_PIN, HIGH);
     delay(SIREN_TONE_LENGTH);
+    digitalWrite(SIREN_AUDIO_PIN, LOW);
+    delay(SIREN_PAUSE_LENGTH);
   }
   last_chunk.status = 0;
 }
 
 void SirenProcess::Init() {
   Process::Init();
+  pinMode(SIREN_AUDIO_PIN, OUTPUT);
 }
