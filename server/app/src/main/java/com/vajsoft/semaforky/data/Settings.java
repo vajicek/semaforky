@@ -6,7 +6,12 @@ package com.vajsoft.semaforky.data;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.vajsoft.semaforky.utils.HotspotManager;
+
 import java.io.Serializable;
+import java.util.logging.Logger;
+
+import static android.content.Context.MODE_PRIVATE;
 
 /**
  * Singleton class. Holds, store, load setting of the application.
@@ -17,6 +22,8 @@ public class Settings implements Serializable {
         SIMPLE,
         ALTERNATING
     }
+
+    private static final Logger LOGGER = Logger.getLogger(Settings.class.getName());
 
     public static final String SEMAFORKY_ESSID = "semaforky";
     public static final String SEMAFORKY_PASSWORD = "semaforky";
@@ -98,8 +105,8 @@ public class Settings implements Serializable {
     }
 
     public void loadSetting(Context applicationContext) {
-        SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, 0);
-        language = settings.getInt("homeScore", language);
+        SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        language = settings.getInt("language", language);
         roundSets = settings.getInt("roundSets", roundSets);
         setTime = settings.getInt("setTime", setTime);
         preparationTime = settings.getInt("preparationTime", preparationTime);
@@ -111,8 +118,8 @@ public class Settings implements Serializable {
     }
 
     public void saveSetting(Context applicationContext) {
-        SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, 0);
-        SharedPreferences.Editor editor = settings.edit();
+        SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit().clear();
         editor.putInt("language", language);
         editor.putInt("roundSets", roundSets);
         editor.putInt("setTime", setTime);
@@ -122,7 +129,7 @@ public class Settings implements Serializable {
         editor.putInt("linesRotation", linesRotation.ordinal());
         editor.putBoolean("continuous", continuous);
         editor.putInt("numberOfSets", numberOfSets);
-        editor.apply();
+        editor.commit();
     }
 
     public boolean getContinuous() {

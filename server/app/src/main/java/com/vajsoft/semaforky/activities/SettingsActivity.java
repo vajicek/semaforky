@@ -13,6 +13,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.vajsoft.semaforky.R;
+import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.utils.HotspotManager;
 
@@ -22,10 +23,12 @@ import java.util.logging.Logger;
 public class SettingsActivity extends AppCompatActivity {
 
     public static final int SETTINGS_UPDATED = 1;
-    private static final Logger LOGGER = Logger.getLogger(HotspotManager.class.getName());
+    public static final int SETTINGS_UPDATE_CANCELED = 1;
+    private static final Logger LOGGER = Logger.getLogger(SettingsActivity.class.getName());
     private Settings settings;
 
     public void onCancelClicked(View view) {
+        setResult(SETTINGS_UPDATE_CANCELED, null);
         finish();
     }
 
@@ -48,7 +51,7 @@ public class SettingsActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.settings = (Settings) getIntent().getParcelableExtra("settings");
+        this.settings = ((Semaforky) getApplication()).getSettings();
         setContentView(R.layout.activity_settings);
         updateGuiFromData();
     }

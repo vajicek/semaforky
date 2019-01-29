@@ -24,6 +24,7 @@ import com.vajsoft.semaforky.controllers.SemaforkyState;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.utils.HotspotManager;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
@@ -86,9 +87,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void onSettingsClick(View view) {
         machine.moveTo(SemaforkyState.SETTINGS);
-        Intent intent = new Intent(getApplicationContext(), SettingsActivity.class);
-        intent.putExtra("settings", settings);
-        startActivityForResult(intent, 0);
+        startActivityForResult(new Intent(getApplicationContext(), SettingsActivity.class), 0);
     }
 
     public void onWifiApSwitchClick(View view) throws HotspotManager.HotspotManagerException {
@@ -110,6 +109,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onDiagnosticClick(View view) {
+        machine.moveTo(SemaforkyState.SETTINGS);
+        startActivityForResult(new Intent(getApplicationContext(), DiagnosticActivity.class), 0);
+    }
+
     public void updateGui() {
         LOGGER.entering(this.getClass().getName(), "updateGui() called");
         runOnUiThread(new Runnable() {
@@ -118,27 +122,19 @@ public class MainActivity extends AppCompatActivity {
                 LOGGER.entering(this.getClass().getName(), "updateGui().run() called");
                 updateSet();
 
+                Object stateName = machine.getCurrenState().name;
                 ((Button) findViewById(R.id.btnBeginRound)).setEnabled(
-                        machine.getCurrenState().name.equals(SemaforkyState.STARTED) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.ROUND_STOPPED));
+                        Arrays.asList(SemaforkyState.STARTED, SemaforkyState.ROUND_STOPPED).contains(stateName));
                 ((Button) findViewById(R.id.btnEndRound)).setEnabled(
-                        machine.getCurrenState().name.equals(SemaforkyState.ROUND_STARTED) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.SET_STOPPED) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.SET_CANCELED));
+                        Arrays.asList(SemaforkyState.ROUND_STARTED, SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED).contains(stateName));
                 ((Button) findViewById(R.id.btnStartSet)).setEnabled(
-                        machine.getCurrenState().name.equals(SemaforkyState.ROUND_STARTED) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.SET_CANCELED) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.SET_STOPPED));
+                        Arrays.asList(SemaforkyState.ROUND_STARTED, SemaforkyState.SET_CANCELED, SemaforkyState.SET_STOPPED).contains(stateName));
                 ((Button) findViewById(R.id.btnStopSet)).setEnabled(
-                        machine.getCurrenState().name.equals(SemaforkyState.FIRE) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.WARNING));
+                        Arrays.asList(SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
                 ((Button) findViewById(R.id.btnCancelSet)).setEnabled(
-                        machine.getCurrenState().name.equals(SemaforkyState.READY) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.FIRE) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.WARNING));
+                        Arrays.asList(SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
                 ((Button) findViewById(R.id.btnSettings)).setEnabled(
-                        machine.getCurrenState().name.equals(SemaforkyState.ROUND_STOPPED) ||
-                                machine.getCurrenState().name.equals(SemaforkyState.STARTED));
+                        Arrays.asList(SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED).contains(stateName));
                 ((Switch) findViewById(R.id.switchWifiAp)).setChecked(
                         new HotspotManager(getApplicationContext()).isApOn(Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD));
 
@@ -159,8 +155,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         machine.moveTo(SemaforkyState.STARTED);
         if (resultCode == SettingsActivity.SETTINGS_UPDATED) {
+            // reset is required because of changed language
             finish();
             startActivity(getIntent());
+        } else {
+            // just gui state update is required due to changed state (to started)
+            updateGui();
         }
     }
 
@@ -173,6 +173,7 @@ public class MainActivity extends AppCompatActivity {
         Semaforky semaforky = (Semaforky) getApplication();
         semaforky.updateMainActivity(this);
         settings = semaforky.getSettings();
+        settings.loadSetting(getApplicationContext());
         machine = semaforky.getMachine();
         mainController = semaforky.getMainController();
 

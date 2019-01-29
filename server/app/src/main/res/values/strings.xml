@@ -2,6 +2,7 @@
 <resources>
     <string name="app_name">semaforky</string>
     <string name="app_name_build">semaforky (git %s)</string>
+    <string name="diagnostic">Diagnostic</string>
     <string name="rounds">Rounds</string>
     <string name="setTime">Set Time</string>
     <string name="preparationTime">Preparation Time</string>

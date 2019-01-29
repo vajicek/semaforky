@@ -14,11 +14,14 @@ const int SIREN_CLIENT = 3;
 #define POWER_ON_PIN 0
 #define CONNECTED_PIN 4
 
+// Ping magic number
+#define PING_MAGIC_NUMBER 69
+
 /// data chunk
 struct ControlChunk {
-  int light;
-  int status;
-  ControlChunk() : light(0), status(0) {
+  int control;
+  int value;
+  ControlChunk() : control(0), value(0) {
   }
 };
 
@@ -49,10 +52,10 @@ struct Process {
   virtual void Init();
 
   /// read data chunk
-  void ReadControlChunk();
+  ControlChunk ReadControlChunk();
 
   /// set outputs
-  virtual void SetLights();
+  virtual void Output() = 0;
 
   Process();
 };
@@ -61,13 +64,15 @@ Process::Process() :
   is_connected(false) {
 }
 
-void Process::ReadControlChunk() {
+ControlChunk Process::ReadControlChunk() {
   Serial.println("ReadControlChunk");
-  client.read((uint8_t*)(&last_chunk), sizeof(last_chunk));
-  Serial.print("last_chunk.light=");
-  Serial.println(last_chunk.light);
-  Serial.print("last_chunk.status=");
-  Serial.println(last_chunk.status);
+  ControlChunk received_chunk;
+  client.read((uint8_t*)(&received_chunk), sizeof(received_chunk));
+  Serial.print("received_chunk.control=");
+  Serial.println(received_chunk.control);
+  Serial.print("received_chunk.value=");
+  Serial.println(received_chunk.value);
+  return received_chunk;
 }
 
 void Process::OnConnect() {
@@ -90,23 +95,28 @@ void Process::Disconnect() {
   is_connected = false;
 }
 
-void Process::SetLights() {
-}
-
 void Process::Execute() {
   if (!is_connected && !ESPWifiUtils::wifi_disabled) {
     Connect();
-  } else  {
+  } else {
     if (client.connected()) {
       if (client.available()) {
-        ReadControlChunk();
+        ControlChunk new_chunk = ReadControlChunk();
+        if (new_chunk.control == PING_MAGIC_NUMBER) {
+          Serial.println("ping received");
+          // send pong
+          RegisterChunk chunk{PING_MAGIC_NUMBER};
+          client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
+        } else {
+          last_chunk = new_chunk;
+        }
       }
     } else {
       Serial.println("disconnected");
       is_connected = false;
     }
   }
-  SetLights();
+  Output();
   delay(100);
 }
 
@@ -127,7 +137,7 @@ void Process::Init() {
 /// Semaphore client specialization.
 struct SemaphoreProcess : public Process {
   virtual void Init();
-  virtual void SetLights();
+  virtual void Output();
   virtual void OnConnect();
 };
 
@@ -136,10 +146,10 @@ void SemaphoreProcess::OnConnect() {
   client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
 }
 
-void SemaphoreProcess::SetLights() {
-  digitalWrite(SEMAPHORE_RED_PIN, last_chunk.status == 1 ? HIGH : LOW);
-  digitalWrite(SEMAPHORE_YELLOW_PIN, last_chunk.status == 2 ? HIGH : LOW);
-  digitalWrite(SEMAPHORE_GREEN_PIN, last_chunk.status == 3 ? HIGH : LOW);
+void SemaphoreProcess::Output() {
+  digitalWrite(SEMAPHORE_RED_PIN, last_chunk.value == 1 ? HIGH : LOW);
+  digitalWrite(SEMAPHORE_YELLOW_PIN, last_chunk.value == 2 ? HIGH : LOW);
+  digitalWrite(SEMAPHORE_GREEN_PIN, last_chunk.value == 3 ? HIGH : LOW);
 }
 
 void SemaphoreProcess::Init() {
@@ -151,35 +161,9 @@ void SemaphoreProcess::Init() {
 
 //-------------------------------------------------------------------------------
 
-/// Clock client specialization.
-struct ClockProcess : public Process {
-  const static int digit_count = 4;
-  const static int segment_count = 7;
-  int segment_pin[7] = {2, 4, 5, 12, 13, 14, 15};
-  int digit_pin[digit_count] = {3, 1, 16, 0};
-  bool digit_configuration[12][7] = {
-    {true, true, true, true, true, true, false},      //0
-    {false, true, true, false, false, false, false},  //1
-    {true, true, false, true, true, false, true},
-    {true, true, true, true, false, false, true},     //3
-    {false, true, true, false, false, true, true},    //4
-    {true, false, true, true, false, true, true},
-    {true, false, true, true, true, true, true},      //6
-    {true, true, true, false, false, false, false},   //7
-    {true, true, true, true, true, true, true},       //8
-    {true, true, true, true, false, true, true},      //9
-    {false, false, false, false, false, false, false},//off
-    {false, false, false, false, false, false, true}  //-
-  };
-  virtual void Init();
-  virtual void SetLights();
-  virtual void OnConnect();
-};
-
-void ClockProcess::OnConnect() {
-  RegisterChunk chunk{CLOCK_CLIENT};
-  client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
-}
+// Wemos D1 mini
+#define SAA1064_CLOCK_CLOCK_PIN 1
+#define SAA1064_CLOCK_DATA_PIN 2
 
 void ComputeDigits(int* digits, int digit_count, int value) {
   int divider = 1;
@@ -195,41 +179,12 @@ void ComputeDigits(int* digits, int digit_count, int value) {
   }
 }
 
-void ClockProcess::SetLights() {
-  int digits[4];
-  ComputeDigits(digits, digit_count, last_chunk.status);
-  for (int i = 0; i < digit_count; i++) {
-    digitalWrite(digit_pin[i], LOW);
-    for (int j = 0; j < segment_count; j++) {
-       digitalWrite(segment_pin[j], digit_configuration[digits[i]][j] ? HIGH : LOW);
-    }
-    delay(4);
-    digitalWrite(digit_pin[i], HIGH);
-  }
-}
-
-void ClockProcess::Init() {
-  Process::Init();
-  for (int i = 0; i < segment_count; i++) {
-    pinMode(segment_pin[i], OUTPUT);
-  }
-  for (int i = 0; i < digit_count; i++) {
-    pinMode(digit_pin[i], OUTPUT);
-  }
-}
-
-//-------------------------------------------------------------------------------
-
-// Wemos D1 mini
-#define SAA1064_CLOCK_CLOCK_PIN 1
-#define SAA1064_CLOCK_DATA_PIN 2
-
 /// Clock client specialization.
 struct SAA1064ClockProcess : public Process {
   const static int digit_count = 4;
   SAA1064 saa1064;
   virtual void Init();
-  virtual void SetLights();
+  virtual void Output();
   virtual void OnConnect();
   SAA1064ClockProcess();
 };
@@ -242,14 +197,14 @@ void SAA1064ClockProcess::OnConnect() {
   client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
 }
 
-void SAA1064ClockProcess::SetLights() {
+void SAA1064ClockProcess::Output() {
   digitalWrite(CONNECTED_PIN, is_connected ? HIGH : LOW);
 
-  if (last_chunk.status == -1) {
+  if (last_chunk.value == -1) {
     saa1064.digits(-2, -2, -2, -1);
   } else {
     int digits[4];
-    ComputeDigits(digits, digit_count, last_chunk.status);
+    ComputeDigits(digits, digit_count, last_chunk.value);
     saa1064.digits(digits[1], digits[2], digits[3], -1);
   }
 }
@@ -277,27 +232,23 @@ void SAA1064ClockProcess::Init() {
 /// Clock client specialization.
 struct SirenProcess : public Process {
   virtual void Init();
-  virtual void SetLights();
+  virtual void Output();
   virtual void OnConnect();
-  SirenProcess();
 };
-
-SirenProcess::SirenProcess() {
-}
 
 void SirenProcess::OnConnect() {
   RegisterChunk chunk{SIREN_CLIENT};
   client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
 }
 
-void SirenProcess::SetLights() {
-  for (int i = 0; i < last_chunk.status; i++) {
+void SirenProcess::Output() {
+  for (int i = 0; i < last_chunk.value; i++) {
     digitalWrite(SIREN_AUDIO_PIN, HIGH);
     delay(SIREN_TONE_LENGTH);
     digitalWrite(SIREN_AUDIO_PIN, LOW);
     delay(SIREN_PAUSE_LENGTH);
   }
-  last_chunk.status = 0;
+  last_chunk.value = 0;
 }
 
 void SirenProcess::Init() {

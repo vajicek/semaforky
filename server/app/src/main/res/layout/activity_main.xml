@@ -122,12 +122,12 @@
             <TextView
                 android:id="@+id/tvSetTime"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
                 android:gravity="center"
                 android:text="---"
                 android:textAlignment="center"
-                android:textSize="100sp"
-                tools:fontFamily="monospace" />
+                android:textSize="70sp"
+                tools:fontFamily="monospace"
+                android:layout_height="90dp"/>
 
             <SurfaceView
                 android:id="@+id/svSemaphore"
@@ -179,6 +179,22 @@
                     android:onClick="onWifiApSwitchClick"
                     tools:text="@string/wifiAp"
                     android:text="@string/wifiAp" />
+
+                <Button
+                    android:text="@string/diagnostic"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:id="@+id/btnDiagnostic"
+                    android:layout_weight="1"
+                    android:onClick="onDiagnosticClick"/>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
 
                 <Button
                     android:id="@+id/btnSettings"

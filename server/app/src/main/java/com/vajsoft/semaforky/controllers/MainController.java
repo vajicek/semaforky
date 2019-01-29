@@ -94,12 +94,12 @@ public class MainController {
             int clientsConnected = 0;
             while (true) {
                 try {
-                    final Socket server = serverSocket.accept();
+                    final Socket serverSocket = this.serverSocket.accept();
                     clientsConnected++;
                     LOGGER.log(Level.INFO, "Client no. {0} connected!", clientsConnected);
                     new Thread(new Runnable() {
                         public void run() {
-                            startupController(server);
+                            startupController(serverSocket);
                         }
                     }).start();
                 } catch (SocketTimeoutException e) {
@@ -121,23 +121,23 @@ public class MainController {
         return new RegisterChunk(clientType);
     }
 
-    private void startupController(Socket server) {
+    private void startupController(Socket serverSocket) {
         LOGGER.entering(this.getClass().getName(), "startupController");
         try {
-            RegisterChunk registerChunk = readRegisterChunk(server.getInputStream());
+            RegisterChunk registerChunk = readRegisterChunk(serverSocket.getInputStream());
             Controller controller = null;
             switch (registerChunk.getType()) {
                 case SEMAPHORE_CLIENT:
                     LOGGER.info("Semaphore connected!");
-                    controller = new SemaphoreController(server);
+                    controller = new SemaphoreController(serverSocket);
                     break;
                 case CLOCK_CLIENT:
                     LOGGER.info("Clock connected!");
-                    controller = new ClockController(server);
+                    controller = new ClockController(serverSocket);
                     break;
                 case SIREN_CLIENT:
                     LOGGER.info("Siren connected!");
-                    controller = new SirenController(server);
+                    controller = new SirenController(serverSocket);
                     break;
                 default:
                     LOGGER.info(String.format("Unknown client connected! (clientType=%1$d)", registerChunk.getType()));

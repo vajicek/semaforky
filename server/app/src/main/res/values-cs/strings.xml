@@ -3,6 +3,7 @@
     <string name="app_name">semaforky</string>
     <string name="app_name_build">semaforky (git %s)</string>
     <string name="rounds">Kola</string>
+    <string name="diagnostic">Diagnóza</string>
     <string name="setTime">Čas sady</string>
     <string name="preparationTime">Čas přípravy</string>
     <string name="warningTime">Čas varování</string>

@@ -9,5 +9,7 @@ import java.io.IOException;
 public interface Controller {
     void run() throws IOException;
 
+    String getAddress();
+
     void send(int value);
 }
