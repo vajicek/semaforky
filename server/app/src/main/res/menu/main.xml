@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:tools="http://schemas.android.com/tools"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:id="@+id/menuItemSwitchWifiAp"
+          android:checkable="true"
+          tools:onClick="onWifiApSwitchClick"
+          android:title="@string/wifiAp"/>
+    <item android:id="@+id/menuItemDiagnostic"
+          tools:onClick="onDiagnosticClick"
+          android:title="@string/diagnostic" />
+    <item android:id="@+id/menuItemSettings"
+          tools:onClick="onSettingsClick"
+          android:title="@string/gotoSettings" />
+</menu>

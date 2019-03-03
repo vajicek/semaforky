@@ -8,11 +8,12 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
-import android.widget.Switch;
 import android.widget.TextView;
 
 import com.vajsoft.semaforky.BuildConfig;
@@ -23,6 +24,7 @@ import com.vajsoft.semaforky.controllers.SemaforkyMachine;
 import com.vajsoft.semaforky.controllers.SemaforkyState;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.utils.HotspotManager;
+import com.vajsoft.semaforky.utils.PopupWindow;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -39,6 +41,7 @@ public class MainActivity extends AppCompatActivity {
     private Settings settings;
     private SemaforkyMachine machine;
     private MainController mainController;
+    private Menu optionsMenu;
 
     public void updateRoundClocks(final Date roundStart) {
         runOnUiThread(new Runnable() {
@@ -90,23 +93,8 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(new Intent(getApplicationContext(), SettingsActivity.class), 0);
     }
 
-    public void onWifiApSwitchClick(View view) throws HotspotManager.HotspotManagerException {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (!android.provider.Settings.System.canWrite(getApplicationContext())) {
-                // if settings write is not enabled, it must be enabled manually by the user in a different activity
-                // NOTE(vajicek): this appeared to be a problem since Android 6.0
-                startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS));
-                ((Switch) findViewById(R.id.switchWifiAp)).setChecked(false);
-                return;
-            }
-        }
-        // else wifi can be controlled directly
-        HotspotManager hotspotManager = new HotspotManager(getApplicationContext());
-        if (((Switch) findViewById(R.id.switchWifiAp)).isChecked()) {
-            hotspotManager.configApState(true, Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD);
-        } else {
-            hotspotManager.disableApState();
-        }
+    public void onWifiApSwitchClick(View view) {
+        updateWifiApState();
     }
 
     public void onDiagnosticClick(View view) {
@@ -133,10 +121,13 @@ public class MainActivity extends AppCompatActivity {
                         Arrays.asList(SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
                 ((Button) findViewById(R.id.btnCancelSet)).setEnabled(
                         Arrays.asList(SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
-                ((Button) findViewById(R.id.btnSettings)).setEnabled(
-                        Arrays.asList(SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED).contains(stateName));
-                ((Switch) findViewById(R.id.switchWifiAp)).setChecked(
-                        new HotspotManager(getApplicationContext()).isApOn(Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD));
+
+                if (optionsMenu != null) {
+                    optionsMenu.findItem(R.id.menuItemSettings).setEnabled(
+                            Arrays.asList(SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED).contains(stateName));
+                    optionsMenu.findItem(R.id.menuItemSwitchWifiAp).setChecked(
+                            new HotspotManager(getApplicationContext()).isApOn(Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD));
+                }
 
                 if (machine.getCurrenState().name.equals(SemaforkyState.READY)) {
                     setSemaphore(SemaphoreWidget.SemaphoreLight.RED);
@@ -149,6 +140,27 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.menuItemSettings) {
+            onSettingsClick(null);
+        } else if (item.getItemId() == R.id.menuItemSwitchWifiAp) {
+            item.setChecked(!item.isChecked());
+            onWifiApSwitchClick(null);
+        } else if (item.getItemId() == R.id.menuItemDiagnostic) {
+            onDiagnosticClick(null);
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main, menu);
+        optionsMenu = menu;
+        updateGui();
+        return true;
     }
 
     @Override
@@ -208,6 +220,30 @@ public class MainActivity extends AppCompatActivity {
             } else {
                 ((TextView) findViewById(R.id.tvLine)).setText(machine.getCurrentLine() != machine.getCurrentSet() % 2 ? "AB" : "CD");
             }
+        }
+    }
+
+    private void updateWifiApState() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (!android.provider.Settings.System.canWrite(getApplicationContext())) {
+                // if settings write is not enabled, it must be enabled manually by the user in a different activity
+                // NOTE(vajicek): this appeared to be a problem since Android 6.0
+                startActivity(new Intent(android.provider.Settings.ACTION_MANAGE_WRITE_SETTINGS));
+                optionsMenu.findItem(R.id.menuItemSwitchWifiAp).setChecked(false);
+                return;
+            }
+        }
+        try {
+            // else wifi can be controlled directly
+            HotspotManager hotspotManager = new HotspotManager(getApplicationContext());
+            if (optionsMenu.findItem(R.id.menuItemSwitchWifiAp).isChecked()) {
+                hotspotManager.configApState(true, Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD);
+            } else {
+                hotspotManager.disableApState();
+            }
+        } catch (HotspotManager.HotspotManagerException e) {
+            LOGGER.severe("Failed to switch WifiAp");
+            PopupWindow.showMessageBox(this, getResources().getString(R.string.warningTitle));
         }
     }
 

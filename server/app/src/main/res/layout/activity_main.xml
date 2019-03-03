@@ -8,7 +8,8 @@
                 android:paddingLeft="@dimen/activity_horizontal_margin"
                 android:paddingRight="@dimen/activity_horizontal_margin"
                 android:paddingTop="@dimen/activity_vertical_margin"
-                tools:context="com.vajsoft.semaforky.activities.MainActivity">
+                tools:context="com.vajsoft.semaforky.activities.MainActivity"
+    >
 
     <ScrollView
         android:layout_width="match_parent"
@@ -33,7 +34,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onBeginRoundClicked"
-                    android:text="@string/beginRound" />
+                    android:text="@string/beginRound"/>
 
                 <Button
                     android:id="@+id/btnEndRound"
@@ -41,7 +42,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onEndRoundClicked"
-                    android:text="@string/endRound" />
+                    android:text="@string/endRound"/>
             </LinearLayout>
 
             <TableLayout
@@ -57,7 +58,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/set"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
 
                     <TextView
                         android:id="@+id/tvSet"
@@ -67,7 +68,7 @@
                         android:gravity="right"
                         android:text="-"
                         android:textAlignment="textEnd"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
 
                 </TableRow>
 
@@ -80,7 +81,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/roundTime"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
 
                     <TextView
                         android:id="@+id/tvRoundTime"
@@ -90,7 +91,7 @@
                         android:gravity="right"
                         android:text="--:--:--"
                         android:textAlignment="textEnd"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
 
                 </TableRow>
 
@@ -103,7 +104,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/line"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
 
                     <TextView
                         android:id="@+id/tvLine"
@@ -113,7 +114,7 @@
                         android:gravity="right"
                         android:text="-"
                         android:textAlignment="textEnd"
-                        android:textSize="24sp" />
+                        android:textSize="24sp"/>
 
                 </TableRow>
 
@@ -122,17 +123,17 @@
             <TextView
                 android:id="@+id/tvSetTime"
                 android:layout_width="match_parent"
+                android:layout_height="90dp"
                 android:gravity="center"
                 android:text="---"
                 android:textAlignment="center"
                 android:textSize="70sp"
-                tools:fontFamily="monospace"
-                android:layout_height="90dp"/>
+                tools:fontFamily="monospace"/>
 
             <SurfaceView
                 android:id="@+id/svSemaphore"
                 android:layout_width="match_parent"
-                android:layout_height="50pt" />
+                android:layout_height="50pt"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -145,7 +146,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onStartSetClick"
-                    android:text="@string/startSet" />
+                    android:text="@string/startSet"/>
 
                 <Button
                     android:id="@+id/btnStopSet"
@@ -153,7 +154,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onStopSetClick"
-                    android:text="@string/stopSet" />
+                    android:text="@string/stopSet"/>
 
                 <Button
                     android:id="@+id/btnCancelSet"
@@ -162,47 +163,8 @@
                     android:layout_weight="1"
                     android:elevation="0dp"
                     android:onClick="onCancelSetClick"
-                    android:text="@string/cancelSet" />
+                    android:text="@string/cancelSet"/>
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <Switch
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/switchWifiAp"
-                    android:layout_weight="1"
-                    android:onClick="onWifiApSwitchClick"
-                    tools:text="@string/wifiAp"
-                    android:text="@string/wifiAp" />
-
-                <Button
-                    android:text="@string/diagnostic"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/btnDiagnostic"
-                    android:layout_weight="1"
-                    android:onClick="onDiagnosticClick"/>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_weight="1">
-
-                <Button
-                    android:id="@+id/btnSettings"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:onClick="onSettingsClick"
-                    android:text="@string/gotoSettings" />
             </LinearLayout>
 
         </LinearLayout>
