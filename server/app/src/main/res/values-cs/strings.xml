@@ -33,4 +33,13 @@
         <item>Netočit řady</item>
         <item>Točení řad</item>
     </string-array>
+    <string name="gotoManualControl">Ruční ovládání</string>
+    <string name="redLight">Červená</string>
+    <string name="greenLight">Zelená</string>
+    <string name="yellowLight">Žlutá</string>
+    <string name="lightOff">Vypnuto</string>
+    <string name="semaforky">Semaphores</string>
+    <string name="clock">Clock</string>
+    <string name="sirene">Sirene</string>
+    <string name="ClockCountdown">Clock countdown</string>
 </resources>

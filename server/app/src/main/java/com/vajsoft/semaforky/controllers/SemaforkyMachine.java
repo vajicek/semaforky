@@ -9,6 +9,7 @@ import com.vajsoft.semaforky.utils.State;
 import com.vajsoft.semaforky.utils.StateMachine;
 
 import static com.vajsoft.semaforky.controllers.SemaforkyState.FIRE;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.MANUAL_CONTROL;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.READY;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.ROUND_STARTED;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.ROUND_STOPPED;
@@ -43,7 +44,7 @@ public class SemaforkyMachine extends StateMachine {
 
     private void initializeStates() {
 
-        setCurrent(addState(new State<SemaforkyState>(STARTED, new SemaforkyState[]{ROUND_STARTED, SETTINGS}) {
+        setCurrent(addState(new State<SemaforkyState>(STARTED, new SemaforkyState[]{ROUND_STARTED, SETTINGS, MANUAL_CONTROL}) {
             @Override
             public void run(State previous) {
                 //Nothing to do
@@ -133,6 +134,12 @@ public class SemaforkyMachine extends StateMachine {
             }
         });
         addState(new State<SemaforkyState>(SETTINGS, new SemaforkyState[]{STARTED}) {
+            @Override
+            public void run(State previous) {
+                semaforky.getMainActivity().updateGui();
+            }
+        });
+        addState(new State<SemaforkyState>(MANUAL_CONTROL, new SemaforkyState[]{STARTED}) {
             @Override
             public void run(State previous) {
                 semaforky.getMainActivity().updateGui();

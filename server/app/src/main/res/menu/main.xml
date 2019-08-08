@@ -12,4 +12,7 @@
     <item android:id="@+id/menuItemSettings"
           tools:onClick="onSettingsClick"
           android:title="@string/gotoSettings" />
+    <item android:id="@+id/menuItemManualControl"
+        tools:onClick="onManualControlClick"
+        android:title="@string/gotoManualControl" />
 </menu>

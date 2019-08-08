@@ -8,14 +8,16 @@ import com.vajsoft.semaforky.controllers.SemaforkyState;
 import com.vajsoft.semaforky.data.Settings;
 
 import java.util.Date;
+import java.util.logging.Logger;
 
 /** Set Clock event. Sets GUI and device controllers values. */
-class SetClockEvent extends Event {
+public class SetClockEvent extends Event {
     private Semaforky semaforky;
     private Settings settings;
     private Date setStart;
+    private static final Logger LOGGER = Logger.getLogger(SetClockEvent.class.getName());
 
-    SetClockEvent(Date time, Date start, Semaforky semaforky) {
+    public SetClockEvent(Date time, Date start, Semaforky semaforky) {
         super(time);
         this.settings = semaforky.getSettings();
         this.setStart = start;
@@ -40,6 +42,9 @@ class SetClockEvent extends Event {
         } else if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.FIRE) ||
                 semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.WARNING)) {
             remaining_seconds = (int) Math.max(settings.getPreparationTimeTime() + settings.getSetTime() - seconds, 0);
+        } else if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.MANUAL_CONTROL)) {
+            remaining_seconds = (int) seconds;
+            LOGGER.info("seconds = " + Integer.toString(remaining_seconds));
         }
         return remaining_seconds;
     }

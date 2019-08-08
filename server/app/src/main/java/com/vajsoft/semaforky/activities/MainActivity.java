@@ -93,6 +93,11 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(new Intent(getApplicationContext(), SettingsActivity.class), 0);
     }
 
+    public void onManualControlClick(View view) {
+        machine.moveTo(SemaforkyState.MANUAL_CONTROL);
+        startActivityForResult(new Intent(getApplicationContext(), ManualControl.class), 0);
+    }
+
     public void onWifiApSwitchClick(View view) {
         updateWifiApState();
     }
@@ -127,6 +132,8 @@ public class MainActivity extends AppCompatActivity {
                             Arrays.asList(SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED).contains(stateName));
                     optionsMenu.findItem(R.id.menuItemSwitchWifiAp).setChecked(
                             new HotspotManager(getApplicationContext()).isApOn(Settings.SEMAFORKY_ESSID, Settings.SEMAFORKY_PASSWORD));
+                    optionsMenu.findItem(R.id.menuItemManualControl).setEnabled(
+                            Arrays.asList(SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED).contains(stateName));
                 }
 
                 if (machine.getCurrenState().name.equals(SemaforkyState.READY)) {
@@ -151,6 +158,8 @@ public class MainActivity extends AppCompatActivity {
             onWifiApSwitchClick(null);
         } else if (item.getItemId() == R.id.menuItemDiagnostic) {
             onDiagnosticClick(null);
+        } else if (item.getItemId() == R.id.menuItemManualControl) {
+            onManualControlClick(null);
         }
         return super.onOptionsItemSelected(item);
     }

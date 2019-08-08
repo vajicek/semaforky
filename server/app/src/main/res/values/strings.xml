@@ -33,4 +33,14 @@
         <item>Simple</item>
         <item>Alternating</item>
     </string-array>
+    <string name="gotoManualControl">Manual Control</string>
+    <string name="title_activity_manual_control">ManualControl</string>
+    <string name="redLight">Red</string>
+    <string name="greenLight">Green</string>
+    <string name="yellowLight">Yellow</string>
+    <string name="lightOff">Off</string>
+    <string name="semaforky">Semaphores</string>
+    <string name="clock">Clock</string>
+    <string name="sirene">Sirene</string>
+    <string name="ClockCountdown">Clock countdown</string>
 </resources>

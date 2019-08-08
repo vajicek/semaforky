@@ -30,6 +30,12 @@ public abstract class AbstractController implements Controller {
         return (i & 0xff) << 24 | (i & 0xff00) << 8 | (i & 0xff0000) >> 8 | (i >> 24) & 0xff;
     }
 
+    static void logSevere(String msg) {
+        if (msg != null) {
+            LOGGER.severe(msg);
+        }
+    }
+
     public void run() throws IOException {
         socket.setSoTimeout(SOCKET_TIMEOUT);
         InputStream inputStream = socket.getInputStream();
@@ -48,16 +54,16 @@ public abstract class AbstractController implements Controller {
                 }
             } catch (SocketTimeoutException e) {
                 LOGGER.severe("Client timeout");
-                LOGGER.severe(e.getMessage());
+                logSevere(e.getMessage());
                 break;
             } catch (IOException e) {
                 // CLIENT DISCONNECTED - EXCEPTION SWALLOWED
                 LOGGER.severe("Client disconnected");
-                LOGGER.severe(e.getMessage());
+                logSevere(e.getMessage());
                 break;
             } catch (Exception e) {
                 LOGGER.severe("Unknown exception");
-                LOGGER.severe(e.getMessage());
+                logSevere(e.getMessage());
                 break;
             }
         }
@@ -84,7 +90,7 @@ public abstract class AbstractController implements Controller {
             buf.putInt(value);
             out.write(buf.array());
         } catch (IOException e) {
-            LOGGER.severe(e.getMessage());
+            logSevere(e.getMessage());
             e.printStackTrace();
         }
     }
