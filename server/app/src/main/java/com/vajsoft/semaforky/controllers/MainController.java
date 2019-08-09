@@ -4,6 +4,7 @@ package com.vajsoft.semaforky.controllers;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import com.vajsoft.semaforky.Semaforky;
+import com.vajsoft.semaforky.activities.DiagnosticActivity;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -30,6 +31,11 @@ public class MainController {
     private Semaforky semaforky;
     private ServerSocket serverSocket;
     private ArrayList<Controller> controllers = new ArrayList<Controller>();
+    private ArrayList<ControllerAddedListener> controllerAddedListenersList = new ArrayList<ControllerAddedListener>();
+
+    public interface ControllerAddedListener {
+        void onControllerAdded();
+    }
 
     public MainController(Semaforky semaforky) {
         this.semaforky = semaforky;
@@ -38,6 +44,14 @@ public class MainController {
 
     public ArrayList<Controller> getControllers() {
         return controllers;
+    }
+
+    public void unregisterControllerAddedListener(ControllerAddedListener controllerAddedListener) {
+        controllerAddedListenersList.remove(controllerAddedListener);
+    }
+
+    public void registerControllerAddedListener(ControllerAddedListener controllerAddedListener) {
+        controllerAddedListenersList.add(controllerAddedListener);
     }
 
     public void updateClocks(int remainingSeconds) {
@@ -144,16 +158,22 @@ public class MainController {
             }
             if (controller != null) {
                 LOGGER.info("run()");
-                controllers.add(controller);
+                addController(controller);
                 controller.run();
                 controllers.remove(controller);
-                LOGGER.info("Client disconnected!");
-                LOGGER.info("Client disconnected!");
+                LOGGER.log(Level.INFO, "Client {0} disconnected!", controller.getClass().getSimpleName());
             } else {
                 LOGGER.severe("Unknown client!");
             }
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    private void addController(Controller controller) {
+        controllers.add(controller);
+        for(ControllerAddedListener listener : controllerAddedListenersList) {
+            listener.onControllerAdded();
         }
     }
 

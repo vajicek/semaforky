@@ -15,28 +15,58 @@ import com.vajsoft.semaforky.controllers.MainController;
 import com.vajsoft.semaforky.controllers.SemaphoreController;
 import com.vajsoft.semaforky.controllers.SirenController;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 /** Diagnostic activity to show list of connected components and their reported state. */
-public class DiagnosticActivity extends AppCompatActivity {
+public class DiagnosticActivity extends AppCompatActivity implements MainController.ControllerAddedListener {
+
+    SimpleDateFormat formatter;
+
+    public DiagnosticActivity() {
+        this.formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_diagnostic);
         report();
+        ((Semaforky) getApplication()).getMainController().registerControllerAddedListener(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ((Semaforky) getApplication()).getMainController().unregisterControllerAddedListener(this);
+    }
+
+    public void onControllerAdded() {
+       this.runOnUiThread(new Runnable() {
+            public void run() {
+                report();
+            }
+        });
+    }
+
+    private void appendLine(String line) {
+        ((TextView) findViewById(R.id.textDevicesReport)).append(formatter.format(new Date()));
+        ((TextView) findViewById(R.id.textDevicesReport)).append(": " + line + "\n");
     }
 
     private void report() {
         MainController mainController = ((Semaforky) getApplication()).getMainController();
-        ((TextView) findViewById(R.id.textDevicesReport)).append("-----------------------\n");
+        appendLine("-----------------------");
         for(Controller controller : mainController.getControllers()) {
+            String line = "";
             if(controller instanceof ClockController) {
-                ((TextView) findViewById(R.id.textDevicesReport)).append("ClockController");
+                line = "ClockController";
             } else if(controller instanceof SemaphoreController) {
-                ((TextView) findViewById(R.id.textDevicesReport)).append("SemaphoreController");
+                line = "SemaphoreController";
             } else if(controller instanceof SirenController) {
-                ((TextView) findViewById(R.id.textDevicesReport)).append("SirenController");
+                line = "SirenController";
             }
-            ((TextView) findViewById(R.id.textDevicesReport)).append(" - " + controller.getAddress() + "\n");
+            appendLine(line + " - " + controller.getAddress());
         }
     }
 }
