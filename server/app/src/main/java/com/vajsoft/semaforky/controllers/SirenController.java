@@ -5,7 +5,9 @@ package com.vajsoft.semaforky.controllers;
 
 import java.net.Socket;
 
-/** Siren device controller. */
+/**
+ * Siren device controller.
+ */
 public class SirenController extends AbstractController {
     public SirenController(Socket socket) {
         super(socket);

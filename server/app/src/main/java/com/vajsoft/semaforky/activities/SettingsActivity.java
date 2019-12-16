@@ -17,7 +17,9 @@ import com.vajsoft.semaforky.utils.PopupWindow;
 
 import java.util.logging.Logger;
 
-/** Setting activity/dialog. */
+/**
+ * Setting activity/dialog.
+ */
 public class SettingsActivity extends AppCompatActivity {
 
     public static final int SETTINGS_UPDATED = 1;

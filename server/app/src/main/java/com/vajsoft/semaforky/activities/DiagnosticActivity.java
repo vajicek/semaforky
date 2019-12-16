@@ -18,7 +18,9 @@ import com.vajsoft.semaforky.controllers.SirenController;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-/** Diagnostic activity to show list of connected components and their reported state. */
+/**
+ * Diagnostic activity to show list of connected components and their reported state.
+ */
 public class DiagnosticActivity extends AppCompatActivity implements MainController.ControllerAddedListener {
 
     SimpleDateFormat formatter;
@@ -42,7 +44,7 @@ public class DiagnosticActivity extends AppCompatActivity implements MainControl
     }
 
     public void onControllerAdded() {
-       this.runOnUiThread(new Runnable() {
+        this.runOnUiThread(new Runnable() {
             public void run() {
                 report();
             }
@@ -57,13 +59,13 @@ public class DiagnosticActivity extends AppCompatActivity implements MainControl
     private void report() {
         MainController mainController = ((Semaforky) getApplication()).getMainController();
         appendLine("-----------------------");
-        for(Controller controller : mainController.getControllers()) {
+        for (Controller controller : mainController.getControllers()) {
             String line = "";
-            if(controller instanceof ClockController) {
+            if (controller instanceof ClockController) {
                 line = "ClockController";
-            } else if(controller instanceof SemaphoreController) {
+            } else if (controller instanceof SemaphoreController) {
                 line = "SemaphoreController";
-            } else if(controller instanceof SirenController) {
+            } else if (controller instanceof SirenController) {
                 line = "SirenController";
             }
             appendLine(line + " - " + controller.getAddress());

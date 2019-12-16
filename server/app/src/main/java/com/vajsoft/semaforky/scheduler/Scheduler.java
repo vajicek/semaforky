@@ -21,7 +21,6 @@ public class Scheduler {
 
     public Scheduler(Semaforky semaforky) {
         this.semaforky = semaforky;
-
         this.setTimer = new Timer();
         this.setTimer.scheduleAtFixedRate(new TimerTask() {
             @Override

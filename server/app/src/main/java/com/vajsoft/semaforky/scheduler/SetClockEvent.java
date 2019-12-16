@@ -30,7 +30,7 @@ public class SetClockEvent extends Event {
         int remaining_seconds = getRemainingSeconds(seconds);
 
         semaforky.getMainController().updateClocks(remaining_seconds);
-        semaforky.getMainActivity().updateSetClocks(remaining_seconds);
+        semaforky.getGuiEventReceiver().updateSetClocks(remaining_seconds);
         semaforky.getScheduler().AddEvent(new SetClockEvent(new Date(now.getTime() + 100), setStart, semaforky));
     }
 

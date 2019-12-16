@@ -9,18 +9,15 @@ import android.graphics.Paint;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 
-/** Wrapper for SurfaceView which is responsible for plotting semaphore lights. */
+import com.vajsoft.semaforky.controllers.SemaphoreController;
+
+/**
+ * Wrapper for SurfaceView which is responsible for plotting semaphore lights.
+ */
 public class SemaphoreWidget implements SurfaceHolder.Callback {
 
-    public enum SemaphoreLight {
-        NONE,
-        RED,
-        GREEN,
-        YELLOW
-    }
-
     private SurfaceView target;
-    private SemaphoreLight light = SemaphoreLight.NONE;
+    private SemaphoreController.SemaphoreLight light = SemaphoreController.SemaphoreLight.NONE;
 
     public SemaphoreWidget(SurfaceView target) {
         this.target = target;
@@ -41,7 +38,7 @@ public class SemaphoreWidget implements SurfaceHolder.Callback {
     public void surfaceDestroyed(SurfaceHolder holder) {
     }
 
-    public void updateStatus(SemaphoreLight newStatus) {
+    public void updateStatus(SemaphoreController.SemaphoreLight newStatus) {
         light = newStatus;
         redrawSemaphore();
     }

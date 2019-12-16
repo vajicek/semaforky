@@ -30,7 +30,7 @@ public class ClockCountdownEvent extends Event {
         long seconds = (now.getTime() - setStart.getTime()) / 1000;
         int remaining_seconds = Math.max(this.countdown - (int)seconds, 0);
         semaforky.getMainController().updateClocks(remaining_seconds);
-        semaforky.getMainActivity().updateSetClocks(remaining_seconds);
+        semaforky.getGuiEventReceiver().updateSetClocks(remaining_seconds);
         semaforky.getScheduler().AddEvent(new ClockCountdownEvent(this.setStart, countdown, semaforky));
     }
 }

@@ -64,12 +64,12 @@ public class MainController {
         }
     }
 
-    public void updateSemaphores(int state) {
+    public void updateSemaphores(SemaphoreController.SemaphoreLight state) {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof SemaphoreController) {
                 LOGGER.fine("Setting semaphore state!");
-                controller.send(state);
+                controller.send(state.ordinal());
             }
         }
     }
@@ -172,7 +172,7 @@ public class MainController {
 
     private void addController(Controller controller) {
         controllers.add(controller);
-        for(ControllerAddedListener listener : controllerAddedListenersList) {
+        for (ControllerAddedListener listener : controllerAddedListenersList) {
             listener.onControllerAdded();
         }
     }

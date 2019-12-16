@@ -9,10 +9,11 @@ import android.view.View;
 
 import com.vajsoft.semaforky.R;
 import com.vajsoft.semaforky.Semaforky;
+import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.controllers.SemaphoreController;
 import com.vajsoft.semaforky.scheduler.ClockCountdownEvent;
+import com.vajsoft.semaforky.scheduler.Scheduler;
 import com.vajsoft.semaforky.scheduler.SetClockEvent;
-
-import java.util.Date;
 
 public class ManualControl extends AppCompatActivity {
 
@@ -22,32 +23,38 @@ public class ManualControl extends AppCompatActivity {
         setContentView(R.layout.activity_manual_control);
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        resetScheduler();
+    }
+
     public void onRedClicked(View view) {
-        ((Semaforky) getApplication()).getMainController().updateSemaphores(1);
+        getMainController().updateSemaphores(SemaphoreController.SemaphoreLight.RED);
     }
 
     public void onGreenClicked(View view) {
-        ((Semaforky) getApplication()).getMainController().updateSemaphores(2);
+        getMainController().updateSemaphores(SemaphoreController.SemaphoreLight.GREEN);
     }
 
     public void onYellowClicked(View view) {
-        ((Semaforky) getApplication()).getMainController().updateSemaphores(3);
+        getMainController().updateSemaphores(SemaphoreController.SemaphoreLight.YELLOW);
     }
 
     public void onNoneClicked(View view) {
-        ((Semaforky) getApplication()).getMainController().updateSemaphores(0);
+        getMainController().updateSemaphores(SemaphoreController.SemaphoreLight.NONE);
     }
 
     public void onThreeBeep(View view) {
-        ((Semaforky) getApplication()).getMainController().playSiren(3);
+        getMainController().playSiren(3);
     }
 
     public void onTwoBeep(View view) {
-        ((Semaforky) getApplication()).getMainController().playSiren(2);
+        getMainController().playSiren(2);
     }
 
     public void onOneBeep(View view) {
-        ((Semaforky) getApplication()).getMainController().playSiren(1);
+        getMainController().playSiren(1);
     }
 
     public void onClockSet0Clicked(View view) {
@@ -77,14 +84,29 @@ public class ManualControl extends AppCompatActivity {
     }
 
     public void onCountdown30Clicked(View view) {
-        ((Semaforky) getApplication()).getScheduler().RemoveAllEventsByClass(ClockCountdownEvent.class);
-        ((Semaforky) getApplication()).getScheduler().RemoveAllEventsByClass(SetClockEvent.class);
-        ((Semaforky) getApplication()).getScheduler().AddEvent(new ClockCountdownEvent(30, ((Semaforky) getApplication())));
+        resetScheduler();
+        getScheduler().AddEvent(new ClockCountdownEvent(30, ((Semaforky) getApplication())));
     }
 
     private void setClock(int value) {
-        ((Semaforky) getApplication()).getScheduler().RemoveAllEventsByClass(ClockCountdownEvent.class);
-        ((Semaforky) getApplication()).getScheduler().RemoveAllEventsByClass(SetClockEvent.class);
-        ((Semaforky) getApplication()).getMainController().updateClocks(value);
+        resetScheduler();
+        getMainController().updateClocks(value);
+    }
+
+    private void resetScheduler() {
+        getScheduler().RemoveAllEventsByClass(ClockCountdownEvent.class);
+        getScheduler().RemoveAllEventsByClass(SetClockEvent.class);
+    }
+
+    private MainController getMainController() {
+        return getApp().getMainController();
+    }
+
+    private Scheduler getScheduler() {
+        return getApp().getScheduler();
+    }
+
+    private Semaforky getApp() {
+        return (Semaforky) getApplication();
     }
 }

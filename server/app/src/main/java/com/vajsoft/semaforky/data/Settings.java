@@ -23,12 +23,10 @@ public class Settings implements Serializable {
         ALTERNATING
     }
 
-    private static final Logger LOGGER = Logger.getLogger(Settings.class.getName());
+    private static final String SEMAFORKY_ESSID = "semaforky";
+    private static final String SEMAFORKY_PASSWORD = "semaforky";
 
-    public static final String SEMAFORKY_ESSID = "semaforky";
-    public static final String SEMAFORKY_PASSWORD = "semaforky";
     public static String PREFS_NAME = "semaforkySettings";
-    private static Settings instance = null;
     private int language = 0;
     private int roundSets = 10;
     private int setTime = 120;
@@ -38,6 +36,10 @@ public class Settings implements Serializable {
     private boolean continuous = false;
     private int numberOfSets = 10;
     private LinesRotation linesRotation = LinesRotation.SIMPLE;
+
+    public Settings(Context applicationContext) {
+        loadSetting(applicationContext);
+    }
 
     public int getLines() {
         return lines;
@@ -146,5 +148,13 @@ public class Settings implements Serializable {
 
     public void setNumberOfSets(int numberOfSets) {
         this.numberOfSets = numberOfSets;
+    }
+
+    public String getEssid() {
+        return Settings.SEMAFORKY_ESSID;
+    }
+
+    public String getPassword() {
+        return Settings.SEMAFORKY_PASSWORD;
     }
 }

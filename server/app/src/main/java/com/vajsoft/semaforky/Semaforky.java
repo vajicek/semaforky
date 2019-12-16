@@ -6,44 +6,46 @@ package com.vajsoft.semaforky;
 import android.app.Application;
 import android.os.StrictMode;
 
-import com.vajsoft.semaforky.activities.MainActivity;
+import com.vajsoft.semaforky.activities.GuiEventReceiver;
 import com.vajsoft.semaforky.controllers.MainController;
 import com.vajsoft.semaforky.controllers.SemaforkyMachine;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.scheduler.Scheduler;
+import com.vajsoft.semaforky.utils.HotspotManager;
 import com.vajsoft.semaforky.utils.SoundManager;
 
 import java.io.InputStream;
 import java.util.logging.LogManager;
 
-/** Application object. Allocates and holds all infrastructure objects. */
+/**
+ * Application object. Allocates and holds all infrastructure objects.
+ */
 public class Semaforky extends Application {
     private MainController mainController;
     private Scheduler scheduler;
     private Settings settings;
     private SemaforkyMachine machine;
     private SoundManager soundManager;
-    private MainActivity mainActivity;
-
-    public Semaforky() {
-        settings = new Settings();
-        mainController = new MainController(this);
-        scheduler = new Scheduler(this);
-        machine = new SemaforkyMachine(this, settings);
-    }
+    private GuiEventReceiver guiEventReceiver;
+    private HotspotManager hotspotManager;
 
     @Override
     public void onCreate() {
         super.onCreate();
         initLogging();
+        initThreading();
+
+        guiEventReceiver = new GuiEventReceiver();
         soundManager = new SoundManager(getApplicationContext());
-        settings.loadSetting(getApplicationContext());
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
+        settings = new Settings(getApplicationContext());
+        mainController = new MainController(this);
+        scheduler = new Scheduler(this);
+        machine = new SemaforkyMachine(this);
+        hotspotManager = new HotspotManager(getApplicationContext(), settings);
     }
 
-    public void updateMainActivity(MainActivity mainActivity) {
-        this.mainActivity = mainActivity;
+    public HotspotManager getHotspotManager() {
+        return hotspotManager;
     }
 
     public Settings getSettings() {
@@ -58,8 +60,8 @@ public class Semaforky extends Application {
         return mainController;
     }
 
-    public MainActivity getMainActivity() {
-        return mainActivity;
+    public GuiEventReceiver getGuiEventReceiver() {
+        return guiEventReceiver;
     }
 
     public SoundManager getSoundManager() {
@@ -78,5 +80,10 @@ public class Semaforky extends Application {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void initThreading() {
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
     }
 }

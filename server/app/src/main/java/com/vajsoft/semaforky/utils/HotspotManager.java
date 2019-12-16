@@ -4,22 +4,50 @@ package com.vajsoft.semaforky.utils;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import android.content.Context;
+import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
+import android.os.Build;
+import android.os.Handler;
+import android.support.annotation.RequiresApi;
 
+import com.vajsoft.semaforky.R;
+import com.vajsoft.semaforky.data.Settings;
+
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 public class HotspotManager {
 
-    private Context context;
+    private Settings settings;
+    WifiManager wifiManager;
+    private WifiManager.LocalOnlyHotspotReservation reservation;
 
-    public HotspotManager(Context context) {
-        this.context = context;
+    public class HotspotManagerException extends Exception {
+        public HotspotManagerException(String message) {
+            super(message);
+        }
     }
 
-    /** Check whether wifi hotspot on or off. */
-    public boolean isApOn(String ssid, String password) {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
+    public HotspotManager(Context context, Settings settings) {
+        this.settings = settings;
+        this.wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
+    }
+
+    /**
+     * Enable or disable wifi AP.
+     */
+    public void setWifiState(boolean state) throws HotspotManagerException {
+        if (isApOn() == state) {
+            return;
+        }
+        configApState(state);
+    }
+
+    /**
+     * Check whether wifi hotspot on or off.
+     */
+    public boolean isApOn() {
         try {
             // test enabled
             Method isApEnabledMethod = wifiManager.getClass().getDeclaredMethod("isWifiApEnabled");
@@ -32,46 +60,66 @@ public class HotspotManager {
             Method getWifiApConfigurationMethod = wifiManager.getClass().getDeclaredMethod("getWifiApConfiguration");
             getWifiApConfigurationMethod.setAccessible(true);
             WifiConfiguration wifiConfiguration = (WifiConfiguration) getWifiApConfigurationMethod.invoke(wifiManager);
-            if (!wifiConfiguration.SSID.equals(ssid) || !wifiConfiguration.preSharedKey.equals(ssid)) {
+            if (!wifiConfiguration.SSID.equals(settings.getEssid()) || !wifiConfiguration.preSharedKey.equals(settings.getEssid())) {
                 return false;
             }
-
             return true;
         } catch (Throwable ignored) {
         }
         return false;
     }
 
-    public void disableApState() throws HotspotManagerException {
-        configApState(false, null, null);
+    private WifiConfiguration setupWifiConfiguration(WifiConfiguration wifiConfiguration) {
+        wifiConfiguration.SSID = settings.getEssid();
+        wifiConfiguration.preSharedKey = settings.getPassword();
+        wifiConfiguration.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+        wifiConfiguration.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
+        wifiConfiguration.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
+        wifiConfiguration.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
+        wifiConfiguration.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
+        wifiConfiguration.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
+        wifiConfiguration.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
+        return wifiConfiguration;
     }
 
-    /** Configure wifi hotspot. */
-    public void configApState(boolean enable, String ssid, String password) throws HotspotManagerException {
-        WifiManager wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
-        WifiConfiguration wifiConfiguration = null;
+    private void configApState(boolean enable) throws HotspotManagerException {
         try {
-            if (enable) {
-                wifiConfiguration = new WifiConfiguration();
-                wifiConfiguration.SSID = ssid;
-                wifiConfiguration.preSharedKey = password;
-                wifiConfiguration.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
-                wifiConfiguration.allowedProtocols.set(WifiConfiguration.Protocol.RSN);
-                wifiConfiguration.allowedProtocols.set(WifiConfiguration.Protocol.WPA);
-                wifiConfiguration.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.TKIP);
-                wifiConfiguration.allowedGroupCiphers.set(WifiConfiguration.GroupCipher.CCMP);
-                wifiConfiguration.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.TKIP);
-                wifiConfiguration.allowedPairwiseCiphers.set(WifiConfiguration.PairwiseCipher.CCMP);
-                wifiManager.setWifiEnabled(false);
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                setupWifiOreo(enable);
+            } else {
+                setupWifi(enable);
             }
-            Method method = wifiManager.getClass().getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class);
-            method.invoke(wifiManager, wifiConfiguration, enable);
+        } catch (NoSuchMethodException e) {
+            throw new HotspotManagerException("Unable to set Wifi AP");
         } catch (Exception e) {
             e.printStackTrace();
-            throw new HotspotManagerException();
+            throw new HotspotManagerException(e.getMessage());
         }
     }
 
-    public class HotspotManagerException extends Exception {
+    private void setupWifi(boolean enable) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        WifiConfiguration wifiConfiguration = enable ? setupWifiConfiguration(new WifiConfiguration()) : null;
+        wifiManager.getClass()
+                .getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class)
+                .invoke(wifiManager, wifiConfiguration, enable);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void setupWifiOreo(boolean enable) {
+        if (enable) {
+            wifiManager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback() {
+                @Override
+                public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation_) {
+                    reservation = reservation_;
+                    setupWifiConfiguration(reservation.getWifiConfiguration());
+                    super.onStarted(reservation);
+                }
+            }, new Handler());
+        } else {
+            if (reservation != null) {
+                reservation.close();
+                reservation = null;
+            }
+        }
     }
 }

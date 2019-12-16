@@ -20,7 +20,7 @@ public class RoundClockEvent extends Event {
 
     public void run() {
         Date now = new Date();
-        semaforky.getMainActivity().updateRoundClocks(roundStart);
+        semaforky.getGuiEventReceiver().updateRoundClocks(roundStart);
         semaforky.getScheduler().AddEvent(new RoundClockEvent(new Date(now.getTime() + 200), roundStart, semaforky));
     }
 }

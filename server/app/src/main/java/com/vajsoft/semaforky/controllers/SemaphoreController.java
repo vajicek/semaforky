@@ -5,12 +5,26 @@ package com.vajsoft.semaforky.controllers;
 
 import java.net.Socket;
 
-/** Controls 3 color semaphores. */
+/**
+ * Controls 3 color semaphores.
+ */
 public class SemaphoreController extends AbstractController {
-    final public static int SEMAPHORE_NONE = 0;
-    final public static int SEMAPHORE_RED = 1;
-    final public static int SEMAPHORE_GREEN = 2;
-    final public static int SEMAPHORE_YELLOW = 3;
+
+    public enum SemaphoreLight {
+        NONE(0),
+        RED(1),
+        GREEN(2),
+        YELLOW(3);
+        private int value;
+
+        SemaphoreLight(int value) {
+            this.value = value;
+        }
+
+        public int getInt() {
+            return value;
+        }
+    }
 
     public SemaphoreController(Socket socket) {
         super(socket);
