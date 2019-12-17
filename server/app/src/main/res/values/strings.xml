@@ -34,7 +34,6 @@
         <item>Alternating</item>
     </string-array>
     <string name="gotoManualControl">Manual Control</string>
-    <string name="title_activity_manual_control">ManualControl</string>
     <string name="redLight">Red</string>
     <string name="greenLight">Green</string>
     <string name="yellowLight">Yellow</string>
@@ -42,5 +41,6 @@
     <string name="semaforky">Semaphores</string>
     <string name="clock">Clock</string>
     <string name="sirene">Sirene</string>
-    <string name="ClockCountdown">Clock countdown</string>
+    <string name="clockCountdown">Clock countdown</string>
+    <string name="wifiHotspotPostOreoWarning">Since Android 8.0 (Oreo) it is not possible to programmatically control Wifi Hotspot capability of the device. Please enable Wifi Hotspot manually in System menu with ESSID=%s and password=%s</string>
 </resources>

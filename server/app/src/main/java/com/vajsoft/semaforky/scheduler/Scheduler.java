@@ -13,7 +13,9 @@ import java.util.PriorityQueue;
 import java.util.Timer;
 import java.util.TimerTask;
 
-/** Plans events in time and control main controller and main activity using settings. */
+/**
+ * Plans events in time and control main controller and main activity using settings.
+ */
 public class Scheduler {
     private Timer setTimer = null;
     private PriorityQueue<Event> events = new PriorityQueue<>();

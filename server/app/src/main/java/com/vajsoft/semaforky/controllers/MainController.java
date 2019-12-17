@@ -4,7 +4,6 @@ package com.vajsoft.semaforky.controllers;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import com.vajsoft.semaforky.Semaforky;
-import com.vajsoft.semaforky.activities.DiagnosticActivity;
 
 import java.io.DataInputStream;
 import java.io.IOException;

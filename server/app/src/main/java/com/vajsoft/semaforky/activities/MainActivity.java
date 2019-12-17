@@ -3,6 +3,7 @@ package com.vajsoft.semaforky.activities;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.os.Build;
@@ -33,7 +34,9 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
-/** Main activity wrapper. Handle GUI interactions. */
+/**
+ * Main activity wrapper. Handle GUI interactions.
+ */
 public class MainActivity extends AppCompatActivity implements GuiEventReceiver.GuiEventSubscriber {
     private static final Logger LOGGER = Logger.getLogger(MainActivity.class.getName());
     private SemaphoreWidget semaphoreWidget;
@@ -197,22 +200,35 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
         hotspotManager = semaforky.getHotspotManager();
         semaforky.getGuiEventReceiver().subscribe(this);
 
+        initGui();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        ((Semaforky) getApplication()).getGuiEventReceiver().unsubscribe(this);
+    }
+
+    private void initGui() {
         updateLocale();
         setContentView(R.layout.activity_main);
         semaphoreWidget = new SemaphoreWidget((SurfaceView) findViewById(R.id.svSemaphore));
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         setTitle(getString(R.string.app_name_build, BuildConfig.GitHash));
-
         updateGui();
+    }
+
+    private void updateContextLocale(Context context, Locale locale) {
+        Configuration config = context.getResources().getConfiguration();
+        config.locale = locale;
+        context.getResources().updateConfiguration(config, context.getResources().getDisplayMetrics());
     }
 
     private void updateLocale() {
         Locale locale = new Locale(settings.getLanguageCode());
         Locale.setDefault(locale);
-        Configuration config = getBaseContext().getResources().getConfiguration();
-        config.locale = locale;
-        getBaseContext().getResources().updateConfiguration(config, getBaseContext().getResources().getDisplayMetrics());
+        updateContextLocale(getBaseContext(), locale);
+        updateContextLocale(getApplication(), locale);
     }
 
     private void updateSet() {
@@ -231,6 +247,19 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
         }
     }
 
+    private void wifiApStateSetFailed(String detailMessage) {
+        LOGGER.severe("Failed to switch WifiAp");
+        MainActivity self = this;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                PopupWindow.showMessageBox(self, detailMessage);
+                MenuItem switchWifiAp = optionsMenu.findItem(R.id.menuItemSwitchWifiAp);
+                switchWifiAp.setChecked(!switchWifiAp.isChecked());
+            }
+        });
+    }
+
     private void updateWifiApState() {
         MenuItem switchWifiAp = optionsMenu.findItem(R.id.menuItemSwitchWifiAp);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -243,11 +272,9 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
             }
         }
         try {
-            hotspotManager.setWifiState(switchWifiAp.isChecked());
+            hotspotManager.setWifiState(switchWifiAp.isChecked(), this::wifiApStateSetFailed);
         } catch (HotspotManager.HotspotManagerException e) {
-            switchWifiAp.setChecked(!switchWifiAp.isChecked());
-            LOGGER.severe("Failed to switch WifiAp");
-            PopupWindow.showMessageBox(this, e.getMessage());
+            wifiApStateSetFailed(e.getMessage());
         }
     }
 

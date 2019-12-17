@@ -11,7 +11,9 @@ public class GuiEventReceiver {
 
     interface GuiEventSubscriber {
         void updateRoundClocks(final Date roundStart);
+
         void updateSetClocks(final int remainingSeconds);
+
         void updateGui();
     }
 

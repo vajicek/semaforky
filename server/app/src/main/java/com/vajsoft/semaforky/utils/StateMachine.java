@@ -8,7 +8,9 @@ import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** State machine base. Holds state lists, current state and perform state transition. */
+/**
+ * State machine base. Holds state lists, current state and perform state transition.
+ */
 public class StateMachine<T> {
     private static final Logger LOGGER = Logger.getLogger(StateMachine.class.getName());
     private ArrayList<State<T>> states = new ArrayList<>();

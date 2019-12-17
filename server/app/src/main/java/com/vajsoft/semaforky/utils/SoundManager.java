@@ -53,7 +53,7 @@ public class SoundManager {
         if (sounds.containsKey(soundName)) {
             SoundEffect soundEffect = sounds.get(soundName);
             if (soundEffect.loaded) {
-                soundPool.play(soundEffect.sampleId , 1 ,1 ,99 ,loop - 1, 1);
+                soundPool.play(soundEffect.sampleId, 1, 1, 99, loop - 1, 1);
             }
         }
     }

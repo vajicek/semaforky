@@ -4,7 +4,6 @@ package com.vajsoft.semaforky.utils;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import android.content.Context;
-import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
@@ -12,15 +11,20 @@ import android.os.Handler;
 import android.support.annotation.RequiresApi;
 
 import com.vajsoft.semaforky.R;
+import com.vajsoft.semaforky.activities.SettingsActivity;
 import com.vajsoft.semaforky.data.Settings;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 public class HotspotManager {
+    private static final Logger LOGGER = Logger.getLogger(SettingsActivity.class.getName());
 
     private Settings settings;
-    WifiManager wifiManager;
+    private Context context;
+    private WifiManager wifiManager;
     private WifiManager.LocalOnlyHotspotReservation reservation;
 
     public class HotspotManagerException extends Exception {
@@ -30,6 +34,7 @@ public class HotspotManager {
     }
 
     public HotspotManager(Context context, Settings settings) {
+        this.context = context;
         this.settings = settings;
         this.wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
     }
@@ -37,11 +42,11 @@ public class HotspotManager {
     /**
      * Enable or disable wifi AP.
      */
-    public void setWifiState(boolean state) throws HotspotManagerException {
+    public void setWifiState(boolean state, Consumer<String> onFail) throws HotspotManagerException {
         if (isApOn() == state) {
             return;
         }
-        configApState(state);
+        configApState(state, onFail);
     }
 
     /**
@@ -82,10 +87,12 @@ public class HotspotManager {
         return wifiConfiguration;
     }
 
-    private void configApState(boolean enable) throws HotspotManagerException {
+    private void configApState(boolean enable, Consumer<String> onFail) throws HotspotManagerException {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                setupWifiOreo(enable);
+                onFail.accept(String.format(this.context.getResources().getString(R.string.wifiHotspotPostOreoWarning),
+                        settings.getEssid(), settings.getPassword()));
+                //setupWifiOreo(enable, onFail);
             } else {
                 setupWifi(enable);
             }
@@ -104,8 +111,9 @@ public class HotspotManager {
                 .invoke(wifiManager, wifiConfiguration, enable);
     }
 
+    // TODO(vajicek): experimntal code, remove if not working
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setupWifiOreo(boolean enable) {
+    private void setupWifiOreo(boolean enable, Consumer<String> onFail) {
         if (enable) {
             wifiManager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback() {
                 @Override
@@ -113,6 +121,12 @@ public class HotspotManager {
                     reservation = reservation_;
                     setupWifiConfiguration(reservation.getWifiConfiguration());
                     super.onStarted(reservation);
+                }
+
+                @Override
+                public void onFailed(int reason) {
+                    super.onFailed(reason);
+                    onFail.accept(String.format("Failed to start local only hotspot. reason=%d", reason));
                 }
             }, new Handler());
         } else {

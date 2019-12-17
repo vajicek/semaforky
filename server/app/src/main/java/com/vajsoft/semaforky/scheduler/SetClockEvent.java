@@ -10,7 +10,9 @@ import com.vajsoft.semaforky.data.Settings;
 import java.util.Date;
 import java.util.logging.Logger;
 
-/** Set Clock event. Sets GUI and device controllers values. */
+/**
+ * Set Clock event. Sets GUI and device controllers values.
+ */
 public class SetClockEvent extends Event {
     private Semaforky semaforky;
     private Settings settings;
@@ -34,7 +36,9 @@ public class SetClockEvent extends Event {
         semaforky.getScheduler().AddEvent(new SetClockEvent(new Date(now.getTime() + 100), setStart, semaforky));
     }
 
-    /** Compute remaining seconds based on total seconds from start. */
+    /**
+     * Compute remaining seconds based on total seconds from start.
+     */
     private int getRemainingSeconds(long seconds) {
         int remaining_seconds = 0;
         if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.READY)) {

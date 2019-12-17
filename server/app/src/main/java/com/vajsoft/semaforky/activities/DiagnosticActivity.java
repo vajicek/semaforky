@@ -3,8 +3,8 @@ package com.vajsoft.semaforky.activities;
 /// Copyright (C) 2019, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.widget.TextView;
 
 import com.vajsoft.semaforky.R;

@@ -41,5 +41,6 @@
     <string name="semaforky">Semaphores</string>
     <string name="clock">Clock</string>
     <string name="sirene">Sirene</string>
-    <string name="ClockCountdown">Clock countdown</string>
+    <string name="clockCountdown">Clock countdown</string>
+    <string name="wifiHotspotPostOreoWarning">Od Android verze 8.0 (Oreo) není možné na zařízení z uživatelské aplikace nastavit Wifi Hotspot. Prosím, aktivujte Wifi Hotspot ručně v Systémové nabídce s ESSID=%s a heslem=%s</string>
 </resources>

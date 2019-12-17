@@ -15,8 +15,6 @@ import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.utils.PopupWindow;
 
-import java.util.logging.Logger;
-
 /**
  * Setting activity/dialog.
  */
@@ -24,7 +22,6 @@ public class SettingsActivity extends AppCompatActivity {
 
     public static final int SETTINGS_UPDATED = 1;
     public static final int SETTINGS_UPDATE_CANCELED = 1;
-    private static final Logger LOGGER = Logger.getLogger(SettingsActivity.class.getName());
     private Settings settings;
 
     public void onCancelClicked(View view) {

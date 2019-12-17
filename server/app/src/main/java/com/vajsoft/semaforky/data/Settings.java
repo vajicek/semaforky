@@ -6,10 +6,7 @@ package com.vajsoft.semaforky.data;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import com.vajsoft.semaforky.utils.HotspotManager;
-
 import java.io.Serializable;
-import java.util.logging.Logger;
 
 import static android.content.Context.MODE_PRIVATE;
 

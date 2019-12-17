@@ -3,7 +3,9 @@ package com.vajsoft.semaforky.utils;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-/** State abstraction. State name and names of states it can change to. */
+/**
+ * State abstraction. State name and names of states it can change to.
+ */
 abstract public class State<T> {
     public T name;
     public T[] next;

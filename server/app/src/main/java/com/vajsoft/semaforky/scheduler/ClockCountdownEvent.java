@@ -4,10 +4,8 @@ package com.vajsoft.semaforky.scheduler;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import com.vajsoft.semaforky.Semaforky;
-import com.vajsoft.semaforky.data.Settings;
 
 import java.util.Date;
-import java.util.logging.Logger;
 
 public class ClockCountdownEvent extends Event {
     private int countdown;
@@ -28,7 +26,7 @@ public class ClockCountdownEvent extends Event {
     public void run() {
         Date now = new Date();
         long seconds = (now.getTime() - setStart.getTime()) / 1000;
-        int remaining_seconds = Math.max(this.countdown - (int)seconds, 0);
+        int remaining_seconds = Math.max(this.countdown - (int) seconds, 0);
         semaforky.getMainController().updateClocks(remaining_seconds);
         semaforky.getGuiEventReceiver().updateSetClocks(remaining_seconds);
         semaforky.getScheduler().AddEvent(new ClockCountdownEvent(this.setStart, countdown, semaforky));

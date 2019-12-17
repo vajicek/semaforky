@@ -8,7 +8,9 @@ import com.vajsoft.semaforky.controllers.SemaforkyState;
 
 import java.util.Date;
 
-/** Semaphore event, move state machine to the next state. */
+/**
+ * Semaphore event, move state machine to the next state.
+ */
 class SemaphoreEvent extends Event {
     private SemaforkyMachine machine;
     private SemaforkyState nextStateName;
