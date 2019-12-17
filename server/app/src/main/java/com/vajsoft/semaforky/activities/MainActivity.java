@@ -247,9 +247,9 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
         }
     }
 
-    private void wifiApStateSetFailed(String detailMessage) {
+    private void wifiApStateSetFailed(final String detailMessage) {
         LOGGER.severe("Failed to switch WifiAp");
-        MainActivity self = this;
+        final MainActivity self = this;
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -272,7 +272,11 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
             }
         }
         try {
-            hotspotManager.setWifiState(switchWifiAp.isChecked(), this::wifiApStateSetFailed);
+            hotspotManager.setWifiState(switchWifiAp.isChecked(), new HotspotManager.OnFailCallback() {
+                public void failed(String message) {
+                    wifiApStateSetFailed(message);
+                }
+            });
         } catch (HotspotManager.HotspotManagerException e) {
             wifiApStateSetFailed(e.getMessage());
         }

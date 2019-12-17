@@ -1,6 +1,11 @@
 Build from command-line
 =======================
 
+Clean
+-----
+
+./gradlew clean
+
 
 Build release apk
 -----------------
@@ -18,7 +23,7 @@ Build debug apk
 Install to Android device
 -------------------------
 
-adb install app/build/outputs/apk/app-release.apk
+adb install app/build/outputs/apk/release/app-release.apk
 
 
 Uninstall semaforky from Android device

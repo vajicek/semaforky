@@ -33,6 +33,10 @@ public class HotspotManager {
         }
     }
 
+    public interface OnFailCallback {
+        void failed(String message);
+    }
+
     public HotspotManager(Context context, Settings settings) {
         this.context = context;
         this.settings = settings;
@@ -42,7 +46,7 @@ public class HotspotManager {
     /**
      * Enable or disable wifi AP.
      */
-    public void setWifiState(boolean state, Consumer<String> onFail) throws HotspotManagerException {
+    public void setWifiState(boolean state, OnFailCallback onFail) throws HotspotManagerException {
         if (isApOn() == state) {
             return;
         }
@@ -87,10 +91,10 @@ public class HotspotManager {
         return wifiConfiguration;
     }
 
-    private void configApState(boolean enable, Consumer<String> onFail) throws HotspotManagerException {
+    private void configApState(boolean enable, OnFailCallback onFail) throws HotspotManagerException {
         try {
             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                onFail.accept(String.format(this.context.getResources().getString(R.string.wifiHotspotPostOreoWarning),
+                onFail.failed(String.format(this.context.getResources().getString(R.string.wifiHotspotPostOreoWarning),
                         settings.getEssid(), settings.getPassword()));
                 //setupWifiOreo(enable, onFail);
             } else {
@@ -113,7 +117,7 @@ public class HotspotManager {
 
     // TODO(vajicek): experimntal code, remove if not working
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setupWifiOreo(boolean enable, Consumer<String> onFail) {
+    private void setupWifiOreo(boolean enable, final OnFailCallback onFail) {
         if (enable) {
             wifiManager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback() {
                 @Override
@@ -126,7 +130,7 @@ public class HotspotManager {
                 @Override
                 public void onFailed(int reason) {
                     super.onFailed(reason);
-                    onFail.accept(String.format("Failed to start local only hotspot. reason=%d", reason));
+                    onFail.failed(String.format("Failed to start local only hotspot. reason=%d", reason));
                 }
             }, new Handler());
         } else {

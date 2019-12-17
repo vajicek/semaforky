@@ -19,12 +19,15 @@ android {
             storePassword 'semaforky'
         }
     }
+    lintOptions {
+        abortOnError false
+    }
     compileSdkVersion 28
     buildToolsVersion '28.0.3'
     defaultConfig {
         applicationId "com.vajsoft.semaforky"
         minSdkVersion 14
-        targetSdkVersion 14
+        targetSdkVersion 26
         versionCode 1
         versionName "1.0"
         // Add git hash variable to generated file with build config
@@ -42,8 +45,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = 1.8
-        targetCompatibility = 1.8
+        sourceCompatibility = 1.7
+        targetCompatibility = 1.7
     }
 }
 
