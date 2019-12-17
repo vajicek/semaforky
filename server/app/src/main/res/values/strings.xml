@@ -42,5 +42,5 @@
     <string name="clock">Clock</string>
     <string name="sirene">Sirene</string>
     <string name="clockCountdown">Clock countdown</string>
-    <string formatted="false" name="wifiHotspotPostOreoWarning">Since Android 8.0 (Oreo) it is not possible to programmatically control Wifi Hotspot capability of the device. Please enable Wifi Hotspot manually in System menu with ESSID=%s and password=%s</string>
+    <string formatted="false" name="wifiHotspotControlFailed">Application failed to enable Wifi Hotspot capability of the device. Please enable Wifi Hotspot manually in System menu with ESSID=%s and password=%s. Error detail message: %s</string>
 </resources>

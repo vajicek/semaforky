@@ -9,6 +9,7 @@ import android.content.res.Configuration;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
@@ -253,7 +254,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                PopupWindow.showMessageBox(self, detailMessage);
+                PopupWindow.showMessageBox(self, String.format(self.getResources().getString(R.string.wifiHotspotControlFailed), settings.getEssid(), settings.getPassword(), detailMessage));
                 MenuItem switchWifiAp = optionsMenu.findItem(R.id.menuItemSwitchWifiAp);
                 switchWifiAp.setChecked(!switchWifiAp.isChecked());
             }
@@ -272,13 +273,16 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
             }
         }
         try {
-            hotspotManager.setWifiState(switchWifiAp.isChecked(), new HotspotManager.OnFailCallback() {
+            hotspotManager.setWifiState(switchWifiAp.isChecked(), new HotspotManager.OnHotspotControlCallbacks() {
                 public void failed(String message) {
                     wifiApStateSetFailed(message);
                 }
+
+                public void started() {
+                }
             });
         } catch (HotspotManager.HotspotManagerException e) {
-            wifiApStateSetFailed(e.getMessage());
+            wifiApStateSetFailed(Log.getStackTraceString(e));
         }
     }
 

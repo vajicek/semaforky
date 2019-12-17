@@ -4,19 +4,22 @@ package com.vajsoft.semaforky.utils;
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
 import android.content.Context;
+import android.net.ConnectivityManager;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.RequiresApi;
 
-import com.vajsoft.semaforky.R;
+import com.android.dx.stock.ProxyBuilder;
 import com.vajsoft.semaforky.activities.SettingsActivity;
 import com.vajsoft.semaforky.data.Settings;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 public class HotspotManager {
@@ -31,10 +34,16 @@ public class HotspotManager {
         public HotspotManagerException(String message) {
             super(message);
         }
+
+        public HotspotManagerException(String message, Throwable cause) {
+            super(message, cause);
+        }
     }
 
-    public interface OnFailCallback {
+    public interface OnHotspotControlCallbacks {
         void failed(String message);
+
+        void started();
     }
 
     public HotspotManager(Context context, Settings settings) {
@@ -46,11 +55,11 @@ public class HotspotManager {
     /**
      * Enable or disable wifi AP.
      */
-    public void setWifiState(boolean state, OnFailCallback onFail) throws HotspotManagerException {
+    public void setWifiState(boolean state, OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
         if (isApOn() == state) {
             return;
         }
-        configApState(state, onFail);
+        configApState(state, controlCallbacks);
     }
 
     /**
@@ -91,52 +100,116 @@ public class HotspotManager {
         return wifiConfiguration;
     }
 
-    private void configApState(boolean enable, OnFailCallback onFail) throws HotspotManagerException {
-        try {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                onFail.failed(String.format(this.context.getResources().getString(R.string.wifiHotspotPostOreoWarning),
-                        settings.getEssid(), settings.getPassword()));
-                //setupWifiOreo(enable, onFail);
-            } else {
-                setupWifi(enable);
-            }
-        } catch (NoSuchMethodException e) {
-            throw new HotspotManagerException("Unable to set Wifi AP");
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new HotspotManagerException(e.getMessage());
+    private void configApState(boolean enable, OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            setupWifiOreo(enable, controlCallbacks);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            setupWifi(enable);
         }
     }
 
-    private void setupWifi(boolean enable) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private void setupWifi(boolean enable) throws HotspotManagerException {
         WifiConfiguration wifiConfiguration = enable ? setupWifiConfiguration(new WifiConfiguration()) : null;
-        wifiManager.getClass()
-                .getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class)
-                .invoke(wifiManager, wifiConfiguration, enable);
+        try {
+            wifiManager.getClass()
+                    .getMethod("setWifiApEnabled", WifiConfiguration.class, boolean.class)
+                    .invoke(wifiManager, wifiConfiguration, enable);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            throw new HotspotManagerException("Failed while getting access to Wifi AP configuration interface.");
+        }
     }
 
-    // TODO(vajicek): experimntal code, remove if not working
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setupWifiOreo(boolean enable, final OnFailCallback onFail) {
+    private void setupWifiOreo(boolean enable, final OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
+        OreoTethering oreoTethering = new OreoTethering(context);
         if (enable) {
-            wifiManager.startLocalOnlyHotspot(new WifiManager.LocalOnlyHotspotCallback() {
-                @Override
-                public void onStarted(WifiManager.LocalOnlyHotspotReservation reservation_) {
-                    reservation = reservation_;
-                    setupWifiConfiguration(reservation.getWifiConfiguration());
-                    super.onStarted(reservation);
-                }
-
-                @Override
-                public void onFailed(int reason) {
-                    super.onFailed(reason);
-                    onFail.failed(String.format("Failed to start local only hotspot. reason=%d", reason));
-                }
-            }, new Handler());
+            oreoTethering.startTethering(settings.getEssid(), settings.getPassword(), controlCallbacks);
         } else {
-            if (reservation != null) {
-                reservation.close();
-                reservation = null;
+            oreoTethering.stopTethering();
+        }
+    }
+
+    /**
+     * This is alternative way to control Wifi AP on Android >= 8.0.
+     */
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    class OreoTethering {
+        ConnectivityManager connectivityManager;
+        Method startTetheringMethod;
+        Method stopTetheringMethod;
+
+        public OreoTethering(Context context) throws HotspotManagerException {
+            connectivityManager = context.getSystemService(ConnectivityManager.class);
+            try {
+                startTetheringMethod = connectivityManager.getClass().getDeclaredMethod("startTethering", int.class, boolean.class, OnStartTetheringCallbackClass(), Handler.class);
+                stopTetheringMethod = connectivityManager.getClass().getDeclaredMethod("stopTethering", int.class);
+            } catch (NoSuchMethodException e) {
+                throw new HotspotManagerException("Failed while obtaining tethering control interface.", e);
+            }
+        }
+
+        public void startTethering(String essid, String password, OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
+            configureHotspot(essid, password);
+            try {
+                startTetheringMethod.invoke(connectivityManager, ConnectivityManager.TYPE_MOBILE, false, getOnStartTetheringCallbackProxy(controlCallbacks), null);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new HotspotManagerException("Failed while starting tethering.", e);
+            }
+        }
+
+        public void stopTethering() throws HotspotManagerException {
+            try {
+                stopTetheringMethod.invoke(connectivityManager, ConnectivityManager.TYPE_MOBILE);
+            } catch (IllegalAccessException | InvocationTargetException e) {
+                throw new HotspotManagerException("Failed while stopping tethering.", e);
+            }
+        }
+
+        private Object getOnStartTetheringCallbackProxy(final OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
+            File outputDir = context.getCodeCacheDir();
+            try {
+                return ProxyBuilder.forClass(OnStartTetheringCallbackClass()).dexCache(outputDir).handler(new InvocationHandler() {
+                    @Override
+                    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+                        switch (method.getName()) {
+                            case "onTetheringStarted":
+                                controlCallbacks.started();
+                                break;
+                            case "onTetheringFailed":
+                                controlCallbacks.failed("Failed while trying to enable tethering.");
+                                break;
+                            default:
+                                ProxyBuilder.callSuper(proxy, method, args);
+                        }
+                        return null;
+                    }
+                }).build();
+            } catch (IOException e) {
+                throw new HotspotManagerException(e.getMessage());
+            }
+        }
+
+        private void configureHotspot(String name, String password) throws HotspotManagerException {
+            WifiConfiguration apConfig = new WifiConfiguration();
+            apConfig.SSID = name;
+            apConfig.preSharedKey = password;
+            apConfig.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+            try {
+                Method setConfigMethod = wifiManager.getClass().getMethod("setWifiApConfiguration", WifiConfiguration.class);
+                if (!(boolean) setConfigMethod.invoke(wifiManager, apConfig)) {
+                    throw new HotspotManagerException("Failed while setting Wifi AP configuration.");
+                }
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                throw new HotspotManagerException("Failed while getting access to Wifi AP configuration interface.", e);
+            }
+        }
+
+        private Class OnStartTetheringCallbackClass() throws HotspotManagerException {
+            try {
+                return Class.forName("android.net.ConnectivityManager$OnStartTetheringCallback");
+            } catch (ClassNotFoundException e) {
+                throw new HotspotManagerException("Failed while getting ConnectivityManager OnStartTetheringCallback class.", e);
             }
         }
     }
