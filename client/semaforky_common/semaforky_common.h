@@ -1,6 +1,10 @@
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+#define double_buffer
+#include <PxMatrix.h>
+#include <Ticker.h>
+
 #include "wifi.h"
 
 #define INVERTED_WIRE_LOGIC
@@ -9,6 +13,7 @@
 const int SEMAPHORE_CLIENT = 1;
 const int CLOCK_CLIENT = 2;
 const int SIREN_CLIENT = 3;
+const int RGB_MATRIX_DISPLAY_CLIENT = 4;
 
 // Wemos D1 mini - common pins
 #define POWER_ON_PIN 0
@@ -67,7 +72,8 @@ Process::Process() :
 ControlChunk Process::ReadControlChunk() {
   Serial.println("ReadControlChunk");
   ControlChunk received_chunk;
-  client.read((uint8_t*)(&received_chunk), sizeof(received_chunk));
+  client.read(reinterpret_cast<uint8_t*>(&received_chunk),
+    sizeof(received_chunk));
   Serial.print("received_chunk.control=");
   Serial.println(received_chunk.control);
   Serial.print("received_chunk.value=");
@@ -79,19 +85,20 @@ void Process::OnConnect() {
 }
 
 void Process::Connect() {
-  if (client.connect(ESPWifiUtils::servername, ESPWifiUtils::port)) {  //starts client connection, checks for connection
+  // starts client connection, checks for connection
+  if (client.connect(ESPWifiUtils::servername, ESPWifiUtils::port)) {
     Serial.println("connected");
     is_connected = true;
     OnConnect();
   } else {
-    Serial.println("connection failed"); //error message if no client connect
+    Serial.println("connection failed");  // error message if no client connect
     Serial.println();
     is_connected = false;
   }
 }
 
 void Process::Disconnect() {
-  client.stop(); //stop client
+  client.stop();  // stop client
   is_connected = false;
 }
 
@@ -106,7 +113,8 @@ void Process::Execute() {
           Serial.println("ping received");
           // send pong
           RegisterChunk chunk{PING_MAGIC_NUMBER};
-          client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
+          client.write(reinterpret_cast<uint8_t*>(&chunk),
+            sizeof(RegisterChunk));
         } else {
           last_chunk = new_chunk;
         }
@@ -143,7 +151,7 @@ struct SemaphoreProcess : public Process {
 
 void SemaphoreProcess::OnConnect() {
   RegisterChunk chunk{SEMAPHORE_CLIENT};
-  client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
+  client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
 
 void SemaphoreProcess::Output() {
@@ -181,7 +189,7 @@ void ComputeDigits(int* digits, int digit_count, int value) {
 
 /// Clock client specialization.
 struct SAA1064ClockProcess : public Process {
-  const static int digit_count = 4;
+  static const int digit_count = 4;
   SAA1064 saa1064;
   virtual void Init();
   virtual void Output();
@@ -189,12 +197,13 @@ struct SAA1064ClockProcess : public Process {
   SAA1064ClockProcess();
 };
 
-SAA1064ClockProcess::SAA1064ClockProcess() : saa1064 (100, SAA1064_CLOCK_CLOCK_PIN, SAA1064_CLOCK_DATA_PIN) {
+SAA1064ClockProcess::SAA1064ClockProcess()
+  : saa1064(100, SAA1064_CLOCK_CLOCK_PIN, SAA1064_CLOCK_DATA_PIN) {
 }
 
 void SAA1064ClockProcess::OnConnect() {
   RegisterChunk chunk{CLOCK_CLIENT};
-  client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
+  client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
 
 void SAA1064ClockProcess::Output() {
@@ -238,7 +247,7 @@ struct SirenProcess : public Process {
 
 void SirenProcess::OnConnect() {
   RegisterChunk chunk{SIREN_CLIENT};
-  client.write((uint8_t*)(&chunk), sizeof(RegisterChunk));
+  client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
 
 void SirenProcess::Output() {
@@ -254,4 +263,84 @@ void SirenProcess::Output() {
 void SirenProcess::Init() {
   Process::Init();
   pinMode(SIREN_AUDIO_PIN, OUTPUT);
+}
+
+//-------------------------------------------------------------------------------
+
+#define P10_LAT 16
+#define P10_A 5
+#define P10_B 4
+#define P10_C 15
+#define P10_OE 2
+
+static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
+  return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
+}
+
+const uint16_t P10_COLORS[] = {
+  color565(255, 255, 255),  // white
+  color565(255, 0, 0),      // red
+  color565(0, 255, 0),      // green
+  color565(255, 255, 0)     // yellow
+};
+
+struct RgbMatrixDisplayProcess : public Process {
+  PxMATRIX display;
+  Ticker display_ticker;
+  RgbMatrixDisplayProcess();
+  virtual void Init();
+  virtual void Output();
+  virtual void OnConnect();
+};
+
+int DecodeTimeValue(int value) {
+  return value & 0x0000ffff;
+}
+
+int DecodeColorValue(int value) {
+  return (value & 0x00ff0000) >> 16;
+}
+
+int DecodeBrightnessValue(int value) {
+  return (value & 0xff000000) >> 24;
+}
+
+RgbMatrixDisplayProcess::RgbMatrixDisplayProcess()
+  : display(32, 16, P10_LAT, P10_OE, P10_A, P10_B, P10_C) {
+}
+
+void RgbMatrixDisplayProcess::OnConnect() {
+  RegisterChunk chunk{RGB_MATRIX_DISPLAY_CLIENT};
+  client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
+}
+
+void RgbMatrixDisplayProcess::Output() {
+  display.fillScreen(color565(0, 0, 0));
+
+  auto time = DecodeTimeValue(last_chunk.value);
+  auto color = DecodeColorValue(last_chunk.value);
+  auto brightness = DecodeBrightnessValue(last_chunk.value);
+  display.setBrightness(brightness);
+
+  int digits[4];
+  ComputeDigits(digits, 4, time);
+  for (int i = 3; i > 0; i--) {
+    if (digits[i] >= 0) {
+      display.drawChar((i - 1) * 11, 1,  // coords
+        '0' + digits[i],  // character
+        P10_COLORS[color], P10_COLORS[color],  // colors
+        2);  // size
+    }
+  }
+  display.showBuffer();
+}
+
+void RgbMatrixDisplayProcess::Init() {
+  Process::Init();
+  Serial.begin(9600);
+  display.begin(8);
+  display.clearDisplay();
+  display_ticker.attach_ms(4, [this]() {
+    this->display.display();
+  });
 }

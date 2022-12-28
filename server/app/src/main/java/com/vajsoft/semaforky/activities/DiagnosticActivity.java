@@ -12,6 +12,7 @@ import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.controllers.ClockController;
 import com.vajsoft.semaforky.controllers.Controller;
 import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.controllers.RgbMatrixDisplayController;
 import com.vajsoft.semaforky.controllers.SemaphoreController;
 import com.vajsoft.semaforky.controllers.SirenController;
 
@@ -63,6 +64,8 @@ public class DiagnosticActivity extends AppCompatActivity implements MainControl
             String line = "";
             if (controller instanceof ClockController) {
                 line = "ClockController";
+            } else if (controller instanceof RgbMatrixDisplayController) {
+                line = "RgbMatrixDisplayController";
             } else if (controller instanceof SemaphoreController) {
                 line = "SemaphoreController";
             } else if (controller instanceof SirenController) {
