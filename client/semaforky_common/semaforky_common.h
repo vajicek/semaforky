@@ -281,7 +281,7 @@ const uint16_t P10_COLORS[] = {
   color565(255, 255, 255),  // white
   color565(255, 0, 0),      // red
   color565(0, 255, 0),      // green
-  color565(255, 255, 0)     // yellow
+  color565(255, 165, 0)     // orange
 };
 
 struct RgbMatrixDisplayProcess : public Process {
