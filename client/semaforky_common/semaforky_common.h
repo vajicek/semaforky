@@ -287,10 +287,16 @@ const uint16_t P10_COLORS[] = {
 struct RgbMatrixDisplayProcess : public Process {
   PxMATRIX display;
   Ticker display_ticker;
+  Ticker redraw_ticker;
+  int brightness;
+  int color;
+  int time;
+  int start;
   RgbMatrixDisplayProcess();
   virtual void Init();
   virtual void Output();
   virtual void OnConnect();
+  void DrawScreen();
 };
 
 int DecodeTimeValue(int value) {
@@ -315,13 +321,15 @@ void RgbMatrixDisplayProcess::OnConnect() {
 }
 
 void RgbMatrixDisplayProcess::Output() {
+  time = DecodeTimeValue(last_chunk.value);
+  color = DecodeColorValue(last_chunk.value);
+  brightness = DecodeBrightnessValue(last_chunk.value);
+  start = micros();
+}
+
+void RgbMatrixDisplayProcess::DrawScreen(int time, int brightness, int color) {
   display.fillScreen(color565(0, 0, 0));
-
-  auto time = DecodeTimeValue(last_chunk.value);
-  auto color = DecodeColorValue(last_chunk.value);
-  auto brightness = DecodeBrightnessValue(last_chunk.value);
   display.setBrightness(brightness);
-
   int digits[4];
   ComputeDigits(digits, 4, time);
   for (int i = 3; i > 0; i--) {
@@ -342,5 +350,8 @@ void RgbMatrixDisplayProcess::Init() {
   display.clearDisplay();
   display_ticker.attach_ms(4, [this]() {
     this->display.display();
+  });
+  redraw_ticker.attach_ms(100, [this]() {
+    DrawScreen(time - (micros() - start) / 1e6 , brightness, color)
   });
 }
