@@ -13,7 +13,7 @@ import java.util.logging.Logger;
  */
 public class StateMachine<T> {
     private static final Logger LOGGER = Logger.getLogger(StateMachine.class.getName());
-    private ArrayList<State<T>> states = new ArrayList<>();
+    private final ArrayList<State<T>> states = new ArrayList<>();
     private State<T> currentState = null;
 
     public State<T> addState(State<T> state) {
@@ -27,15 +27,15 @@ public class StateMachine<T> {
         currentState = state;
     }
 
-    public State getCurrenState() {
+    public State<T> getCurrenState() {
         LOGGER.log(Level.CONFIG, "getCurrenState() = {0})", currentState.name.toString());
         return currentState;
     }
 
-    public boolean moveTo(T stateName) {
+    public void moveTo(T stateName) {
         if (!Arrays.asList(currentState.next).contains(stateName)) {
             LOGGER.log(Level.CONFIG, "Failed to change state from {0} to {1}", new Object[]{currentState.name, stateName});
-            return false;
+            return;
         }
         State<T> state = SearchArray.findFirst(states, stateName,
                 new SearchArray.Comparator<State<T>, T>() {
@@ -45,12 +45,10 @@ public class StateMachine<T> {
                 }
         );
         if (state != null) {
-            State previousState = currentState;
+            State<T> previousState = currentState;
             setCurrent(state);
             state.run(previousState);
-            return true;
         }
-        return false;
     }
 }
 

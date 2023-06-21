@@ -15,6 +15,8 @@ import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.utils.PopupWindow;
 
+import java.util.Locale;
+
 /**
  * Setting activity/dialog.
  */
@@ -49,13 +51,13 @@ public class SettingsActivity extends AppCompatActivity {
     private void updateGuiFromData() {
         ((Spinner) findViewById(R.id.spinnerLanguage)).setSelection(settings.getLanguage());
         ((Spinner) findViewById(R.id.spinnerLineRotation)).setSelection(settings.getLinesRotation().ordinal());
-        ((TextView) findViewById(R.id.editLines)).setText(Integer.toString(settings.getLines()));
-        ((TextView) findViewById(R.id.editRounds)).setText(Integer.toString(settings.getRoundSets()));
-        ((TextView) findViewById(R.id.editSetTime)).setText(Integer.toString(settings.getSetTime()));
-        ((TextView) findViewById(R.id.editPreparationTime)).setText(Integer.toString(settings.getPreparationTimeTime()));
-        ((TextView) findViewById(R.id.editWarningTime)).setText(Integer.toString(settings.getWarningTimeTime()));
+        ((TextView) findViewById(R.id.editLines)).setText(String.format(Locale.ROOT, "%d", settings.getLines()));
+        ((TextView) findViewById(R.id.editRounds)).setText(String.format(Locale.ROOT, "%d", settings.getRoundSets()));
+        ((TextView) findViewById(R.id.editSetTime)).setText(String.format(Locale.ROOT, "%d", settings.getSetTime()));
+        ((TextView) findViewById(R.id.editPreparationTime)).setText(String.format(Locale.ROOT, "%d", settings.getPreparationTimeTime()));
+        ((TextView) findViewById(R.id.editWarningTime)).setText(String.format(Locale.ROOT, "%d", settings.getWarningTimeTime()));
         ((CheckBox) findViewById(R.id.cbContinuous)).setChecked(settings.getContinuous());
-        ((TextView) findViewById(R.id.editNumberOfSets)).setText(Integer.toString(settings.getNumberOfSets()));
+        ((TextView) findViewById(R.id.editNumberOfSets)).setText(String.format(Locale.ROOT, "%d", settings.getNumberOfSets()));
     }
 
     private boolean validateTime() {

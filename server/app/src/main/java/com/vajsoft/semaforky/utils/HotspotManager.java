@@ -12,7 +12,6 @@ import android.os.Handler;
 import android.support.annotation.RequiresApi;
 
 import com.android.dx.stock.ProxyBuilder;
-import com.vajsoft.semaforky.activities.SettingsActivity;
 import com.vajsoft.semaforky.data.Settings;
 
 import java.io.File;
@@ -20,17 +19,14 @@ import java.io.IOException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.logging.Logger;
 
 public class HotspotManager {
-    private static final Logger LOGGER = Logger.getLogger(SettingsActivity.class.getName());
 
-    private Settings settings;
-    private Context context;
-    private WifiManager wifiManager;
-    private WifiManager.LocalOnlyHotspotReservation reservation;
+    private final Settings settings;
+    private final Context context;
+    private final WifiManager wifiManager;
 
-    public class HotspotManagerException extends Exception {
+    public static class HotspotManagerException extends Exception {
         public HotspotManagerException(String message) {
             super(message);
         }
@@ -46,7 +42,7 @@ public class HotspotManager {
         void started();
     }
 
-    public HotspotManager(Context context, Settings settings) {
+    public HotspotManager(final Context context, final Settings settings) {
         this.context = context;
         this.settings = settings;
         this.wifiManager = (WifiManager) context.getSystemService(context.WIFI_SERVICE);
@@ -78,10 +74,7 @@ public class HotspotManager {
             Method getWifiApConfigurationMethod = wifiManager.getClass().getDeclaredMethod("getWifiApConfiguration");
             getWifiApConfigurationMethod.setAccessible(true);
             WifiConfiguration wifiConfiguration = (WifiConfiguration) getWifiApConfigurationMethod.invoke(wifiManager);
-            if (!wifiConfiguration.SSID.equals(settings.getEssid()) || !wifiConfiguration.preSharedKey.equals(settings.getEssid())) {
-                return false;
-            }
-            return true;
+            return wifiConfiguration.SSID.equals(settings.getEssid()) && wifiConfiguration.preSharedKey.equals(settings.getEssid());
         } catch (Throwable ignored) {
         }
         return false;
@@ -103,12 +96,11 @@ public class HotspotManager {
     private void configApState(boolean enable, OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setupWifiOreo(enable, controlCallbacks);
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        } else {
             setupWifi(enable);
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void setupWifi(boolean enable) throws HotspotManagerException {
         WifiConfiguration wifiConfiguration = enable ? setupWifiConfiguration(new WifiConfiguration()) : null;
         try {
@@ -205,7 +197,7 @@ public class HotspotManager {
             }
         }
 
-        private Class OnStartTetheringCallbackClass() throws HotspotManagerException {
+        private Class<?> OnStartTetheringCallbackClass() throws HotspotManagerException {
             try {
                 return Class.forName("android.net.ConnectivityManager$OnStartTetheringCallback");
             } catch (ClassNotFoundException e) {

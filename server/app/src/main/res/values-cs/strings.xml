@@ -42,5 +42,7 @@
     <string name="clock">Clock</string>
     <string name="sirene">Sirene</string>
     <string name="clockCountdown">Clock countdown</string>
+    <string name="linesAB">AB</string>
+    <string name="linesCD">CD</string>
     <string formatted="false" name="wifiHotspotControlFailed">Aplikace selhala při pokusu aktivovat Wifi Hotspot. Prosím, aktivujte Wifi Hotspot ručně v Systémové nabídce s ESSID=%s a heslem=%s. Detail chyby: %s</string>
 </resources>

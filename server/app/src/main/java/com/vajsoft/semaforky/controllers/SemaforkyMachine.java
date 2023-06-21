@@ -3,10 +3,6 @@ package com.vajsoft.semaforky.controllers;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-import com.vajsoft.semaforky.Semaforky;
-import com.vajsoft.semaforky.utils.State;
-import com.vajsoft.semaforky.utils.StateMachine;
-
 import static com.vajsoft.semaforky.controllers.SemaforkyState.FIRE;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.MANUAL_CONTROL;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.READY;
@@ -19,14 +15,18 @@ import static com.vajsoft.semaforky.controllers.SemaforkyState.SET_STOPPED;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.STARTED;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.WARNING;
 
+import com.vajsoft.semaforky.Semaforky;
+import com.vajsoft.semaforky.utils.State;
+import com.vajsoft.semaforky.utils.StateMachine;
+
 /**
  * Semaforky state machine. Defines sttate names and state change implementation.
  */
-public class SemaforkyMachine extends StateMachine {
+public class SemaforkyMachine extends StateMachine<SemaforkyState> {
 
     private int currentSet = 1;
     private int currentLine = 0;
-    private Semaforky semaforky;
+    private final Semaforky semaforky;
 
     public SemaforkyMachine(Semaforky semaforky) {
         this.semaforky = semaforky;
@@ -45,13 +45,13 @@ public class SemaforkyMachine extends StateMachine {
 
         setCurrent(addState(new State<SemaforkyState>(STARTED, new SemaforkyState[]{ROUND_STARTED, SETTINGS, MANUAL_CONTROL}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 //Nothing to do
             }
         }));
         addState(new State<SemaforkyState>(ROUND_STARTED, new SemaforkyState[]{SET_STARTED, ROUND_STOPPED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getScheduler().StartRound();
                 semaforky.getGuiEventReceiver().updateGui();
                 currentSet = 1;
@@ -61,7 +61,7 @@ public class SemaforkyMachine extends StateMachine {
         });
         addState(new State<SemaforkyState>(SET_STARTED, new SemaforkyState[]{READY}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
                 semaforky.getMainController().playSiren(2);
                 semaforky.getScheduler().StartSet();
@@ -69,26 +69,26 @@ public class SemaforkyMachine extends StateMachine {
         });
         addState(new State<SemaforkyState>(READY, new SemaforkyState[]{FIRE, SET_CANCELED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
             }
         });
-        addState(new State<SemaforkyState>(FIRE, new SemaforkyState[]{SET_STOPPED, SET_CANCELED, WARNING}) {
+        addState(new State<SemaforkyState>(FIRE, new SemaforkyState[]{SET_STOPPED, SET_CANCELED, WARNING, ROUND_STOPPED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
                 semaforky.getMainController().playSiren(1);
             }
         });
-        addState(new State<SemaforkyState>(WARNING, new SemaforkyState[]{SET_CANCELED, SET_STOPPED}) {
+        addState(new State<SemaforkyState>(WARNING, new SemaforkyState[]{SET_CANCELED, SET_STOPPED, ROUND_STOPPED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
             }
         });
         addState(new State<SemaforkyState>(SET_STOPPED, new SemaforkyState[]{SET_STARTED, ROUND_STOPPED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getScheduler().StopSet();
                 updateSetAndLine();
                 semaforky.getGuiEventReceiver().updateGui();
@@ -127,7 +127,7 @@ public class SemaforkyMachine extends StateMachine {
         });
         addState(new State<SemaforkyState>(SET_CANCELED, new SemaforkyState[]{ROUND_STOPPED, SET_STARTED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getScheduler().CancelSet();
                 semaforky.getGuiEventReceiver().updateGui();
                 semaforky.getMainController().playSiren(2);
@@ -135,7 +135,7 @@ public class SemaforkyMachine extends StateMachine {
         });
         addState(new State<SemaforkyState>(ROUND_STOPPED, new SemaforkyState[]{SETTINGS, ROUND_STARTED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
                 semaforky.getMainController().playSiren(4);
                 semaforky.getScheduler().EndRound();
@@ -143,15 +143,15 @@ public class SemaforkyMachine extends StateMachine {
         });
         addState(new State<SemaforkyState>(SETTINGS, new SemaforkyState[]{STARTED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
             }
         });
         addState(new State<SemaforkyState>(MANUAL_CONTROL, new SemaforkyState[]{STARTED}) {
             @Override
-            public void run(State previous) {
+            public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
             }
         });
     }
-};
+}

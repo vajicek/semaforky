@@ -11,8 +11,8 @@ import java.util.Date;
  * Round clock event. Updates GUI clock control on main activity.
  */
 public class RoundClockEvent extends Event {
-    private Date roundStart;
-    private Semaforky semaforky;
+    private final Date roundStart;
+    private final Semaforky semaforky;
 
     RoundClockEvent(Date time, Date roundStart, Semaforky semaforky) {
         super(time);

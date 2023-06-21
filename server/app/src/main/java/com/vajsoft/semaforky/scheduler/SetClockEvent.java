@@ -14,9 +14,9 @@ import java.util.logging.Logger;
  * Set Clock event. Sets GUI and device controllers values.
  */
 public class SetClockEvent extends Event {
-    private Semaforky semaforky;
-    private Settings settings;
-    private Date setStart;
+    private final Semaforky semaforky;
+    private final Settings settings;
+    private final Date setStart;
     private static final Logger LOGGER = Logger.getLogger(SetClockEvent.class.getName());
 
     public SetClockEvent(Date time, Date start, Semaforky semaforky) {
@@ -48,8 +48,8 @@ public class SetClockEvent extends Event {
             remaining_seconds = (int) Math.max(settings.getPreparationTimeTime() + settings.getSetTime() - seconds, 0);
         } else if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.MANUAL_CONTROL)) {
             remaining_seconds = (int) seconds;
-            LOGGER.info("seconds = " + Integer.toString(remaining_seconds));
+            LOGGER.info("seconds = " + remaining_seconds);
         }
         return remaining_seconds;
     }
-};
+}

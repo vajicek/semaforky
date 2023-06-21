@@ -17,14 +17,12 @@ import java.util.TimerTask;
  * Plans events in time and control main controller and main activity using settings.
  */
 public class Scheduler {
-    private Timer setTimer = null;
-    private PriorityQueue<Event> events = new PriorityQueue<>();
-    private Semaforky semaforky;
+    private final PriorityQueue<Event> events = new PriorityQueue<>();
+    private final Semaforky semaforky;
 
     public Scheduler(Semaforky semaforky) {
         this.semaforky = semaforky;
-        this.setTimer = new Timer();
-        this.setTimer.scheduleAtFixedRate(new TimerTask() {
+        new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 UpdateControllers();
@@ -45,11 +43,11 @@ public class Scheduler {
         RemoveAllEventsByClass(RoundClockEvent.class);
     }
 
-    public void RemoveAllEventsByClass(Class eventType) {
-        Object[] eventsArray = events.toArray();
-        for (int i = 0; i < eventsArray.length; i++) {
-            if (eventsArray[i].getClass().equals(eventType)) {
-                events.remove(eventsArray[i]);
+    public void RemoveAllEventsByClass(Class<? extends Event> eventType) {
+        Event[] eventsArray = events.toArray(new Event[0]);
+        for (Event o : eventsArray) {
+            if (o.getClass().equals(eventType)) {
+                events.remove(o);
             }
         }
     }
@@ -65,13 +63,13 @@ public class Scheduler {
         AddEvent(new SemaphoreEvent(now,
                 SemaforkyState.READY,
                 machine));
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + settings.getPreparationTimeTime() * 1000),
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + settings.getPreparationTimeTime() * 1000L),
                 SemaforkyState.FIRE,
                 machine));
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.getPreparationTimeTime() + settings.getSetTime() - settings.getWarningTimeTime()) * 1000),
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.getPreparationTimeTime() + settings.getSetTime() - settings.getWarningTimeTime()) * 1000L),
                 SemaforkyState.WARNING,
                 machine));
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.getPreparationTimeTime() + settings.getSetTime()) * 1000 + 500),
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.getPreparationTimeTime() + settings.getSetTime()) * 1000L + 500),
                 SemaforkyState.SET_STOPPED,
                 machine));
         AddEvent(new SetClockEvent(new Date(), new Date(), semaforky));

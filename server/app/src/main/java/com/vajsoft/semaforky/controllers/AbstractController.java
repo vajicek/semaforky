@@ -19,8 +19,7 @@ public abstract class AbstractController implements Controller {
     private static final int PING_TIMEOUT = 3000;
     private static final int PING_MAGIC_VALUE = 69;
     private static final int CONTROL_MAGIC_VALUE = 123;
-    private Socket socket;
-    private boolean interrupted = false;
+    private final Socket socket;
 
     public AbstractController(Socket socket) {
         this.socket = socket;
@@ -40,7 +39,7 @@ public abstract class AbstractController implements Controller {
         socket.setSoTimeout(SOCKET_TIMEOUT);
         InputStream inputStream = socket.getInputStream();
         DataInputStream dataInputStream = new DataInputStream(inputStream);
-        while (!interrupted && !socket.isClosed()) {
+        while (!socket.isClosed()) {
             try {
                 Thread.sleep(PING_TIMEOUT);
 

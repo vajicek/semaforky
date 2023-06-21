@@ -9,7 +9,7 @@ import java.util.Date;
  * Abstract base class for events which can be added to prioritized (by time) event queue. Run
  * method is executed when event is fired.
  */
-abstract class Event implements Comparable {
+abstract class Event implements Comparable<Event> {
     public Date time;
 
     Event(Date time) {
@@ -19,10 +19,8 @@ abstract class Event implements Comparable {
     public abstract void run();
 
     @Override
-    public int compareTo(Object o) {
-        if (time.getTime() < ((Event) o).time.getTime()) return -1;
-        if (time.getTime() > ((Event) o).time.getTime()) return 1;
-        return 0;
+    public int compareTo(Event o) {
+        return Long.compare(time.getTime(), o.time.getTime());
     }
 };
 

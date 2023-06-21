@@ -12,8 +12,8 @@ import java.util.Date;
  * Semaphore event, move state machine to the next state.
  */
 class SemaphoreEvent extends Event {
-    private SemaforkyMachine machine;
-    private SemaforkyState nextStateName;
+    private final SemaforkyMachine machine;
+    private final SemaforkyState nextStateName;
 
     SemaphoreEvent(Date time, SemaforkyState nextStateName, SemaforkyMachine machine) {
         super(time);

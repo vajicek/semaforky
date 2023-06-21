@@ -15,7 +15,6 @@ import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.TextView;
 
 import com.vajsoft.semaforky.BuildConfig;
@@ -55,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
                 long seconds = TimeUnit.MILLISECONDS.toSeconds(diff) % 60;
                 long minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60;
                 ((TextView) findViewById(R.id.tvRoundTime)).setText(
-                        String.format("%1$02d:%2$02d", minutes, seconds)
+                        String.format(Locale.ROOT, "%1$02d:%2$02d", minutes, seconds)
                 );
             }
         });
@@ -66,7 +65,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
             @Override
             public void run() {
                 ((TextView) findViewById(R.id.tvSetTime)).setText(
-                        String.format("%1$03d", remainingSeconds)
+                        String.format(Locale.ROOT, "%1$03d", remainingSeconds)
                 );
             }
         });
@@ -80,16 +79,16 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
                 LOGGER.entering(this.getClass().getName(), "updateGui().run() called");
                 updateSet();
 
-                Object stateName = machine.getCurrenState().name;
-                ((Button) findViewById(R.id.btnBeginRound)).setEnabled(
+                final SemaforkyState stateName = machine.getCurrenState().name;
+                findViewById(R.id.btnBeginRound).setEnabled(
                         Arrays.asList(SemaforkyState.STARTED, SemaforkyState.ROUND_STOPPED).contains(stateName));
-                ((Button) findViewById(R.id.btnEndRound)).setEnabled(
-                        Arrays.asList(SemaforkyState.ROUND_STARTED, SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED).contains(stateName));
-                ((Button) findViewById(R.id.btnStartSet)).setEnabled(
+                findViewById(R.id.btnEndRound).setEnabled(
+                        Arrays.asList(SemaforkyState.ROUND_STARTED, SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED, SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
+                findViewById(R.id.btnStartSet).setEnabled(
                         Arrays.asList(SemaforkyState.ROUND_STARTED, SemaforkyState.SET_CANCELED, SemaforkyState.SET_STOPPED).contains(stateName));
-                ((Button) findViewById(R.id.btnStopSet)).setEnabled(
+                findViewById(R.id.btnStopSet).setEnabled(
                         Arrays.asList(SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
-                ((Button) findViewById(R.id.btnCancelSet)).setEnabled(
+                findViewById(R.id.btnCancelSet).setEnabled(
                         Arrays.asList(SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
 
                 if (optionsMenu != null) {
@@ -233,17 +232,21 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
     }
 
     private void updateSet() {
-        ((TextView) findViewById(R.id.tvSet)).setText(Integer.toString(machine.getCurrentSet()));
+        ((TextView) findViewById(R.id.tvSet)).setText(String.format(Locale.ROOT, "%d", machine.getCurrentSet()));
         if (machine.getCurrenState().name.equals(SemaforkyState.STARTED) ||
                 machine.getCurrenState().name.equals(SemaforkyState.ROUND_STOPPED)) {
             ((TextView) findViewById(R.id.tvLine)).setText("--");
         } else if (settings.getLines() == 1) {
-            ((TextView) findViewById(R.id.tvLine)).setText("AB");
+            ((TextView) findViewById(R.id.tvLine)).setText(getResources().getText(R.string.linesAB));
         } else if (settings.getLines() == 2) {
             if (settings.getLinesRotation() == Settings.LinesRotation.SIMPLE) {
-                ((TextView) findViewById(R.id.tvLine)).setText(machine.getCurrentLine() == 0 ? "AB" : "CD");
+                ((TextView) findViewById(R.id.tvLine)).setText(machine.getCurrentLine() == 0 ?
+                        getResources().getText(R.string.linesAB) :
+                        getResources().getText(R.string.linesCD));
             } else {
-                ((TextView) findViewById(R.id.tvLine)).setText(machine.getCurrentLine() != machine.getCurrentSet() % 2 ? "AB" : "CD");
+                ((TextView) findViewById(R.id.tvLine)).setText(machine.getCurrentLine() != machine.getCurrentSet() % 2 ?
+                        getResources().getText(R.string.linesAB) :
+                        getResources().getText(R.string.linesCD));
             }
         }
     }

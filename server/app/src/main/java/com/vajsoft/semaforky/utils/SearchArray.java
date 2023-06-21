@@ -20,6 +20,6 @@ public class SearchArray<T> {
     }
 
     public interface Comparator<T, V> {
-        public boolean isEqual(T item, V value);
+        boolean isEqual(T item, V value);
     }
 }

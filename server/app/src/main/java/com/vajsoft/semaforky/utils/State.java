@@ -15,7 +15,5 @@ abstract public class State<T> {
         next = next_states;
     }
 
-    public abstract void run(State previous);
-};
-
-
+    public abstract void run(State<T> previous);
+}

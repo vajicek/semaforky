@@ -18,6 +18,7 @@ import com.vajsoft.semaforky.controllers.SirenController;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 /**
  * Diagnostic activity to show list of connected components and their reported state.
@@ -27,7 +28,7 @@ public class DiagnosticActivity extends AppCompatActivity implements MainControl
     SimpleDateFormat formatter;
 
     public DiagnosticActivity() {
-        this.formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
+        this.formatter = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss", Locale.ROOT);
     }
 
     @Override

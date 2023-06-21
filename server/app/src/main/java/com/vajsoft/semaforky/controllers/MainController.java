@@ -28,10 +28,10 @@ public class MainController {
     public static final int RGB_MATRIX_DISPLAY_CLIENT = 4;
     public static final int SERVER_PORT = 8888;
     private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
-    private Semaforky semaforky;
+    private final Semaforky semaforky;
     private ServerSocket serverSocket;
-    private ArrayList<Controller> controllers = new ArrayList<Controller>();
-    private ArrayList<ControllerAddedListener> controllerAddedListenersList = new ArrayList<ControllerAddedListener>();
+    private final ArrayList<Controller> controllers = new ArrayList<Controller>();
+    private final ArrayList<ControllerAddedListener> controllerAddedListenersList = new ArrayList<ControllerAddedListener>();
 
     public interface ControllerAddedListener {
         void onControllerAdded();

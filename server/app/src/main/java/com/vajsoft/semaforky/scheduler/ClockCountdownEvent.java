@@ -8,9 +8,9 @@ import com.vajsoft.semaforky.Semaforky;
 import java.util.Date;
 
 public class ClockCountdownEvent extends Event {
-    private int countdown;
-    private Semaforky semaforky;
-    private Date setStart;
+    private final int countdown;
+    private final Semaforky semaforky;
+    private final Date setStart;
 
     public ClockCountdownEvent(int countdown, Semaforky semaforky) {
         this(new Date(), countdown, semaforky);

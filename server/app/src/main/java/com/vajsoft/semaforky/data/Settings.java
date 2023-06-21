@@ -3,12 +3,12 @@ package com.vajsoft.semaforky.data;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import static android.content.Context.MODE_PRIVATE;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 
 import java.io.Serializable;
-
-import static android.content.Context.MODE_PRIVATE;
 
 /**
  * Singleton class. Holds, store, load setting of the application.
@@ -58,6 +58,7 @@ public class Settings implements Serializable {
         switch (language) {
             case 1:
                 return "cs";
+            case 0:
             default:
                 return "";
         }
@@ -128,7 +129,7 @@ public class Settings implements Serializable {
         editor.putInt("linesRotation", linesRotation.ordinal());
         editor.putBoolean("continuous", continuous);
         editor.putInt("numberOfSets", numberOfSets);
-        editor.commit();
+        editor.apply();
     }
 
     public boolean getContinuous() {

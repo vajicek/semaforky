@@ -16,7 +16,7 @@ import com.vajsoft.semaforky.controllers.SemaphoreController;
  */
 public class SemaphoreWidget implements SurfaceHolder.Callback {
 
-    private SurfaceView target;
+    private final SurfaceView target;
     private SemaphoreController.SemaphoreLight light = SemaphoreController.SemaphoreLight.NONE;
 
     public SemaphoreWidget(SurfaceView target) {
@@ -53,7 +53,7 @@ public class SemaphoreWidget implements SurfaceHolder.Callback {
         int h = c.getHeight();
         int w = c.getWidth();
         int[] colors = new int[]{Color.RED, Color.GREEN, Color.YELLOW};
-        float circle_diameter = w / colors.length;
+        float circle_diameter = w / (float)colors.length;
         float circle_radius = circle_diameter / 2.0f;
         for (int i = 0; i < colors.length; i++) {
             if ((i + 1) != light.ordinal()) {

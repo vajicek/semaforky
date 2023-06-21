@@ -12,6 +12,7 @@ import com.vajsoft.semaforky.R;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Logger;
 
 /**
@@ -20,8 +21,8 @@ import java.util.logging.Logger;
 public class SoundManager {
     private static final Logger LOGGER = Logger.getLogger(SoundManager.class.getName());
     private static final int MAX_STREAMS = 1;
-    private SoundPool soundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, 0);
-    private HashMap<String, SoundEffect> sounds = new HashMap<String, SoundEffect>();
+    private final SoundPool soundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, 0);
+    private final HashMap<String, SoundEffect> sounds = new HashMap<>();
 
     public SoundManager(Context context) {
         init(context);
@@ -31,18 +32,13 @@ public class SoundManager {
      * Find sample by sound id.
      */
     public static SoundEffect findBySampleId(Collection<SoundEffect> collection, int sampleId) {
-        SoundEffect sound_effect = SearchArray.findFirst(collection, sampleId,
+        return SearchArray.findFirst(collection, sampleId,
                 new SearchArray.Comparator<SoundEffect, Integer>() {
                     public boolean isEqual(SoundEffect item, Integer value) {
-                        return item.sampleId == value.intValue();
+                        return item.sampleId == value;
                     }
                 }
         );
-        return sound_effect;
-    }
-
-    public boolean isLoaded(String soundName) {
-        return sounds.containsKey(soundName) && sounds.get(soundName).sampleId >= 0;
     }
 
     /**
@@ -52,7 +48,7 @@ public class SoundManager {
         LOGGER.info("soundPool.play loop=" + loop);
         if (sounds.containsKey(soundName)) {
             SoundEffect soundEffect = sounds.get(soundName);
-            if (soundEffect.loaded) {
+            if (Objects.requireNonNull(soundEffect).loaded) {
                 soundPool.play(soundEffect.sampleId, 1, 1, 99, loop - 1, 1);
             }
         }
@@ -80,7 +76,7 @@ public class SoundManager {
      * Sound effect structure. Bind resource id with sample id or sound pool player. Also track
      * whether the sample is already loaded.
      */
-    class SoundEffect {
+    static class SoundEffect {
         public int resourceId;
         public int sampleId;
         public boolean loaded;

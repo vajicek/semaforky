@@ -15,7 +15,7 @@ public class SemaphoreController extends AbstractController {
         RED(1),
         GREEN(2),
         YELLOW(3);
-        private int value;
+        private final int value;
 
         SemaphoreLight(int value) {
             this.value = value;
