@@ -14,7 +14,7 @@ public class RoundClockEvent extends Event {
     private final Date roundStart;
     private final Semaforky semaforky;
 
-    RoundClockEvent(Date time, Date roundStart, Semaforky semaforky) {
+    RoundClockEvent(final Date time, final Date roundStart, final Semaforky semaforky) {
         super(time);
         this.roundStart = roundStart;
         this.semaforky = semaforky;

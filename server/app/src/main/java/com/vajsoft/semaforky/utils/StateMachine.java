@@ -16,12 +16,12 @@ public class StateMachine<T> {
     private final ArrayList<State<T>> states = new ArrayList<>();
     private State<T> currentState = null;
 
-    public State<T> addState(State<T> state) {
+    public State<T> addState(final State<T> state) {
         states.add(state);
         return state;
     }
 
-    public void setCurrent(State<T> state) {
+    public void setCurrent(final State<T> state) {
         assert (states.contains(state));
         LOGGER.log(Level.CONFIG, "setCurrent({0})", state.name.toString());
         currentState = state;
@@ -32,7 +32,7 @@ public class StateMachine<T> {
         return currentState;
     }
 
-    public void moveTo(T stateName) {
+    public void moveTo(final T stateName) {
         if (!Arrays.asList(currentState.next).contains(stateName)) {
             LOGGER.log(Level.CONFIG, "Failed to change state from {0} to {1}", new Object[]{currentState.name, stateName});
             return;

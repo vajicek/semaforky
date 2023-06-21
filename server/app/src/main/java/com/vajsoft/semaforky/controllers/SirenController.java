@@ -9,7 +9,7 @@ import java.net.Socket;
  * Siren device controller.
  */
 public class SirenController extends AbstractController {
-    public SirenController(Socket socket) {
+    public SirenController(final Socket socket) {
         super(socket);
     }
 }

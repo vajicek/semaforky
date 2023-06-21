@@ -19,26 +19,26 @@ public class SemaphoreWidget implements SurfaceHolder.Callback {
     private final SurfaceView target;
     private SemaphoreController.SemaphoreLight light = SemaphoreController.SemaphoreLight.NONE;
 
-    public SemaphoreWidget(SurfaceView target) {
+    public SemaphoreWidget(final SurfaceView target) {
         this.target = target;
         this.target.getHolder().addCallback(this);
     }
 
     @Override
-    public void surfaceCreated(SurfaceHolder holder) {
+    public void surfaceCreated(final SurfaceHolder holder) {
         redrawSemaphore();
     }
 
     @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+    public void surfaceChanged(final SurfaceHolder holder, int format, int width, int height) {
         redrawSemaphore();
     }
 
     @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
+    public void surfaceDestroyed(final SurfaceHolder holder) {
     }
 
-    public void updateStatus(SemaphoreController.SemaphoreLight newStatus) {
+    public void updateStatus(final SemaphoreController.SemaphoreLight newStatus) {
         light = newStatus;
         redrawSemaphore();
     }

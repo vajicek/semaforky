@@ -12,11 +12,11 @@ public class ClockCountdownEvent extends Event {
     private final Semaforky semaforky;
     private final Date setStart;
 
-    public ClockCountdownEvent(int countdown, Semaforky semaforky) {
+    public ClockCountdownEvent(final int countdown, final Semaforky semaforky) {
         this(new Date(), countdown, semaforky);
     }
 
-    private ClockCountdownEvent(Date setStart, int countdown, Semaforky semaforky) {
+    private ClockCountdownEvent(final Date setStart, final int countdown, final Semaforky semaforky) {
         super(new Date(new Date().getTime() + 100));
         this.countdown = countdown;
         this.semaforky = semaforky;

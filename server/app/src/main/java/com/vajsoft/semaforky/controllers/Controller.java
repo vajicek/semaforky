@@ -13,5 +13,5 @@ public interface Controller {
 
     String getAddress();
 
-    void send(int value);
+    void send(final int value);
 }

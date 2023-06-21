@@ -10,7 +10,7 @@ import java.util.Collection;
  */
 public class SearchArray<T> {
 
-    public static <T, V, C extends Comparator<T, V>> T findFirst(Collection<T> list, V value, C comparator) {
+    public static <T, V, C extends Comparator<T, V>> T findFirst(final Collection<T> list, final V value, final C comparator) {
         for (T item : list) {
             if (comparator.isEqual(item, value)) {
                 return item;
@@ -20,6 +20,6 @@ public class SearchArray<T> {
     }
 
     public interface Comparator<T, V> {
-        boolean isEqual(T item, V value);
+        boolean isEqual(final T item, final V value);
     }
 }

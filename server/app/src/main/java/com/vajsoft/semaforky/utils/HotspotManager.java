@@ -27,17 +27,17 @@ public class HotspotManager {
     private final WifiManager wifiManager;
 
     public static class HotspotManagerException extends Exception {
-        public HotspotManagerException(String message) {
+        public HotspotManagerException(final String message) {
             super(message);
         }
 
-        public HotspotManagerException(String message, Throwable cause) {
+        public HotspotManagerException(final String message, Throwable cause) {
             super(message, cause);
         }
     }
 
     public interface OnHotspotControlCallbacks {
-        void failed(String message);
+        void failed(final String message);
 
         void started();
     }
@@ -51,7 +51,7 @@ public class HotspotManager {
     /**
      * Enable or disable wifi AP.
      */
-    public void setWifiState(boolean state, OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
+    public void setWifiState(final boolean state, final OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
         if (isApOn() == state) {
             return;
         }
@@ -80,7 +80,7 @@ public class HotspotManager {
         return false;
     }
 
-    private WifiConfiguration setupWifiConfiguration(WifiConfiguration wifiConfiguration) {
+    private WifiConfiguration setupWifiConfiguration(final WifiConfiguration wifiConfiguration) {
         wifiConfiguration.SSID = settings.getEssid();
         wifiConfiguration.preSharedKey = settings.getPassword();
         wifiConfiguration.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
@@ -93,7 +93,7 @@ public class HotspotManager {
         return wifiConfiguration;
     }
 
-    private void configApState(boolean enable, OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
+    private void configApState(final boolean enable, final OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             setupWifiOreo(enable, controlCallbacks);
         } else {
@@ -101,7 +101,7 @@ public class HotspotManager {
         }
     }
 
-    private void setupWifi(boolean enable) throws HotspotManagerException {
+    private void setupWifi(final boolean enable) throws HotspotManagerException {
         WifiConfiguration wifiConfiguration = enable ? setupWifiConfiguration(new WifiConfiguration()) : null;
         try {
             wifiManager.getClass()
@@ -113,7 +113,7 @@ public class HotspotManager {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void setupWifiOreo(boolean enable, final OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
+    private void setupWifiOreo(final boolean enable, final OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
         OreoTethering oreoTethering = new OreoTethering(context);
         if (enable) {
             oreoTethering.startTethering(settings.getEssid(), settings.getPassword(), controlCallbacks);
@@ -131,7 +131,7 @@ public class HotspotManager {
         Method startTetheringMethod;
         Method stopTetheringMethod;
 
-        public OreoTethering(Context context) throws HotspotManagerException {
+        public OreoTethering(final Context context) throws HotspotManagerException {
             connectivityManager = context.getSystemService(ConnectivityManager.class);
             try {
                 startTetheringMethod = connectivityManager.getClass().getDeclaredMethod("startTethering", int.class, boolean.class, OnStartTetheringCallbackClass(), Handler.class);
@@ -141,7 +141,7 @@ public class HotspotManager {
             }
         }
 
-        public void startTethering(String essid, String password, OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
+        public void startTethering(final String essid, final String password, final OnHotspotControlCallbacks controlCallbacks) throws HotspotManagerException {
             configureHotspot(essid, password);
             try {
                 startTetheringMethod.invoke(connectivityManager, ConnectivityManager.TYPE_MOBILE, false, getOnStartTetheringCallbackProxy(controlCallbacks), null);
@@ -182,7 +182,7 @@ public class HotspotManager {
             }
         }
 
-        private void configureHotspot(String name, String password) throws HotspotManagerException {
+        private void configureHotspot(final String name, final String password) throws HotspotManagerException {
             WifiConfiguration apConfig = new WifiConfiguration();
             apConfig.SSID = name;
             apConfig.preSharedKey = password;

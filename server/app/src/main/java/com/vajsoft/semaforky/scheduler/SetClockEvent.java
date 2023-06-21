@@ -19,7 +19,7 @@ public class SetClockEvent extends Event {
     private final Date setStart;
     private static final Logger LOGGER = Logger.getLogger(SetClockEvent.class.getName());
 
-    public SetClockEvent(Date time, Date start, Semaforky semaforky) {
+    public SetClockEvent(final Date time, final Date start, final Semaforky semaforky) {
         super(time);
         this.settings = semaforky.getSettings();
         this.setStart = start;
@@ -39,7 +39,7 @@ public class SetClockEvent extends Event {
     /**
      * Compute remaining seconds based on total seconds from start.
      */
-    private int getRemainingSeconds(long seconds) {
+    private int getRemainingSeconds(final long seconds) {
         int remaining_seconds = 0;
         if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.READY)) {
             remaining_seconds = (int) Math.max(settings.getPreparationTimeTime() - seconds, 0);

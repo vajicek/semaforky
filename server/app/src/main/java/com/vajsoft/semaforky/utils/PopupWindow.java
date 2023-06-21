@@ -15,14 +15,14 @@ import java.util.logging.Logger;
 public class PopupWindow {
     private static final Logger LOGGER = Logger.getLogger(SettingsActivity.class.getName());
 
-    static public void showMessageBox(Activity activity, String message) {
+    static public void showMessageBox(final Activity activity, final String message) {
         LOGGER.info("showMessageBox: " + message);
         getDialogBuilder(activity).setTitle(activity.getResources().getString(R.string.warningTitle))
                 .setMessage(message)
                 .show();
     }
 
-    static private AlertDialog.Builder getDialogBuilder(Activity activity) {
+    static private AlertDialog.Builder getDialogBuilder(final Activity activity) {
         AlertDialog.Builder builder;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             builder = new AlertDialog.Builder(activity, android.R.style.Theme_Material_Dialog_Alert);

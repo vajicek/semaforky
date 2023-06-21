@@ -15,7 +15,7 @@ class SemaphoreEvent extends Event {
     private final SemaforkyMachine machine;
     private final SemaforkyState nextStateName;
 
-    SemaphoreEvent(Date time, SemaforkyState nextStateName, SemaforkyMachine machine) {
+    SemaphoreEvent(final Date time, final SemaforkyState nextStateName, final SemaforkyMachine machine) {
         super(time);
         this.machine = machine;
         this.nextStateName = nextStateName;

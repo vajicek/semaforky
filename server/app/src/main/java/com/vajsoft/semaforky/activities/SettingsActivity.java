@@ -26,12 +26,12 @@ public class SettingsActivity extends AppCompatActivity {
     public static final int SETTINGS_UPDATE_CANCELED = 1;
     private Settings settings;
 
-    public void onCancelClicked(View view) {
+    public void onCancelClicked(final View view) {
         setResult(SETTINGS_UPDATE_CANCELED, null);
         finish();
     }
 
-    public void onOkClicked(View view) {
+    public void onOkClicked(final View view) {
         if (validateTime()) {
             updateDataFromGui();
             setResult(SETTINGS_UPDATED, null);
@@ -41,7 +41,7 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.settings = ((Semaforky) getApplication()).getSettings();
         setContentView(R.layout.activity_settings);

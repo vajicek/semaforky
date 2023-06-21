@@ -10,10 +10,10 @@ abstract public class State<T> {
     public T name;
     public T[] next;
 
-    public State(T state_name, T[] next_states) {
+    public State(final T state_name, final T[] next_states) {
         name = state_name;
         next = next_states;
     }
 
-    public abstract void run(State<T> previous);
+    public abstract void run(final State<T> previous);
 }

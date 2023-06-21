@@ -14,6 +14,7 @@ import java.net.SocketTimeoutException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,7 +30,6 @@ public class MainController {
     public static final int SERVER_PORT = 8888;
     private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
     private final Semaforky semaforky;
-    private ServerSocket serverSocket;
     private final ArrayList<Controller> controllers = new ArrayList<Controller>();
     private final ArrayList<ControllerAddedListener> controllerAddedListenersList = new ArrayList<ControllerAddedListener>();
 
@@ -54,7 +54,7 @@ public class MainController {
         controllerAddedListenersList.add(controllerAddedListener);
     }
 
-    public void updateClocks(int remainingSeconds) {
+    public void updateClocks(final int remainingSeconds) {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof ClockController ||
@@ -65,7 +65,7 @@ public class MainController {
         }
     }
 
-    public void updateSemaphores(SemaphoreController.SemaphoreLight state) {
+    public void updateSemaphores(final SemaphoreController.SemaphoreLight state) {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof SemaphoreController) {
@@ -79,7 +79,7 @@ public class MainController {
         }
     }
 
-    public void playSiren(int count) {
+    public void playSiren(final int count) {
         LOGGER.info("play siren! count: " + count);
         semaforky.getSoundManager().play("buzzer", count);
 
@@ -108,17 +108,17 @@ public class MainController {
     private void serverLoop() {
         LOGGER.entering(this.getClass().getName(), "serverLoop");
         try {
-            serverSocket = new ServerSocket(SERVER_PORT);
+            final ServerSocket serverSocket = new ServerSocket(SERVER_PORT);
             LOGGER.log(Level.CONFIG, "IP: {0}", serverSocket.getLocalSocketAddress().toString());
             int clientsConnected = 0;
             while (true) {
                 try {
-                    final Socket serverSocket = this.serverSocket.accept();
+                    final Socket clientSocket = serverSocket.accept();
                     clientsConnected++;
                     LOGGER.log(Level.INFO, "Client no. {0} connected!", clientsConnected);
                     new Thread(new Runnable() {
                         public void run() {
-                            startupController(serverSocket);
+                            startupController(clientSocket);
                         }
                     }).start();
                 } catch (SocketTimeoutException e) {
@@ -131,7 +131,7 @@ public class MainController {
         }
     }
 
-    private RegisterChunk readRegisterChunk(InputStream inputStream) throws IOException {
+    private RegisterChunk readRegisterChunk(final InputStream inputStream) throws IOException {
         DataInputStream dataInputStream = new DataInputStream(inputStream);
         ByteBuffer byteBuffer = ByteBuffer.allocate(4);
         byteBuffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -140,7 +140,7 @@ public class MainController {
         return new RegisterChunk(clientType);
     }
 
-    private void startupController(Socket serverSocket) {
+    private void startupController(final Socket serverSocket) {
         LOGGER.entering(this.getClass().getName(), "startupController");
         try {
             RegisterChunk registerChunk = readRegisterChunk(serverSocket.getInputStream());
@@ -163,7 +163,7 @@ public class MainController {
                     controller = new RgbMatrixDisplayController(serverSocket);
                     break;
                 default:
-                    LOGGER.info(String.format("Unknown client connected! (clientType=%1$d)", registerChunk.getType()));
+                    LOGGER.info(String.format(Locale.ROOT, "Unknown client connected! (clientType=%1$d)", registerChunk.getType()));
             }
             if (controller != null) {
                 LOGGER.info("run()");
@@ -179,17 +179,17 @@ public class MainController {
         }
     }
 
-    private void addController(Controller controller) {
+    private void addController(final Controller controller) {
         controllers.add(controller);
         for (ControllerAddedListener listener : controllerAddedListenersList) {
             listener.onControllerAdded();
         }
     }
 
-    private class RegisterChunk {
+    private static class RegisterChunk {
         int type;
 
-        RegisterChunk(int type) {
+        RegisterChunk(final int type) {
             this.type = type;
         }
 

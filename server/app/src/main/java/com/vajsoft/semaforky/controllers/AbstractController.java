@@ -21,11 +21,11 @@ public abstract class AbstractController implements Controller {
     private static final int CONTROL_MAGIC_VALUE = 123;
     private final Socket socket;
 
-    public AbstractController(Socket socket) {
+    public AbstractController(final Socket socket) {
         this.socket = socket;
     }
 
-    static private int little2big(int i) {
+    static private int little2big(final int i) {
         return (i & 0xff) << 24 | (i & 0xff00) << 8 | (i & 0xff0000) >> 8 | (i >> 24) & 0xff;
     }
 
@@ -72,7 +72,7 @@ public abstract class AbstractController implements Controller {
         return socket.getLocalSocketAddress().toString();
     }
 
-    public void send(int value) {
+    public void send(final int value) {
         sendControlChunk(CONTROL_MAGIC_VALUE, value);
     }
 
@@ -80,7 +80,7 @@ public abstract class AbstractController implements Controller {
         sendControlChunk(PING_MAGIC_VALUE, PING_MAGIC_VALUE);
     }
 
-    private void sendControlChunk(int control, int value) {
+    private void sendControlChunk(final int control, final int value) {
         try {
             DataOutputStream out = new DataOutputStream(socket.getOutputStream());
             ByteBuffer buf = ByteBuffer.allocate(8);

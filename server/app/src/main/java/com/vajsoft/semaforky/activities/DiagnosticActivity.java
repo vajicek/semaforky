@@ -32,7 +32,7 @@ public class DiagnosticActivity extends AppCompatActivity implements MainControl
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_diagnostic);
         report();
@@ -53,7 +53,7 @@ public class DiagnosticActivity extends AppCompatActivity implements MainControl
         });
     }
 
-    private void appendLine(String line) {
+    private void appendLine(final String line) {
         ((TextView) findViewById(R.id.textDevicesReport)).append(formatter.format(new Date()));
         ((TextView) findViewById(R.id.textDevicesReport)).append(": " + line + "\n");
     }

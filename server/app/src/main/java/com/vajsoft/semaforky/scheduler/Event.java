@@ -12,14 +12,14 @@ import java.util.Date;
 abstract class Event implements Comparable<Event> {
     public Date time;
 
-    Event(Date time) {
+    Event(final Date time) {
         this.time = time;
     }
 
     public abstract void run();
 
     @Override
-    public int compareTo(Event o) {
+    public int compareTo(final Event o) {
         return Long.compare(time.getTime(), o.time.getTime());
     }
 };

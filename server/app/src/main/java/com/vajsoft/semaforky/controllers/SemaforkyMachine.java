@@ -28,7 +28,7 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
     private int currentLine = 0;
     private final Semaforky semaforky;
 
-    public SemaforkyMachine(Semaforky semaforky) {
+    public SemaforkyMachine(final Semaforky semaforky) {
         this.semaforky = semaforky;
         initializeStates();
     }
@@ -136,6 +136,8 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
         addState(new State<SemaforkyState>(ROUND_STOPPED, new SemaforkyState[]{SETTINGS, ROUND_STARTED}) {
             @Override
             public void run(State<SemaforkyState> previous) {
+                semaforky.getMainController().updateClocks(0);
+                semaforky.getGuiEventReceiver().updateSetClocks(0);
                 semaforky.getGuiEventReceiver().updateGui();
                 semaforky.getMainController().playSiren(4);
                 semaforky.getScheduler().EndRound();

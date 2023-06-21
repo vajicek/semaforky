@@ -17,7 +17,7 @@ public class SemaphoreController extends AbstractController {
         YELLOW(3);
         private final int value;
 
-        SemaphoreLight(int value) {
+        SemaphoreLight(final int value) {
             this.value = value;
         }
 
@@ -26,7 +26,7 @@ public class SemaphoreController extends AbstractController {
         }
     }
 
-    public SemaphoreController(Socket socket) {
+    public SemaphoreController(final Socket socket) {
         super(socket);
     }
 }

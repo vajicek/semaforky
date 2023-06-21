@@ -11,27 +11,27 @@ public class RgbMatrixDisplayController extends AbstractController {
     private int value = 0;
     private int brightness = 255;
 
-    public RgbMatrixDisplayController(Socket socket) {
+    public RgbMatrixDisplayController(final Socket socket) {
         super(socket);
     }
 
-    public static int encodeLightColor(int ordinal) {
+    public static int encodeLightColor(final int ordinal) {
         return (ordinal << 16) & 0x00ff0000;
     }
 
-    public static int encodeLightBrightness(int ordinal) {
+    public static int encodeLightBrightness(final int ordinal) {
         return (ordinal << 24) & 0xff000000;
     }
 
-    private static int decodeLightColor(int encodedOrdinal) {
+    private static int decodeLightColor(final int encodedOrdinal) {
         return (encodedOrdinal & 0x00ff0000) >> 16;
     }
 
-    private static int decodeLightBrightness(int encodedOrdinal) {
+    private static int decodeLightBrightness(final int encodedOrdinal) {
         return (encodedOrdinal & 0xff000000) >> 24;
     }
 
-    public void send(int v) {
+    public void send(final int v) {
         if (isLightBrightness(v)) {
             brightness = decodeLightBrightness(v);
         } else if (isLightColor(v)) {
@@ -46,11 +46,11 @@ public class RgbMatrixDisplayController extends AbstractController {
         return value | (color << 16) | (brightness << 24);
     }
 
-    private boolean isLightColor(int value) {
+    private boolean isLightColor(final int value) {
         return (value & 0x00ff0000) != 0;
     }
 
-    private boolean isLightBrightness(int value) {
+    private boolean isLightBrightness(final int value) {
         return (value & 0xff000000) != 0;
     }
 }

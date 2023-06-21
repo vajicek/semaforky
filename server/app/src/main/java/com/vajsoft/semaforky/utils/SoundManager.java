@@ -24,14 +24,14 @@ public class SoundManager {
     private final SoundPool soundPool = new SoundPool(MAX_STREAMS, AudioManager.STREAM_MUSIC, 0);
     private final HashMap<String, SoundEffect> sounds = new HashMap<>();
 
-    public SoundManager(Context context) {
+    public SoundManager(final Context context) {
         init(context);
     }
 
     /**
      * Find sample by sound id.
      */
-    public static SoundEffect findBySampleId(Collection<SoundEffect> collection, int sampleId) {
+    public static SoundEffect findBySampleId(final Collection<SoundEffect> collection, final int sampleId) {
         return SearchArray.findFirst(collection, sampleId,
                 new SearchArray.Comparator<SoundEffect, Integer>() {
                     public boolean isEqual(SoundEffect item, Integer value) {
@@ -44,7 +44,7 @@ public class SoundManager {
     /**
      * play sample by name with repetition. Skip if not loaded.
      */
-    public void play(String soundName, int loop) {
+    public void play(final String soundName, final int loop) {
         LOGGER.info("soundPool.play loop=" + loop);
         if (sounds.containsKey(soundName)) {
             SoundEffect soundEffect = sounds.get(soundName);
@@ -57,7 +57,7 @@ public class SoundManager {
     /**
      * Initialized sample list and also initialized loading.
      */
-    private void init(Context context) {
+    private void init(final Context context) {
         sounds.put("buzzer", new SoundEffect(R.raw.buzzer, -1));
 
         for (Map.Entry<String, SoundEffect> entry : sounds.entrySet()) {
@@ -81,7 +81,7 @@ public class SoundManager {
         public int sampleId;
         public boolean loaded;
 
-        public SoundEffect(int resourceId_, int sampleId_) {
+        public SoundEffect(final int resourceId_, final int sampleId_) {
             resourceId = resourceId_;
             sampleId = sampleId_;
             loaded = false;

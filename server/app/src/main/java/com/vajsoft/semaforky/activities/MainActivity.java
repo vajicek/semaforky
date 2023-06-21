@@ -218,7 +218,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
         updateGui();
     }
 
-    private void updateContextLocale(Context context, Locale locale) {
+    private void updateContextLocale(final Context context, final Locale locale) {
         Configuration config = context.getResources().getConfiguration();
         config.locale = locale;
         context.getResources().updateConfiguration(config, context.getResources().getDisplayMetrics());

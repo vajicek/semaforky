@@ -19,11 +19,11 @@ public class GuiEventReceiver {
 
     Set<GuiEventSubscriber> subscribers = new HashSet<>();
 
-    public void subscribe(GuiEventSubscriber subscriber) {
+    public void subscribe(final GuiEventSubscriber subscriber) {
         subscribers.add(subscriber);
     }
 
-    public void unsubscribe(GuiEventSubscriber subscriber) {
+    public void unsubscribe(final GuiEventSubscriber subscriber) {
         subscribers.remove(subscriber);
     }
 

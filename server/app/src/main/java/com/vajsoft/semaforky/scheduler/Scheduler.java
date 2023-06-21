@@ -20,7 +20,7 @@ public class Scheduler {
     private final PriorityQueue<Event> events = new PriorityQueue<>();
     private final Semaforky semaforky;
 
-    public Scheduler(Semaforky semaforky) {
+    public Scheduler(final Semaforky semaforky) {
         this.semaforky = semaforky;
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -34,7 +34,7 @@ public class Scheduler {
         AddEvent(new RoundClockEvent(new Date(), new Date(), semaforky));
     }
 
-    public void AddEvent(Event event) {
+    public void AddEvent(final Event event) {
         events.add(event);
     }
 
@@ -43,8 +43,8 @@ public class Scheduler {
         RemoveAllEventsByClass(RoundClockEvent.class);
     }
 
-    public void RemoveAllEventsByClass(Class<? extends Event> eventType) {
-        Event[] eventsArray = events.toArray(new Event[0]);
+    public void RemoveAllEventsByClass(final Class<? extends Event> eventType) {
+        final Event[] eventsArray = events.toArray(new Event[0]);
         for (Event o : eventsArray) {
             if (o.getClass().equals(eventType)) {
                 events.remove(o);
@@ -85,7 +85,7 @@ public class Scheduler {
 
     /// Timer event handler
     protected void UpdateControllers() {
-        Date now = new Date();
+        final Date now = new Date();
 
         while (!events.isEmpty() && now.getTime() > events.peek().time.getTime()) {
             Event event = events.peek();

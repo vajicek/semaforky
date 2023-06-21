@@ -34,7 +34,7 @@ public class Settings implements Serializable {
     private int numberOfSets = 10;
     private LinesRotation linesRotation = LinesRotation.SIMPLE;
 
-    public Settings(Context applicationContext) {
+    public Settings(final Context applicationContext) {
         loadSetting(applicationContext);
     }
 
@@ -50,7 +50,7 @@ public class Settings implements Serializable {
         return language;
     }
 
-    public void setLanguage(int selectedLanguageNo) {
+    public void setLanguage(final int selectedLanguageNo) {
         language = selectedLanguageNo;
     }
 
@@ -68,7 +68,7 @@ public class Settings implements Serializable {
         return linesRotation;
     }
 
-    public void setLinesRotation(LinesRotation linesRotation) {
+    public void setLinesRotation(final LinesRotation linesRotation) {
         this.linesRotation = linesRotation;
     }
 
@@ -84,7 +84,7 @@ public class Settings implements Serializable {
         return setTime;
     }
 
-    public void setSetTime(int setTime) {
+    public void setSetTime(final int setTime) {
         this.setTime = setTime;
     }
 
@@ -92,7 +92,7 @@ public class Settings implements Serializable {
         return preparationTime;
     }
 
-    public void setPreparationTimeTime(int preparationTime) {
+    public void setPreparationTimeTime(final int preparationTime) {
         this.preparationTime = preparationTime;
     }
 
@@ -100,11 +100,11 @@ public class Settings implements Serializable {
         return warningTime;
     }
 
-    public void setWarningTimeTime(int warningTime) {
+    public void setWarningTimeTime(final int warningTime) {
         this.warningTime = warningTime;
     }
 
-    public void loadSetting(Context applicationContext) {
+    public void loadSetting(final Context applicationContext) {
         SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         language = settings.getInt("language", language);
         roundSets = settings.getInt("roundSets", roundSets);
@@ -117,7 +117,7 @@ public class Settings implements Serializable {
         continuous = settings.getBoolean("continuous", continuous);
     }
 
-    public void saveSetting(Context applicationContext) {
+    public void saveSetting(final Context applicationContext) {
         SharedPreferences settings = applicationContext.getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit().clear();
         editor.putInt("language", language);
@@ -136,7 +136,7 @@ public class Settings implements Serializable {
         return continuous;
     }
 
-    public void setContinuous(boolean continuous) {
+    public void setContinuous(final boolean continuous) {
         this.continuous = continuous;
     }
 
@@ -144,7 +144,7 @@ public class Settings implements Serializable {
         return numberOfSets;
     }
 
-    public void setNumberOfSets(int numberOfSets) {
+    public void setNumberOfSets(final int numberOfSets) {
         this.numberOfSets = numberOfSets;
     }
 
