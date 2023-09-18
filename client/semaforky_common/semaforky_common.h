@@ -267,27 +267,24 @@ void SirenProcess::Init() {
 
 //-------------------------------------------------------------------------------
 
-#define P10_LAT 16
-#define P10_A 5
-#define P10_B 4
-#define P10_C 15
-#define P10_OE 2
-
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
   return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
 }
 
-const uint16_t P10_COLORS[] = {
-  color565(255, 255, 255),  // white
-  color565(255, 0, 0),      // red
-  color565(0, 255, 0),      // green
-  color565(255, 165, 0)     // orange
-};
-
 struct RgbMatrixDisplayProcess : public Process {
-  PxMATRIX display;
+  PxMATRIX* display;
   Ticker display_ticker;
-  RgbMatrixDisplayProcess();
+  int digit_width;
+  int digit_height;
+  int digit_size;
+  int old_value;
+  const uint16_t* colors;
+  RgbMatrixDisplayProcess(
+    PxMATRIX* display,
+    int digit_width,
+    int digit_height,
+    int digit_size,
+    const uint16_t* colors);
   virtual void Init();
   virtual void Output();
   virtual void OnConnect();
@@ -305,9 +302,19 @@ int DecodeBrightnessValue(int value) {
   return (value & 0xff000000) >> 24;
 }
 
-RgbMatrixDisplayProcess::RgbMatrixDisplayProcess()
-  : display(32, 16, P10_LAT, P10_OE, P10_A, P10_B, P10_C) {
-}
+RgbMatrixDisplayProcess::RgbMatrixDisplayProcess(
+    PxMATRIX* _display,
+    int _digit_width,
+    int _digit_height,
+    int _digit_size,
+    const uint16_t* _colors)
+    : display(_display),
+    digit_width(_digit_width),
+    digit_height(_digit_height),
+    digit_size(_digit_size),
+    old_value(-1),
+    colors(_colors) {
+    }
 
 void RgbMatrixDisplayProcess::OnConnect() {
   RegisterChunk chunk{RGB_MATRIX_DISPLAY_CLIENT};
@@ -315,32 +322,97 @@ void RgbMatrixDisplayProcess::OnConnect() {
 }
 
 void RgbMatrixDisplayProcess::Output() {
-  display.fillScreen(color565(0, 0, 0));
+  if (old_value == last_chunk.value) {
+    return;
+  }
+  old_value = last_chunk.value;
+
+  display->fillScreen(color565(0, 0, 0));
 
   auto time = DecodeTimeValue(last_chunk.value);
   auto color = DecodeColorValue(last_chunk.value);
   auto brightness = DecodeBrightnessValue(last_chunk.value);
-  display.setBrightness(brightness);
+  display->setBrightness(brightness);
 
   int digits[4];
   ComputeDigits(digits, 4, time);
   for (int i = 3; i > 0; i--) {
     if (digits[i] >= 0) {
-      display.drawChar((i - 1) * 11, 1,  // coords
+      display->drawChar((i - 1) * digit_width, digit_height,  // coords
         '0' + digits[i],  // character
-        P10_COLORS[color], P10_COLORS[color],  // colors
-        2);  // size
+        colors[color], colors[color],  // colors
+        digit_size);  // size
     }
   }
-  display.showBuffer();
+  display->showBuffer();
 }
 
 void RgbMatrixDisplayProcess::Init() {
   Process::Init();
   Serial.begin(9600);
-  display.begin(8);
-  display.clearDisplay();
+  display->begin(8);
+  display->clearDisplay();
   display_ticker.attach_ms(4, [this]() {
-    this->display.display();
+    this->display->display();
   });
+}
+
+//-------------------------------------------------------------------------------
+
+#define P10_LAT 16
+#define P10_A 5
+#define P10_B 4
+#define P10_C 15
+#define P10_OE 2
+
+const uint16_t P10_COLORS[] = {
+  color565(255, 255, 255),  // white
+  color565(255, 0, 0),      // red
+  color565(0, 255, 0),      // green
+  color565(255, 165, 0)     // orange
+};
+
+struct RgbMatrixDisplayProcess32 : public RgbMatrixDisplayProcess {
+  PxMATRIX display;
+  RgbMatrixDisplayProcess32();
+};
+
+RgbMatrixDisplayProcess32::RgbMatrixDisplayProcess32()
+  : display(32, 16, P10_LAT, P10_OE, P10_A, P10_B, P10_C),
+  RgbMatrixDisplayProcess(&display, 11, 1, 2, P10_COLORS) {
+}
+
+//-------------------------------------------------------------------------------
+
+#include "digits_font.h"
+
+#define P5_LAT 16
+#define P5_A 5
+#define P5_B 4
+#define P5_C 15
+#define P5_D 12
+#define P5_OE 2
+
+const uint16_t P5_COLORS[] = {
+  color565(255, 255, 255),  // white
+  color565(0, 0, 255),      // red
+  color565(0, 255, 0),      // green
+  color565(0, 165, 255)     // orange
+};
+
+struct RgbMatrixDisplayProcess64 : public RgbMatrixDisplayProcess {
+  PxMATRIX display;
+  RgbMatrixDisplayProcess64();
+  virtual void Init();
+};
+
+RgbMatrixDisplayProcess64::RgbMatrixDisplayProcess64()
+  : display(64, 32, P5_LAT, P5_OE, P5_A, P5_B, P5_C, P5_D),
+  RgbMatrixDisplayProcess(&display, 21, 32, 1, P5_COLORS) {
+}
+
+void RgbMatrixDisplayProcess64::Init() {
+  RgbMatrixDisplayProcess::Init();
+  display.setFont(&FixedWidthDigit);
+  display.setTextWrap(false);
 }
