@@ -3,7 +3,7 @@
 
 #include "semaforky_common.h"
 
-RgbMatrixDisplayProcess global;
+RgbMatrixDisplayProcess32 global;
 
 void setup() {
   global.Init();
