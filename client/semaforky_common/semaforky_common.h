@@ -103,8 +103,15 @@ void Process::Disconnect() {
 }
 
 void Process::Execute() {
-  if (!is_connected && !ESPWifiUtils::wifi_disabled) {
-    Connect();
+  if (!ESPWifiUtils::wifi_disabled) {
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("Reset..");
+      delay(3000);
+      ESP.restart();
+    } else if (!is_connected) {
+      Serial.println("Connecting..");
+      Connect();
+    }
   } else {
     if (client.connected()) {
       if (client.available()) {
@@ -416,3 +423,91 @@ void RgbMatrixDisplayProcess64::Init() {
   display.setFont(&FixedWidthDigit);
   display.setTextWrap(false);
 }
+
+//-------------------------------------------------------------------------------
+
+#include <SPI.h>
+#include <DMD2.h>
+#include "digits32.h"
+
+/* P10 led pannel pins to ESP 8266
+A D0      2
+B D6      4
+CLK D5    8
+SCK D3    10
+R D7      12
+NOE D8    1
+GND GND   3
+*/
+
+void map_panel_coords(unsigned int x, unsigned int y,
+                      unsigned int* tx, unsigned int* ty) {
+  const int PANEL_H = 16;
+  const int PANEL_W = 32;
+  const int PANELS = 3;
+  const int MAX_X = PANEL_H * PANELS - 1;
+
+  int panel = (MAX_X - x) / PANEL_H;
+  *tx = (PANELS - 1) * PANEL_W - (PANELS - 1 - panel) * PANEL_W + y;
+  *ty = PANEL_H - 1 - x % PANEL_H;
+}
+
+struct MySPIDMD : public SPIDMD {
+  MySPIDMD(byte panelsWide, byte panelsHigh) :
+    SPIDMD(panelsWide, panelsHigh) {
+  }
+
+  void setPixel(unsigned int x1, unsigned int y1, DMDGraphicsMode mode) {
+    unsigned int x, y;
+    map_panel_coords(x1, y1, &x, &y);
+    SPIDMD::setPixel(x, y, mode);
+  }
+};
+
+struct MonoMatrixDisplayProcess : public Process {
+  MySPIDMD dmd;
+  int old_value;
+  MonoMatrixDisplayProcess();
+  virtual void Init();
+  virtual void Output();
+  virtual void OnConnect();
+};
+
+MonoMatrixDisplayProcess::MonoMatrixDisplayProcess()
+    : dmd(3, 1),
+    old_value(-1) {
+}
+
+void MonoMatrixDisplayProcess::OnConnect() {
+  RegisterChunk chunk{RGB_MATRIX_DISPLAY_CLIENT};
+  client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
+}
+
+void MonoMatrixDisplayProcess::Output() {
+  if (old_value == last_chunk.value) {
+    return;
+  }
+  old_value = last_chunk.value;
+
+  auto time = DecodeTimeValue(last_chunk.value);
+  auto color = DecodeColorValue(last_chunk.value);
+  auto brightness = DecodeBrightnessValue(last_chunk.value);
+
+  int digits[4];
+  ComputeDigits(digits, 4, time);
+  for (int i = 3; i > 0; i--) {
+    if (digits[i] >= 0) {
+      dmd.drawChar((i - 1) * 16, 0, '0' + digits[i], GRAPHICS_ON, Digits32);
+    }
+  }
+}
+
+void MonoMatrixDisplayProcess::Init() {
+  Process::Init();
+  Serial.begin(9600);
+  dmd.setBrightness(5);
+  dmd.begin();
+}
+
+
+
