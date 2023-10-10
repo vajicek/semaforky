@@ -14,6 +14,7 @@ const int SEMAPHORE_CLIENT = 1;
 const int CLOCK_CLIENT = 2;
 const int SIREN_CLIENT = 3;
 const int RGB_MATRIX_DISPLAY_CLIENT = 4;
+const int MONO_MATRIX_DISPLAY_CLIENT = 5;
 
 // Wemos D1 mini - common pins
 #define POWER_ON_PIN 0
@@ -479,7 +480,7 @@ MonoMatrixDisplayProcess::MonoMatrixDisplayProcess()
 }
 
 void MonoMatrixDisplayProcess::OnConnect() {
-  RegisterChunk chunk{RGB_MATRIX_DISPLAY_CLIENT};
+  RegisterChunk chunk{MONO_MATRIX_DISPLAY_CLIENT};
   client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
 
