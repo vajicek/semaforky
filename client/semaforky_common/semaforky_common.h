@@ -39,22 +39,21 @@ struct RegisterChunk {
 struct Process {
   WiFiClient client;
   String result;
-  bool is_connected;
   ControlChunk last_chunk;
 
   /// connect to server specified by global variables
-  void Connect();
+  void ConnectServer();
 
-  /// OnConnect event
-  virtual void OnConnect();
+  /// OnConnectServer event
+  virtual void OnConnectServer();
 
   /// disconnect
-  virtual void Disconnect();
+  virtual void DisconnectServer();
 
   /// non blocking processing of states
   void Execute();
 
-  /// init output pins
+  /// init output pins and wifi connection
   virtual void Init();
 
   /// read data chunk
@@ -63,11 +62,13 @@ struct Process {
   /// set outputs
   virtual void Output() = 0;
 
+  /// handle ping message
+  void HandlePing();
+
   Process();
 };
 
-Process::Process() :
-  is_connected(false) {
+Process::Process() {
 }
 
 ControlChunk Process::ReadControlChunk() {
@@ -82,65 +83,68 @@ ControlChunk Process::ReadControlChunk() {
   return received_chunk;
 }
 
-void Process::OnConnect() {
+void Process::OnConnectServer() {
 }
 
-void Process::Connect() {
+void Process::ConnectServer() {
+  Serial.println("Connecting..");
   // starts client connection, checks for connection
   if (client.connect(ESPWifiUtils::servername, ESPWifiUtils::port)) {
-    Serial.println("connected");
-    is_connected = true;
-    OnConnect();
+    Serial.println("Connected to the server");
+    OnConnectServer();
   } else {
-    Serial.println("connection failed");  // error message if no client connect
-    Serial.println();
-    is_connected = false;
+    // error message if no client connect
+    Serial.println("Connection to the server failed");
   }
 }
 
-void Process::Disconnect() {
+void Process::DisconnectServer() {
+  Serial.println("Disconnected");
   client.stop();  // stop client
-  is_connected = false;
+}
+
+void Process::HandlePing() {
+  Serial.println("Ping received");
+  // send pong
+  RegisterChunk chunk{PING_MAGIC_NUMBER};
+  client.write(reinterpret_cast<uint8_t*>(&chunk),
+    sizeof(RegisterChunk));
 }
 
 void Process::Execute() {
   if (!ESPWifiUtils::wifi_disabled) {
-    if (WiFi.status() != WL_CONNECTED) {
-      Serial.println("Reset..");
-      delay(3000);
-      ESP.restart();
-    } else if (!is_connected) {
-      Serial.println("Connecting..");
-      Connect();
-    }
-  } else {
     if (client.connected()) {
       if (client.available()) {
         ControlChunk new_chunk = ReadControlChunk();
         if (new_chunk.control == PING_MAGIC_NUMBER) {
-          Serial.println("ping received");
-          // send pong
-          RegisterChunk chunk{PING_MAGIC_NUMBER};
-          client.write(reinterpret_cast<uint8_t*>(&chunk),
-            sizeof(RegisterChunk));
+          HandlePing();
         } else {
           last_chunk = new_chunk;
         }
       }
     } else {
-      Serial.println("disconnected");
-      is_connected = false;
+      ConnectServer();
     }
   }
   Output();
-  delay(100);
+  delay(50);
 }
 
 void Process::Init() {
   Serial.begin(115200);
+
+  // wait for serial port to connect. Needed for Leonardo only
+  while (!Serial) {
+  }
+
+  Serial.println();
+  Serial.println("Initialization started");
+
   if (!ESPWifiUtils::wifi_disabled) {
     ESPWifiUtils::ConnectWiFiAP();
     ESPWifiUtils::PrintWiFiInfo();
+
+    ConnectServer();
   }
 }
 
@@ -154,10 +158,10 @@ void Process::Init() {
 struct SemaphoreProcess : public Process {
   virtual void Init();
   virtual void Output();
-  virtual void OnConnect();
+  virtual void OnConnectServer();
 };
 
-void SemaphoreProcess::OnConnect() {
+void SemaphoreProcess::OnConnectServer() {
   RegisterChunk chunk{SEMAPHORE_CLIENT};
   client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
@@ -201,7 +205,7 @@ struct SAA1064ClockProcess : public Process {
   SAA1064 saa1064;
   virtual void Init();
   virtual void Output();
-  virtual void OnConnect();
+  virtual void OnConnectServer();
   SAA1064ClockProcess();
 };
 
@@ -209,13 +213,13 @@ SAA1064ClockProcess::SAA1064ClockProcess()
   : saa1064(100, SAA1064_CLOCK_CLOCK_PIN, SAA1064_CLOCK_DATA_PIN) {
 }
 
-void SAA1064ClockProcess::OnConnect() {
+void SAA1064ClockProcess::OnConnectServer() {
   RegisterChunk chunk{CLOCK_CLIENT};
   client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
 
 void SAA1064ClockProcess::Output() {
-  digitalWrite(CONNECTED_PIN, is_connected ? HIGH : LOW);
+  digitalWrite(CONNECTED_PIN, client.connected() ? HIGH : LOW);
 
   if (last_chunk.value == -1) {
     saa1064.digits(-2, -2, -2, -1);
@@ -250,10 +254,10 @@ void SAA1064ClockProcess::Init() {
 struct SirenProcess : public Process {
   virtual void Init();
   virtual void Output();
-  virtual void OnConnect();
+  virtual void OnConnectServer();
 };
 
-void SirenProcess::OnConnect() {
+void SirenProcess::OnConnectServer() {
   RegisterChunk chunk{SIREN_CLIENT};
   client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
@@ -295,7 +299,7 @@ struct RgbMatrixDisplayProcess : public Process {
     const uint16_t* colors);
   virtual void Init();
   virtual void Output();
-  virtual void OnConnect();
+  virtual void OnConnectServer();
 };
 
 int DecodeTimeValue(int value) {
@@ -324,7 +328,7 @@ RgbMatrixDisplayProcess::RgbMatrixDisplayProcess(
     colors(_colors) {
     }
 
-void RgbMatrixDisplayProcess::OnConnect() {
+void RgbMatrixDisplayProcess::OnConnectServer() {
   RegisterChunk chunk{RGB_MATRIX_DISPLAY_CLIENT};
   client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
@@ -357,7 +361,6 @@ void RgbMatrixDisplayProcess::Output() {
 
 void RgbMatrixDisplayProcess::Init() {
   Process::Init();
-  Serial.begin(9600);
   display->begin(8);
   display->clearDisplay();
   display_ticker.attach_ms(4, [this]() {
@@ -441,18 +444,6 @@ NOE D8    1
 GND GND   3
 */
 
-void map_panel_coords(unsigned int x, unsigned int y,
-                      unsigned int* tx, unsigned int* ty) {
-  const int PANEL_H = 16;
-  const int PANEL_W = 32;
-  const int PANELS = 3;
-  const int MAX_X = PANEL_H * PANELS - 1;
-
-  int panel = (MAX_X - x) / PANEL_H;
-  *tx = (PANELS - 1) * PANEL_W - (PANELS - 1 - panel) * PANEL_W + y;
-  *ty = PANEL_H - 1 - x % PANEL_H;
-}
-
 struct MySPIDMD : public SPIDMD {
   MySPIDMD(byte panelsWide, byte panelsHigh) :
     SPIDMD(panelsWide, panelsHigh) {
@@ -463,23 +454,36 @@ struct MySPIDMD : public SPIDMD {
     map_panel_coords(x1, y1, &x, &y);
     SPIDMD::setPixel(x, y, mode);
   }
+
+  void map_panel_coords(unsigned int x, unsigned int y,
+                        unsigned int* tx, unsigned int* ty) {
+    const int PANEL_H = 16;
+    const int PANEL_W = 32;
+    const int PANELS = 3;
+    const int MAX_X = PANEL_H * PANELS - 1;
+
+    int panel = (MAX_X - x) / PANEL_H;
+    *tx = (PANELS - 1) * PANEL_W - (PANELS - 1 - panel) * PANEL_W + y;
+    *ty = PANEL_H - 1 - x % PANEL_H;
+  }
 };
 
 struct MonoMatrixDisplayProcess : public Process {
   MySPIDMD dmd;
+  MySPIDMD buffer;
   int old_value;
   MonoMatrixDisplayProcess();
   virtual void Init();
   virtual void Output();
-  virtual void OnConnect();
+  virtual void OnConnectServer();
 };
 
 MonoMatrixDisplayProcess::MonoMatrixDisplayProcess()
-    : dmd(3, 1),
+    : dmd(3, 1), buffer(3, 1),
     old_value(-1) {
 }
 
-void MonoMatrixDisplayProcess::OnConnect() {
+void MonoMatrixDisplayProcess::OnConnectServer() {
   RegisterChunk chunk{MONO_MATRIX_DISPLAY_CLIENT};
   client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
@@ -494,20 +498,23 @@ void MonoMatrixDisplayProcess::Output() {
   auto color = DecodeColorValue(last_chunk.value);
   auto brightness = DecodeBrightnessValue(last_chunk.value);
 
+  buffer.fillScreen(false);
+
   int digits[4];
   ComputeDigits(digits, 4, time);
   for (int i = 3; i > 0; i--) {
     if (digits[i] >= 0) {
-      dmd.drawChar((i - 1) * 16, 0, '0' + digits[i], GRAPHICS_ON, Digits32);
+      buffer.drawChar((i - 1) * 16, 0, '0' + digits[i], GRAPHICS_ON, Digits32);
     }
   }
+
+  dmd.setBrightness(brightness);
+  dmd.swapBuffers(buffer);
 }
 
 void MonoMatrixDisplayProcess::Init() {
   Process::Init();
-  Serial.begin(9600);
-  dmd.setBrightness(5);
-  dmd.begin();
+  dmd.beginNoTimer();
 }
 
 

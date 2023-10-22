@@ -27,6 +27,7 @@ public class MainController {
     public static final int CLOCK_CLIENT = 2;
     public static final int SIREN_CLIENT = 3;
     public static final int RGB_MATRIX_DISPLAY_CLIENT = 4;
+    public static final int MONO_MATRIX_DISPLAY_CLIENT = 5;
     public static final int SERVER_PORT = 8888;
     private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
     private final Semaforky semaforky;
@@ -58,7 +59,8 @@ public class MainController {
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof ClockController ||
-                    controller instanceof RgbMatrixDisplayController) {
+                    controller instanceof RgbMatrixDisplayController ||
+                    controller instanceof MonoMatrixDisplayController) {
                 LOGGER.fine("Setting clock!");
                 controller.send(remainingSeconds);
             }
@@ -75,6 +77,10 @@ public class MainController {
             if (controller instanceof RgbMatrixDisplayController) {
                 LOGGER.fine("Setting semaphore state of rgb matrix display!");
                 controller.send(RgbMatrixDisplayController.encodeLightColor(state.ordinal()));
+            }
+            if (controller instanceof MonoMatrixDisplayController) {
+                LOGGER.fine("Setting semaphore state of mono matrix display!");
+                controller.send(MonoMatrixDisplayController.encodeLightColor(state.ordinal()));
             }
         }
     }
@@ -161,6 +167,10 @@ public class MainController {
                 case RGB_MATRIX_DISPLAY_CLIENT:
                     LOGGER.info("RGB matrix display connected!");
                     controller = new RgbMatrixDisplayController(serverSocket);
+                    break;
+                case MONO_MATRIX_DISPLAY_CLIENT:
+                    LOGGER.info("Mono matrix display connected!");
+                    controller = new MonoMatrixDisplayController(serverSocket);
                     break;
                 default:
                     LOGGER.info(String.format(Locale.ROOT, "Unknown client connected! (clientType=%1$d)", registerChunk.getType()));
