@@ -33,29 +33,30 @@ void ESPWifiUtils::PrintWiFiInfo() {
 
 void ESPWifiUtils::ConnectWiFiAP() {
   // setup wifi module to station mode
+  Serial.print("Connecting to ");
+  Serial.println(ESPWifiUtils::ssid);
   WiFi.mode(WIFI_STA);
-  int status = WL_IDLE_STATUS;
+  WiFi.begin(ESPWifiUtils::ssid, ESPWifiUtils::password);
 
   // led indication
   pinMode(connection_indicating_led, OUTPUT);
 
-  while (status != WL_CONNECTED) {
-    if (connection_waiting_counter % 400 == 0) {
-      Serial.print("Connecting to ");
-      Serial.println(ESPWifiUtils::ssid);
-      WiFi.begin(ESPWifiUtils::ssid, ESPWifiUtils::password);
-    }
-
-    delay(50);
+  int status = WL_IDLE_STATUS;
+  for (int i = 0; i < 300; i++) {
+    // serial report
+    Serial.print(status);
 
     // led indication
     digitalWrite(connection_indicating_led,
       ((connection_waiting_counter++ / 10) % 2) ? LOW  : HIGH);
 
-    // serial report
-    Serial.print(".");
 
     status = WiFi.status();
+    if (status == WL_CONNECTED) {
+      break;
+    }
+
+    delay(100);
   }
 
   // turn off led

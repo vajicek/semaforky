@@ -38,7 +38,6 @@ struct RegisterChunk {
 /// Process object, state machine behavior
 struct Process {
   WiFiClient client;
-  String result;
   ControlChunk last_chunk;
 
   /// connect to server specified by global variables
@@ -47,17 +46,17 @@ struct Process {
   /// OnConnectServer event
   virtual void OnConnectServer();
 
-  /// disconnect
-  virtual void DisconnectServer();
-
   /// non blocking processing of states
-  void Execute();
+  virtual void Execute();
 
   /// init output pins and wifi connection
   virtual void Init();
 
   /// read data chunk
   ControlChunk ReadControlChunk();
+
+  /// handle input
+  virtual void Input();
 
   /// set outputs
   virtual void Output() = 0;
@@ -98,11 +97,6 @@ void Process::ConnectServer() {
   }
 }
 
-void Process::DisconnectServer() {
-  Serial.println("Disconnected");
-  client.stop();  // stop client
-}
-
 void Process::HandlePing() {
   Serial.println("Ping received");
   // send pong
@@ -111,7 +105,7 @@ void Process::HandlePing() {
     sizeof(RegisterChunk));
 }
 
-void Process::Execute() {
+void Process::Input() {
   if (!ESPWifiUtils::wifi_disabled) {
     if (client.connected()) {
       if (client.available()) {
@@ -126,6 +120,10 @@ void Process::Execute() {
       ConnectServer();
     }
   }
+}
+
+void Process::Execute() {
+  Input();
   Output();
   delay(50);
 }
@@ -472,15 +470,17 @@ struct MonoMatrixDisplayProcess : public Process {
   MySPIDMD dmd;
   MySPIDMD buffer;
   int old_value;
+  unsigned long last_time;
   MonoMatrixDisplayProcess();
   virtual void Init();
   virtual void Output();
   virtual void OnConnectServer();
+  virtual void Execute();
+  void DrawDigits();
 };
 
 MonoMatrixDisplayProcess::MonoMatrixDisplayProcess()
-    : dmd(3, 1), buffer(3, 1),
-    old_value(-1) {
+    : dmd(3, 1), buffer(3, 1), old_value(-1), last_time(0) {
 }
 
 void MonoMatrixDisplayProcess::OnConnectServer() {
@@ -488,12 +488,7 @@ void MonoMatrixDisplayProcess::OnConnectServer() {
   client.write(reinterpret_cast<uint8_t*>(&chunk), sizeof(RegisterChunk));
 }
 
-void MonoMatrixDisplayProcess::Output() {
-  if (old_value == last_chunk.value) {
-    return;
-  }
-  old_value = last_chunk.value;
-
+void MonoMatrixDisplayProcess::DrawDigits() {
   auto time = DecodeTimeValue(last_chunk.value);
   auto color = DecodeColorValue(last_chunk.value);
   auto brightness = DecodeBrightnessValue(last_chunk.value);
@@ -508,8 +503,16 @@ void MonoMatrixDisplayProcess::Output() {
     }
   }
 
-  dmd.setBrightness(brightness);
   dmd.swapBuffers(buffer);
+  dmd.setBrightness(brightness);
+}
+
+void MonoMatrixDisplayProcess::Output() {
+  if (old_value != last_chunk.value) {
+    old_value = last_chunk.value;
+    DrawDigits();
+  }
+  dmd.scanDisplay();
 }
 
 void MonoMatrixDisplayProcess::Init() {
@@ -517,5 +520,11 @@ void MonoMatrixDisplayProcess::Init() {
   dmd.beginNoTimer();
 }
 
-
-
+void MonoMatrixDisplayProcess::Execute() {
+  unsigned long current = millis();
+  if ((current - last_time) > 50) {
+    last_time = current;
+    Input();
+  }
+  Output();
+}
