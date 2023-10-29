@@ -7,19 +7,18 @@
 
 * Install semaforky_common as local library
 
-	* ON WINDOWS
-```cmd
-cd Arduino\libraries
-mklink /D semaforky_common semaforky_github\client\semaforky_common
-```
+	* On Windows
+	```cmd
+	cd Arduino\libraries
+	mklink /D semaforky_common semaforky_github\client\semaforky_common
+	```
+	* On Linux
+	```bash
+	cd Arduino\libraries
+	ln -s semaforky_github/client/semaforky_common
+	```
+	* Restart Arduino Studio
 
-	* ON LINUX
-```bash
-cd Arduino\libraries
-ln -s semaforky_github/client/semaforky_common
-```
-
-	* restart Arduino Studio
 
 ## Upload sketch in ArduinoIDE
 * Open one of sketches, i.e. **\*_client/\*.ino**
