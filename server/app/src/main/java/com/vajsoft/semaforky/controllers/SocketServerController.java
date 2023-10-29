@@ -22,14 +22,18 @@ import java.util.logging.Logger;
  * Main controller which implements server, creates client listeners and macro operation for sending
  * messages to clients.
  */
-public class MainController {
-    public static final int SEMAPHORE_CLIENT = 1;
-    public static final int CLOCK_CLIENT = 2;
-    public static final int SIREN_CLIENT = 3;
-    public static final int RGB_MATRIX_DISPLAY_CLIENT = 4;
-    public static final int MONO_MATRIX_DISPLAY_CLIENT = 5;
-    public static final int SERVER_PORT = 8888;
-    private static final Logger LOGGER = Logger.getLogger(MainController.class.getName());
+public class SocketServerController implements ControllerRegistry, SemaforkyEvents {
+    private static final int SEMAPHORE_CLIENT = 1;
+    private static final int CLOCK_CLIENT = 2;
+    private static final int SIREN_CLIENT = 3;
+    private static final int RGB_MATRIX_DISPLAY_CLIENT = 4;
+    private static final int MONO_MATRIX_DISPLAY_CLIENT = 5;
+    private static final int SERVER_PORT = 8888;
+    private static final Logger LOGGER = Logger.getLogger(SocketServerController.class.getName());
+
+    private SemaphoreController.SemaphoreLight lastState = SemaphoreController.SemaphoreLight.RED;
+    private int lastRemainingSeconds = 0;
+
     private final Semaforky semaforky;
     private final ArrayList<Controller> controllers = new ArrayList<Controller>();
     private final ArrayList<ControllerAddedListener> controllerAddedListenersList = new ArrayList<ControllerAddedListener>();
@@ -38,24 +42,30 @@ public class MainController {
         void onControllerAdded();
     }
 
-    public MainController(Semaforky semaforky) {
+    public SocketServerController(final Semaforky semaforky) {
         this.semaforky = semaforky;
         startServer();
     }
 
+    @Override
     public ArrayList<Controller> getControllers() {
         return controllers;
     }
 
-    public void unregisterControllerAddedListener(ControllerAddedListener controllerAddedListener) {
+    @Override
+    public void unregisterControllerAddedListener(final ControllerAddedListener controllerAddedListener) {
         controllerAddedListenersList.remove(controllerAddedListener);
     }
 
-    public void registerControllerAddedListener(ControllerAddedListener controllerAddedListener) {
+    @Override
+    public void registerControllerAddedListener(final ControllerAddedListener controllerAddedListener) {
         controllerAddedListenersList.add(controllerAddedListener);
     }
 
+    @Override
     public void updateClocks(final int remainingSeconds) {
+        lastRemainingSeconds = remainingSeconds;
+
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof ClockController ||
@@ -67,7 +77,10 @@ public class MainController {
         }
     }
 
+    @Override
     public void updateSemaphores(final SemaphoreController.SemaphoreLight state) {
+        lastState = state;
+
         for (int i = 0; i < controllers.size(); ++i) {
             Controller controller = controllers.get(i);
             if (controller instanceof SemaphoreController) {
@@ -85,6 +98,7 @@ public class MainController {
         }
     }
 
+    @Override
     public void playSiren(final int count) {
         LOGGER.info("play siren! count: " + count);
         semaforky.getSoundManager().play("buzzer", count);
@@ -96,10 +110,6 @@ public class MainController {
                 controller.send(count);
             }
         }
-    }
-
-    public Semaforky getSemaforky() {
-        return semaforky;
     }
 
     private void startServer() {
@@ -178,6 +188,11 @@ public class MainController {
             if (controller != null) {
                 LOGGER.info("run()");
                 addController(controller);
+
+                // Initialize state of newly connected controller
+                updateSemaphores(lastState);
+                updateClocks(lastRemainingSeconds);
+
                 controller.run();
                 controllers.remove(controller);
                 LOGGER.log(Level.INFO, "Client {0} disconnected!", controller.getClass().getSimpleName());

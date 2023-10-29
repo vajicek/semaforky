@@ -9,7 +9,7 @@ import android.view.View;
 
 import com.vajsoft.semaforky.R;
 import com.vajsoft.semaforky.Semaforky;
-import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.controllers.SemaforkyEvents;
 import com.vajsoft.semaforky.controllers.SemaphoreController;
 import com.vajsoft.semaforky.scheduler.ClockCountdownEvent;
 import com.vajsoft.semaforky.scheduler.Scheduler;
@@ -17,7 +17,7 @@ import com.vajsoft.semaforky.scheduler.SetClockEvent;
 
 public class ManualControl extends AppCompatActivity {
 
-    private MainController mainController;
+    private SemaforkyEvents semaforkyEvents;
     private Scheduler scheduler;
 
     @Override
@@ -25,7 +25,7 @@ public class ManualControl extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_manual_control);
         this.scheduler = ((Semaforky) getApplication()).getScheduler();
-        this.mainController = ((Semaforky) getApplication()).getMainController();
+        this.semaforkyEvents = ((Semaforky) getApplication()).getSemaforkyEvents();
     }
 
     @Override
@@ -35,31 +35,31 @@ public class ManualControl extends AppCompatActivity {
     }
 
     public void onRedClicked(final View view) {
-        mainController.updateSemaphores(SemaphoreController.SemaphoreLight.RED);
+        semaforkyEvents.updateSemaphores(SemaphoreController.SemaphoreLight.RED);
     }
 
     public void onGreenClicked(final View view) {
-        mainController.updateSemaphores(SemaphoreController.SemaphoreLight.GREEN);
+        semaforkyEvents.updateSemaphores(SemaphoreController.SemaphoreLight.GREEN);
     }
 
     public void onYellowClicked(final View view) {
-        mainController.updateSemaphores(SemaphoreController.SemaphoreLight.YELLOW);
+        semaforkyEvents.updateSemaphores(SemaphoreController.SemaphoreLight.YELLOW);
     }
 
     public void onNoneClicked(final View view) {
-        mainController.updateSemaphores(SemaphoreController.SemaphoreLight.NONE);
+        semaforkyEvents.updateSemaphores(SemaphoreController.SemaphoreLight.NONE);
     }
 
     public void onThreeBeep(final View view) {
-        mainController.playSiren(3);
+        semaforkyEvents.playSiren(3);
     }
 
     public void onTwoBeep(final View view) {
-        mainController.playSiren(2);
+        semaforkyEvents.playSiren(2);
     }
 
     public void onOneBeep(final View view) {
-        mainController.playSiren(1);
+        semaforkyEvents.playSiren(1);
     }
 
     public void onClockSet0Clicked(final View view) {
@@ -97,7 +97,7 @@ public class ManualControl extends AppCompatActivity {
 
     private void setClock(final int value) {
         resetScheduler();
-        mainController.updateClocks(value);
+        semaforkyEvents.updateClocks(value);
     }
 
     private void resetScheduler() {

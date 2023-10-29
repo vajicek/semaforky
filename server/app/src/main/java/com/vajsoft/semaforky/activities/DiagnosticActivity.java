@@ -11,11 +11,12 @@ import com.vajsoft.semaforky.R;
 import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.controllers.ClockController;
 import com.vajsoft.semaforky.controllers.Controller;
-import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.controllers.ControllerRegistry;
 import com.vajsoft.semaforky.controllers.MonoMatrixDisplayController;
 import com.vajsoft.semaforky.controllers.RgbMatrixDisplayController;
 import com.vajsoft.semaforky.controllers.SemaphoreController;
 import com.vajsoft.semaforky.controllers.SirenController;
+import com.vajsoft.semaforky.controllers.SocketServerController;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -24,7 +25,7 @@ import java.util.Locale;
 /**
  * Diagnostic activity to show list of connected components and their reported state.
  */
-public class DiagnosticActivity extends AppCompatActivity implements MainController.ControllerAddedListener {
+public class DiagnosticActivity extends AppCompatActivity implements SocketServerController.ControllerAddedListener {
 
     SimpleDateFormat formatter;
 
@@ -37,13 +38,13 @@ public class DiagnosticActivity extends AppCompatActivity implements MainControl
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_diagnostic);
         report();
-        ((Semaforky) getApplication()).getMainController().registerControllerAddedListener(this);
+        ((Semaforky) getApplication()).getControllerRegistry().registerControllerAddedListener(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        ((Semaforky) getApplication()).getMainController().unregisterControllerAddedListener(this);
+        ((Semaforky) getApplication()).getControllerRegistry().unregisterControllerAddedListener(this);
     }
 
     public void onControllerAdded() {
@@ -60,9 +61,9 @@ public class DiagnosticActivity extends AppCompatActivity implements MainControl
     }
 
     private void report() {
-        MainController mainController = ((Semaforky) getApplication()).getMainController();
+        ControllerRegistry controllerRegistry = ((Semaforky) getApplication()).getControllerRegistry();
         appendLine("-----------------------");
-        for (Controller controller : mainController.getControllers()) {
+        for (Controller controller : controllerRegistry.getControllers()) {
             String line = "";
             if (controller instanceof ClockController) {
                 line = "ClockController";

@@ -3,8 +3,7 @@ package com.vajsoft.semaforky;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-import com.vajsoft.semaforky.activities.MainActivity;
-import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.controllers.SocketServerController;
 
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -27,32 +26,32 @@ public class ServerStabilityTest {
 
     @Test
     public void serverWorkingTest() throws Exception {
-        MainController mainController = new MainController(Mockito.mock(Semaforky.class));
+        SocketServerController socketServerController = new SocketServerController(Mockito.mock(Semaforky.class));
         sync();
         runClient(1);
         sync();
-        Assert.assertEquals(1, mainController.getControllers().size());
+        Assert.assertEquals(1, socketServerController.getControllers().size());
     }
 
     @Test
     public void serverStabilityTest() throws Exception {
-        MainController mainController = new MainController(Mockito.mock(Semaforky.class));
+        SocketServerController socketServerController = new SocketServerController(Mockito.mock(Semaforky.class));
         sync();
 
         // connect first client
         ClientThread client1Thread = runClient(1);
         sync();
-        Assert.assertEquals(1, mainController.getControllers().size());
+        Assert.assertEquals(1, socketServerController.getControllers().size());
 
         // connect second client
         ClientThread client2Thread = runClient(1);
         sync();
-        Assert.assertEquals(2, mainController.getControllers().size());
+        Assert.assertEquals(2, socketServerController.getControllers().size());
 
         // disconnect second client (by force)
         client2Thread.close();
         sync();
-        Assert.assertEquals(1, mainController.getControllers().size());
+        Assert.assertEquals(1, socketServerController.getControllers().size());
     }
 
     private void sync() throws InterruptedException {

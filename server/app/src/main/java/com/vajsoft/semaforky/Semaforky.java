@@ -7,8 +7,10 @@ import android.app.Application;
 import android.os.StrictMode;
 
 import com.vajsoft.semaforky.activities.GuiEventReceiver;
-import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.controllers.ControllerRegistry;
+import com.vajsoft.semaforky.controllers.SemaforkyEvents;
 import com.vajsoft.semaforky.controllers.SemaforkyMachine;
+import com.vajsoft.semaforky.controllers.SocketServerController;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.scheduler.Scheduler;
 import com.vajsoft.semaforky.utils.HotspotManager;
@@ -21,7 +23,7 @@ import java.util.logging.LogManager;
  * Application object. Allocates and holds all infrastructure objects.
  */
 public class Semaforky extends Application {
-    private MainController mainController;
+    private SocketServerController socketServerController;
     private Scheduler scheduler;
     private Settings settings;
     private SemaforkyMachine machine;
@@ -38,7 +40,7 @@ public class Semaforky extends Application {
         guiEventReceiver = new GuiEventReceiver();
         soundManager = new SoundManager(getApplicationContext());
         settings = new Settings(getApplicationContext());
-        mainController = new MainController(this);
+        socketServerController = new SocketServerController(this);
         scheduler = new Scheduler(this);
         machine = new SemaforkyMachine(this);
         hotspotManager = new HotspotManager(getApplicationContext(), settings);
@@ -56,8 +58,12 @@ public class Semaforky extends Application {
         return machine;
     }
 
-    public MainController getMainController() {
-        return mainController;
+    public SemaforkyEvents getSemaforkyEvents() {
+        return socketServerController;
+    }
+
+    public ControllerRegistry getControllerRegistry() {
+        return socketServerController;
     }
 
     public GuiEventReceiver getGuiEventReceiver() {

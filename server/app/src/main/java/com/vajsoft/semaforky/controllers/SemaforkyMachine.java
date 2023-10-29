@@ -63,7 +63,7 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
             @Override
             public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
-                semaforky.getMainController().playSiren(2);
+                semaforky.getSemaforkyEvents().playSiren(2);
                 semaforky.getScheduler().StartSet();
             }
         });
@@ -77,7 +77,7 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
             @Override
             public void run(State<SemaforkyState> previous) {
                 semaforky.getGuiEventReceiver().updateGui();
-                semaforky.getMainController().playSiren(1);
+                semaforky.getSemaforkyEvents().playSiren(1);
             }
         });
         addState(new State<SemaforkyState>(WARNING, new SemaforkyState[]{SET_CANCELED, SET_STOPPED, ROUND_STOPPED}) {
@@ -98,9 +98,9 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
             private void updateState() {
                 if (currentLine == 0) {
                     // remain stopped (or handle special cases) if set is over
-                    semaforky.getMainController().playSiren(3);
-                    semaforky.getMainController().updateClocks(0);
-                    semaforky.getMainController().updateSemaphores(SemaphoreController.SemaphoreLight.RED);
+                    semaforky.getSemaforkyEvents().playSiren(3);
+                    semaforky.getSemaforkyEvents().updateClocks(0);
+                    semaforky.getSemaforkyEvents().updateSemaphores(SemaphoreController.SemaphoreLight.RED);
                     if (semaforky.getSettings().getContinuous()) {
                         if (currentSet <= semaforky.getSettings().getNumberOfSets()) {
                             moveTo(SET_STARTED);
@@ -130,16 +130,16 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
             public void run(State<SemaforkyState> previous) {
                 semaforky.getScheduler().CancelSet();
                 semaforky.getGuiEventReceiver().updateGui();
-                semaforky.getMainController().playSiren(2);
+                semaforky.getSemaforkyEvents().playSiren(2);
             }
         });
         addState(new State<SemaforkyState>(ROUND_STOPPED, new SemaforkyState[]{SETTINGS, ROUND_STARTED}) {
             @Override
             public void run(State<SemaforkyState> previous) {
-                semaforky.getMainController().updateClocks(0);
+                semaforky.getSemaforkyEvents().updateClocks(0);
                 semaforky.getGuiEventReceiver().updateSetClocks(0);
                 semaforky.getGuiEventReceiver().updateGui();
-                semaforky.getMainController().playSiren(4);
+                semaforky.getSemaforkyEvents().playSiren(4);
                 semaforky.getScheduler().EndRound();
             }
         });

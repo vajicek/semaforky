@@ -20,7 +20,7 @@ import android.widget.TextView;
 import com.vajsoft.semaforky.BuildConfig;
 import com.vajsoft.semaforky.R;
 import com.vajsoft.semaforky.Semaforky;
-import com.vajsoft.semaforky.controllers.MainController;
+import com.vajsoft.semaforky.controllers.SemaforkyEvents;
 import com.vajsoft.semaforky.controllers.SemaforkyMachine;
 import com.vajsoft.semaforky.controllers.SemaforkyState;
 import com.vajsoft.semaforky.controllers.SemaphoreController;
@@ -42,7 +42,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
     private SemaphoreWidget semaphoreWidget;
     private Settings settings;
     private SemaforkyMachine machine;
-    private MainController mainController;
+    private SemaforkyEvents semaforkyEvents;
     private Menu optionsMenu;
     private HotspotManager hotspotManager;
 
@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
         Semaforky semaforky = (Semaforky) getApplication();
         settings = semaforky.getSettings();
         machine = semaforky.getMachine();
-        mainController = semaforky.getMainController();
+        semaforkyEvents = semaforky.getSemaforkyEvents();
         hotspotManager = semaforky.getHotspotManager();
         semaforky.getGuiEventReceiver().subscribe(this);
 
@@ -296,6 +296,6 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
                 semaphoreWidget.updateStatus(light);
             }
         });
-        mainController.updateSemaphores(light);
+        semaforkyEvents.updateSemaphores(light);
     }
 }
