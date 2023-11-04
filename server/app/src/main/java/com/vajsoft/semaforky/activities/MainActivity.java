@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
                 LOGGER.entering(this.getClass().getName(), "updateGui().run() called");
                 updateSet();
 
-                final SemaforkyState stateName = machine.getCurrenState().name;
+                final SemaforkyState stateName = machine.getCurrentState().name;
                 findViewById(R.id.btnBeginRound).setEnabled(
                         Arrays.asList(SemaforkyState.STARTED, SemaforkyState.ROUND_STOPPED).contains(stateName));
                 findViewById(R.id.btnEndRound).setEnabled(
@@ -86,7 +86,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
                 findViewById(R.id.btnCancelSet).setEnabled(
                         Arrays.asList(SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
                 findViewById(R.id.btnCustomSet).setEnabled(
-                        Arrays.asList(SemaforkyState.SET_STOPPED).contains(stateName));
+                        Arrays.asList(SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED).contains(stateName));
 
                 if (optionsMenu != null) {
                     optionsMenu.findItem(R.id.menuItemSettings).setEnabled(
@@ -96,11 +96,11 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
                             Arrays.asList(SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED).contains(stateName));
                 }
 
-                if (machine.getCurrenState().name.equals(SemaforkyState.READY)) {
+                if (machine.getCurrentState().name.equals(SemaforkyState.READY)) {
                     setSemaphore(SemaphoreController.SemaphoreLight.RED);
-                } else if (machine.getCurrenState().name.equals(SemaforkyState.FIRE)) {
+                } else if (machine.getCurrentState().name.equals(SemaforkyState.FIRE)) {
                     setSemaphore(SemaphoreController.SemaphoreLight.GREEN);
-                } else if (machine.getCurrenState().name.equals(SemaforkyState.WARNING)) {
+                } else if (machine.getCurrentState().name.equals(SemaforkyState.WARNING)) {
                     setSemaphore(SemaphoreController.SemaphoreLight.YELLOW);
                 } else {
                     setSemaphore(SemaphoreController.SemaphoreLight.NONE);
@@ -126,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
         final View customSetDialog = li.inflate(R.layout.activity_custom_set, null);
         final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
         alertDialogBuilder.setView(customSetDialog);
-        final EditText customSetLength = (EditText) customSetDialog.findViewById(R.id.editCustomSetLength);
+        final EditText customSetLength = customSetDialog.findViewById(R.id.editCustomSetLength);
 
         alertDialogBuilder
                 .setCancelable(false)
@@ -254,8 +254,8 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
 
     private void updateSet() {
         ((TextView) findViewById(R.id.tvSet)).setText(String.format(Locale.ROOT, "%d", machine.getCurrentSet()));
-        if (machine.getCurrenState().name.equals(SemaforkyState.STARTED) ||
-                machine.getCurrenState().name.equals(SemaforkyState.ROUND_STOPPED)) {
+        if (machine.getCurrentState().name.equals(SemaforkyState.STARTED) ||
+                machine.getCurrentState().name.equals(SemaforkyState.ROUND_STOPPED)) {
             ((TextView) findViewById(R.id.tvLine)).setText("--");
         } else if (settings.getLines() == 1) {
             ((TextView) findViewById(R.id.tvLine)).setText(getResources().getText(R.string.linesAB));

@@ -66,13 +66,16 @@ public class Scheduler {
         AddEvent(new SetClockEvent(new Date(), new Date(), semaforky));
     }
 
-    /// Plan events for set start
     public void StartSet() {
-        Settings settings = semaforky.getSettings();
-        StartSet(settings.getSetTime());
+        StartSet(semaforky.getSettings().getSetTime());
     }
 
-    public void StartSet(int setTime) {
+    public void StartCustomSet() {
+        StartSet(semaforky.getSettings().getCustomSetTime());
+    }
+
+    /// Plan events for set start
+    private void StartSet(int setTime) {
         CancelSetEvents();
         Date now = new Date();
 

@@ -53,9 +53,11 @@ public class SetClockEvent extends Event {
         long seconds = (now.getTime() - setStart.getTime()) / 1000;
         int remaining_seconds = getRemainingSeconds(seconds);
 
-        semaforky.getSemaforkyEvents().updateClocks(remaining_seconds);
-        semaforky.getGuiEventReceiver().updateSetClocks(remaining_seconds);
-        semaforky.getScheduler().AddEvent(new SetClockEvent(new Date(now.getTime() + 100), setStart, semaforky, setTiming));
+        this.semaforky.getSemaforkyEvents().updateClocks(remaining_seconds);
+        this.semaforky.getGuiEventReceiver().updateSetClocks(remaining_seconds);
+
+        // plan the event again
+        this.semaforky.getScheduler().AddEvent(new SetClockEvent(new Date(now.getTime() + 100), setStart, this.semaforky, setTiming));
     }
 
     /**
@@ -64,15 +66,16 @@ public class SetClockEvent extends Event {
     private int getRemainingSeconds(final long seconds) {
         // time to show based on top-level machine state
         int remaining_seconds = 0;
-        if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.START_WAITING)) {
+        final SemaforkyState currentStateName = this.semaforky.getMachine().getCurrentState().name;
+        if (currentStateName.equals(SemaforkyState.START_WAITING)) {
             long sec = (this.semaforky.getSettings().getDelayedStartDate().getTime() - new Date().getTime()) / 1000;
             remaining_seconds = (int) Math.max(Math.min(sec, 999), 0);
-        } else if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.READY)) {
+        } else if (currentStateName.equals(SemaforkyState.READY)) {
             remaining_seconds = (int) Math.max(this.setTiming.getPreparationTimeTime() - seconds, 0);
-        } else if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.FIRE) ||
-                semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.WARNING)) {
+        } else if (currentStateName.equals(SemaforkyState.FIRE) ||
+                currentStateName.equals(SemaforkyState.WARNING)) {
             remaining_seconds = (int) Math.max(this.setTiming.getPreparationTimeTime() + this.setTiming.getSetTime() - seconds, 0);
-        } else if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.MANUAL_CONTROL)) {
+        } else if (currentStateName.equals(SemaforkyState.MANUAL_CONTROL)) {
             remaining_seconds = (int) seconds;
             LOGGER.info("seconds = " + remaining_seconds);
         }

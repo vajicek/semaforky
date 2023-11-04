@@ -28,6 +28,7 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
 
     private int currentSet = 1;
     private int currentLine = 0;
+    private boolean customSet = false;
     private final Semaforky semaforky;
 
     public SemaforkyMachine(final Semaforky semaforky) {
@@ -71,9 +72,10 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
         addState(new State<SemaforkyState>(CUSTOM_SET_STARTED, new SemaforkyState[]{READY}) {
             @Override
             public void run(State<SemaforkyState> previous) {
+                customSet = true;
                 semaforky.getGuiEventReceiver().updateGui();
                 semaforky.getSemaforkyEvents().playSiren(2);
-                semaforky.getScheduler().StartSet(semaforky.getSettings().getCustomSetTime());
+                semaforky.getScheduler().StartCustomSet();
             }
         });
         addState(new State<SemaforkyState>(SET_STARTED, new SemaforkyState[]{READY}) {
@@ -103,13 +105,15 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
                 semaforky.getGuiEventReceiver().updateGui();
             }
         });
-        addState(new State<SemaforkyState>(SET_STOPPED, new SemaforkyState[]{SET_STARTED, ROUND_STOPPED, CUSTOM_SET_STARTED}) {
+        addState(new State<SemaforkyState>(SET_STOPPED, new SemaforkyState[]{ROUND_STOPPED, SET_STARTED, CUSTOM_SET_STARTED}) {
             @Override
             public void run(State<SemaforkyState> previous) {
-                // TODO: IF NOT CUSTOM SET
-
                 semaforky.getScheduler().StopSet();
-                updateSetAndLine();
+                if (!customSet) {
+                    updateSetAndLine();
+                } else {
+                    customSet = false;
+                }
                 semaforky.getGuiEventReceiver().updateGui();
                 updateState();
             }
@@ -144,9 +148,10 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
                 }
             }
         });
-        addState(new State<SemaforkyState>(SET_CANCELED, new SemaforkyState[]{ROUND_STOPPED, SET_STARTED}) {
+        addState(new State<SemaforkyState>(SET_CANCELED, new SemaforkyState[]{ROUND_STOPPED, SET_STARTED, CUSTOM_SET_STARTED}) {
             @Override
             public void run(State<SemaforkyState> previous) {
+                customSet = false;
                 semaforky.getScheduler().CancelSet();
                 semaforky.getGuiEventReceiver().updateGui();
                 semaforky.getSemaforkyEvents().playSiren(2);

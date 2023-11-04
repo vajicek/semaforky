@@ -1,5 +1,8 @@
 package com.vajsoft.semaforky.controllers;
 
+/// Copyright (C) 2023, Vajsoft
+/// Author: Vaclav Krajicek <vajicek@volny.cz>
+
 import java.net.Socket;
 
 public class MonoMatrixDisplayController extends AbstractController {

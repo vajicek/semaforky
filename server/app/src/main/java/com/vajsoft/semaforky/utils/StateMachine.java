@@ -27,7 +27,7 @@ public class StateMachine<T> {
         currentState = state;
     }
 
-    public State<T> getCurrenState() {
+    public State<T> getCurrentState() {
         LOGGER.log(Level.CONFIG, "getCurrenState() = {0})", currentState.name.toString());
         return currentState;
     }
@@ -38,11 +38,7 @@ public class StateMachine<T> {
             return;
         }
         State<T> state = SearchArray.findFirst(states, stateName,
-                new SearchArray.Comparator<State<T>, T>() {
-                    public boolean isEqual(State<T> item, T value) {
-                        return item.name.equals(value);
-                    }
-                }
+                (item, value) -> item.name.equals(value)
         );
         if (state != null) {
             State<T> previousState = currentState;

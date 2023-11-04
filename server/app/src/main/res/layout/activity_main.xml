@@ -18,32 +18,37 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
             android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
             android:layout_alignParentTop="true"
             android:orientation="vertical">
 
-            <LinearLayout
+            <TableLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_height="match_parent">
 
-                <Button
-                    android:id="@+id/btnBeginRound"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:onClick="onBeginRoundClicked"
-                    android:text="@string/beginRound"/>
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" >
 
-                <Button
-                    android:id="@+id/btnEndRound"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:onClick="onEndRoundClicked"
-                    android:text="@string/endRound"/>
-            </LinearLayout>
+                    <Button
+                        android:id="@+id/btnBeginRound"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:onClick="onBeginRoundClicked"
+                        android:text="@string/beginRound" />
+
+                    <Button
+                        android:id="@+id/btnEndRound"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:onClick="onEndRoundClicked"
+                        android:text="@string/endRound" />
+                </TableRow>
+
+            </TableLayout>
 
             <TableLayout
                 android:layout_width="match_parent"
@@ -58,7 +63,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/set"
-                        android:textSize="24sp"/>
+                        android:textSize="24sp" />
 
                     <TextView
                         android:id="@+id/tvSet"
@@ -68,7 +73,7 @@
                         android:gravity="end"
                         android:text="-"
                         android:textAlignment="textEnd"
-                        android:textSize="24sp"/>
+                        android:textSize="24sp" />
 
                 </TableRow>
 
@@ -81,7 +86,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/roundTime"
-                        android:textSize="24sp"/>
+                        android:textSize="24sp" />
 
                     <TextView
                         android:id="@+id/tvRoundTime"
@@ -91,7 +96,7 @@
                         android:gravity="end"
                         android:text="--:--:--"
                         android:textAlignment="textEnd"
-                        android:textSize="24sp"/>
+                        android:textSize="24sp" />
 
                 </TableRow>
 
@@ -104,7 +109,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/line"
-                        android:textSize="24sp"/>
+                        android:textSize="24sp" />
 
                     <TextView
                         android:id="@+id/tvLine"
@@ -114,7 +119,7 @@
                         android:gravity="end"
                         android:text="-"
                         android:textAlignment="textEnd"
-                        android:textSize="24sp"/>
+                        android:textSize="24sp" />
 
                 </TableRow>
 
@@ -128,58 +133,61 @@
                 android:text="---"
                 android:textAlignment="center"
                 android:textSize="70sp"
-                tools:fontFamily="monospace"/>
+                tools:fontFamily="monospace" />
 
             <SurfaceView
                 android:id="@+id/svSemaphore"
                 android:layout_width="match_parent"
-                android:layout_height="50pt"/>
+                android:layout_height="50pt" />
 
-            <LinearLayout
+            <TableLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_height="match_parent">
 
-                <Button
-                    android:id="@+id/btnStartSet"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:onClick="onStartSetClick"
-                    android:text="@string/startSet" />
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
-                <Button
-                    android:id="@+id/btnStopSet"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:onClick="onStopSetClick"
-                    android:text="@string/stopSet" />
+                    <Button
+                        android:id="@+id/btnStartSet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:onClick="onStartSetClick"
+                        android:text="@string/startSet" />
 
-            </LinearLayout>
+                    <Button
+                        android:id="@+id/btnStopSet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:onClick="onStopSetClick"
+                        android:text="@string/stopSet" />
+                </TableRow>
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal">
+                <TableRow
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent">
 
-                <Button
-                    android:id="@+id/btnCancelSet"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:elevation="0dp"
-                    android:onClick="onCancelSetClick"
-                    android:text="@string/cancelSet" />
+                    <Button
+                        android:id="@+id/btnCancelSet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:elevation="0dp"
+                        android:onClick="onCancelSetClick"
+                        android:text="@string/cancelSet" />
 
-                <Button
-                    android:id="@+id/btnCustomSet"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:onClick="onCustomSetClick"
-                    android:text="@string/setTiming" />
-            </LinearLayout>
+                    <Button
+                        android:id="@+id/btnCustomSet"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:onClick="onCustomSetClick"
+                        android:text="@string/setTiming" />
+                </TableRow>
+
+            </TableLayout>
 
         </LinearLayout>
 
