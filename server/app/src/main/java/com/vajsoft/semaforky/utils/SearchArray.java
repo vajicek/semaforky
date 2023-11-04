@@ -8,7 +8,7 @@ import java.util.Collection;
 /**
  * Search array according to given comparator functor value.
  */
-public class SearchArray<T> {
+public class SearchArray {
 
     public static <T, V, C extends Comparator<T, V>> T findFirst(final Collection<T> list, final V value, final C comparator) {
         for (T item : list) {

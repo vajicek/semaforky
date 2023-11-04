@@ -125,7 +125,11 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
     }
 
     public void onBeginRoundClicked(View view) {
-        machine.moveTo(SemaforkyState.ROUND_STARTED);
+        if (settings.isDelayedStartEnabled()) {
+            machine.moveTo(SemaforkyState.START_WAITING);
+        } else {
+            machine.moveTo(SemaforkyState.ROUND_STARTED);
+        }
     }
 
     public void onEndRoundClicked(View view) {

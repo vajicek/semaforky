@@ -7,6 +7,7 @@ import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.controllers.SemaforkyState;
 import com.vajsoft.semaforky.data.Settings;
 
+import java.time.Instant;
 import java.util.Date;
 import java.util.logging.Logger;
 
@@ -41,7 +42,10 @@ public class SetClockEvent extends Event {
      */
     private int getRemainingSeconds(final long seconds) {
         int remaining_seconds = 0;
-        if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.READY)) {
+        if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.START_WAITING)) {
+            long sec = new Date().getTime() - settings.getDelayedStartTime().getTime();
+            remaining_seconds = (int) Math.max(Math.min(sec, 999), 0);
+        } else if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.READY)) {
             remaining_seconds = (int) Math.max(settings.getPreparationTimeTime() - seconds, 0);
         } else if (semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.FIRE) ||
                 semaforky.getMachine().getCurrenState().name.equals(SemaforkyState.WARNING)) {

@@ -15,6 +15,7 @@ import com.vajsoft.semaforky.Semaforky;
 import com.vajsoft.semaforky.data.Settings;
 import com.vajsoft.semaforky.utils.PopupWindow;
 
+import java.sql.Time;
 import java.util.Locale;
 
 /**
@@ -58,6 +59,8 @@ public class SettingsActivity extends AppCompatActivity {
         ((TextView) findViewById(R.id.editWarningTime)).setText(String.format(Locale.ROOT, "%d", settings.getWarningTimeTime()));
         ((CheckBox) findViewById(R.id.cbContinuous)).setChecked(settings.getContinuous());
         ((TextView) findViewById(R.id.editNumberOfSets)).setText(String.format(Locale.ROOT, "%d", settings.getNumberOfSets()));
+        ((CheckBox) findViewById(R.id.cbDelayStart)).setChecked(settings.isDelayedStartEnabled());
+        ((TextView) findViewById(R.id.ebRoundStart)).setText(settings.getDelayedStartTime().toString());
     }
 
     private boolean validateTime() {
@@ -82,6 +85,16 @@ public class SettingsActivity extends AppCompatActivity {
         settings.setWarningTimeTime(getWarningTimeFromGui());
         settings.setContinuous(getContinuousFromGui());
         settings.setNumberOfSets(getNumberOfSetsGui());
+        settings.setDelayedStartEnabled(getDelayedStartEnabledFromGui());
+        settings.setDelayedStartTime(getDelayedStartTimeFromGui());
+    }
+
+    private boolean getDelayedStartEnabledFromGui() {
+        return ((CheckBox) findViewById(R.id.cbDelayStart)).isChecked();
+    }
+
+    private Time getDelayedStartTimeFromGui() {
+        return Time.valueOf(((TextView) findViewById(R.id.ebRoundStart)).getText().toString());
     }
 
     private int getWarningTimeFromGui() {

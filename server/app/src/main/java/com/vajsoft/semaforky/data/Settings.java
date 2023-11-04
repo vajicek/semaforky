@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 import java.io.Serializable;
+import java.sql.Time;
+import java.util.Date;
 
 /**
  * Singleton class. Holds, store, load setting of the application.
@@ -33,9 +35,27 @@ public class Settings implements Serializable {
     private boolean continuous = false;
     private int numberOfSets = 10;
     private LinesRotation linesRotation = LinesRotation.SIMPLE;
+    private boolean delayedStartEnabled = false;
+    private Time delayedStartTime = new Time(12, 0, 0);
 
     public Settings(final Context applicationContext) {
         loadSetting(applicationContext);
+    }
+
+    public boolean isDelayedStartEnabled() {
+        return delayedStartEnabled;
+    }
+
+    public void setDelayedStartEnabled(boolean delayedStartEnabled) {
+        this.delayedStartEnabled = delayedStartEnabled;
+    }
+
+    public Time getDelayedStartTime() {
+        return delayedStartTime;
+    }
+
+    public void setDelayedStartTime(Time delayedStartTime) {
+        this.delayedStartTime = delayedStartTime;
     }
 
     public int getLines() {
@@ -115,6 +135,8 @@ public class Settings implements Serializable {
         linesRotation = LinesRotation.values()[settings.getInt("linesRotation", linesRotation.ordinal())];
         numberOfSets = settings.getInt("numberOfSets", numberOfSets);
         continuous = settings.getBoolean("continuous", continuous);
+        delayedStartEnabled = settings.getBoolean("delayedStartEnabled", delayedStartEnabled);
+        delayedStartTime = Time.valueOf(settings.getString("delayedStartTime", delayedStartTime.toString()));
     }
 
     public void saveSetting(final Context applicationContext) {
@@ -129,6 +151,8 @@ public class Settings implements Serializable {
         editor.putInt("linesRotation", linesRotation.ordinal());
         editor.putBoolean("continuous", continuous);
         editor.putInt("numberOfSets", numberOfSets);
+        editor.putBoolean("delayedStartEnabled", delayedStartEnabled);
+        editor.putString("delayedStartTime", delayedStartTime.toString());
         editor.apply();
     }
 

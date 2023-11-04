@@ -14,8 +14,8 @@
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:divider="?attr/dividerHorizontal">
 
@@ -27,16 +27,16 @@
                 android:id="@+id/textView12"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/language"/>
+                android:text="@string/language" />
 
             <Spinner
                 android:id="@+id/spinnerLanguage"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:entries="@array/languages_array"
-                android:paddingBottom="10dp"
                 android:paddingTop="10dp"
-                android:spinnerMode="dropdown"/>
+                android:paddingBottom="10dp"
+                android:spinnerMode="dropdown" />
 
         </TableRow>
 
@@ -48,7 +48,7 @@
                 android:id="@+id/textView6"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/lineRotation"/>
+                android:text="@string/lineRotation" />
 
             <Spinner
                 android:id="@+id/spinnerLineRotation"
@@ -56,9 +56,9 @@
                 android:layout_height="wrap_content"
                 android:dropDownWidth="wrap_content"
                 android:entries="@array/line_rotation_array"
-                android:paddingBottom="10dp"
                 android:paddingTop="10dp"
-                android:spinnerMode="dropdown"/>
+                android:paddingBottom="10dp"
+                android:spinnerMode="dropdown" />
         </TableRow>
 
         <TableRow
@@ -69,14 +69,14 @@
                 android:id="@+id/textView11"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/lines"/>
+                android:text="@string/lines" />
 
             <EditText
                 android:id="@+id/editLines"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="number"/>
+                android:inputType="number" />
 
         </TableRow>
 
@@ -88,17 +88,17 @@
                 android:id="@+id/textView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentLeft="true"
                 android:layout_alignParentStart="true"
+                android:layout_alignParentLeft="true"
                 android:layout_alignParentTop="true"
-                android:text="@string/rounds"/>
+                android:text="@string/rounds" />
 
             <EditText
                 android:id="@+id/editRounds"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="number"/>
+                android:inputType="number" />
 
         </TableRow>
 
@@ -110,14 +110,14 @@
                 android:id="@+id/textView5"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/setTime"/>
+                android:text="@string/setTime" />
 
             <EditText
                 android:id="@+id/editSetTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="number"/>
+                android:inputType="number" />
 
         </TableRow>
 
@@ -129,14 +129,14 @@
                 android:id="@+id/textView8"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/preparationTime"/>
+                android:text="@string/preparationTime" />
 
             <EditText
                 android:id="@+id/editPreparationTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="numberSigned"/>
+                android:inputType="numberSigned" />
 
         </TableRow>
 
@@ -148,14 +148,14 @@
                 android:id="@+id/textView9"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/warningTime"/>
+                android:text="@string/warningTime" />
 
             <EditText
                 android:id="@+id/editWarningTime"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="number"/>
+                android:inputType="number" />
 
         </TableRow>
 
@@ -167,14 +167,13 @@
                 android:id="@+id/textView7"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/autoSet"
-                />
+                android:text="@string/autoSet" />
 
             <CheckBox
                 android:id="@+id/cbContinuous"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"/>
+                android:layout_weight="1" />
 
         </TableRow>
 
@@ -186,15 +185,49 @@
                 android:id="@+id/textView10"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/numberOfSets"/>
+                android:text="@string/numberOfSets" />
 
             <EditText
                 android:id="@+id/editNumberOfSets"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:ems="10"
-                android:inputType="numberDecimal"/>
+                android:inputType="numberDecimal" />
 
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/textView16"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/delayStart" />
+
+            <CheckBox
+                android:id="@+id/cbDelayStart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" >
+
+            <TextView
+                android:id="@+id/textView15"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/roundStart" />
+
+            <EditText
+                android:id="@+id/ebRoundStart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:ems="10"
+                android:inputType="time" />
         </TableRow>
 
         <TableRow
@@ -214,7 +247,7 @@
                     android:layout_weight="1"
                     android:longClickable="false"
                     android:onClick="onOkClicked"
-                    android:text="@android:string/ok"/>
+                    android:text="@android:string/ok" />
 
                 <Button
                     android:id="@+id/btnCancel"
@@ -222,7 +255,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onCancelClicked"
-                    android:text="@android:string/cancel"/>
+                    android:text="@android:string/cancel" />
 
             </LinearLayout>
         </TableRow>

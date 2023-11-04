@@ -52,6 +52,16 @@ public class Scheduler {
         }
     }
 
+    /// Plan events for round start
+    public void WaitForRoundStart() {
+        Date now = new Date();
+        Settings settings = semaforky.getSettings();
+        SemaforkyMachine machine = semaforky.getMachine();
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + settings.getDelayedStartTime().getTime()),
+                SemaforkyState.ROUND_STARTED,
+                machine));
+    }
+
     /// Plan events for set start
     public void StartSet() {
         CancelSetEvents();

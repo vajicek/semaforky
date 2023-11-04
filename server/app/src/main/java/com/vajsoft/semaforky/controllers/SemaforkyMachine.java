@@ -13,6 +13,7 @@ import static com.vajsoft.semaforky.controllers.SemaforkyState.SET_CANCELED;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.SET_STARTED;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.SET_STOPPED;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.STARTED;
+import static com.vajsoft.semaforky.controllers.SemaforkyState.START_WAITING;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.WARNING;
 
 import com.vajsoft.semaforky.Semaforky;
@@ -42,13 +43,19 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
     }
 
     private void initializeStates() {
-
-        setCurrent(addState(new State<SemaforkyState>(STARTED, new SemaforkyState[]{ROUND_STARTED, SETTINGS, MANUAL_CONTROL}) {
+        setCurrent(addState(new State<SemaforkyState>(STARTED, new SemaforkyState[]{ROUND_STARTED, SETTINGS, MANUAL_CONTROL, START_WAITING}) {
             @Override
             public void run(State<SemaforkyState> previous) {
                 //Nothing to do
             }
         }));
+        addState(new State<SemaforkyState>(START_WAITING, new SemaforkyState[]{ROUND_STARTED}) {
+             @Override
+             public void run(State<SemaforkyState> previous) {
+                 semaforky.getScheduler().WaitForRoundStart();
+                 semaforky.getGuiEventReceiver().updateGui();
+             }
+        });
         addState(new State<SemaforkyState>(ROUND_STARTED, new SemaforkyState[]{SET_STARTED, ROUND_STOPPED}) {
             @Override
             public void run(State<SemaforkyState> previous) {
@@ -137,6 +144,7 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
             @Override
             public void run(State<SemaforkyState> previous) {
                 semaforky.getSemaforkyEvents().updateClocks(0);
+                semaforky.getSemaforkyEvents().updateSemaphores(SemaphoreController.SemaphoreLight.RED);
                 semaforky.getGuiEventReceiver().updateSetClocks(0);
                 semaforky.getGuiEventReceiver().updateGui();
                 semaforky.getSemaforkyEvents().playSiren(4);
