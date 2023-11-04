@@ -8,6 +8,12 @@ Semaforky is client-server software for Android (server) and several Arduino-bas
 
 This platform was originally designed for archery competitions according to World Archery rules (REFERENCE TO BE ADDED). The solution should replace outdated cabel-based predecessor.
 
+## Motivation
+
+Server app             |  Client hardware
+:-:|:-:
+![](doc/server_app.png)  |  ![](doc/client_hardware.jpg)
+
 ## Goals
 - Most of existing devices should be preserved, only extended by remote transmitter and power source
 - Simple construction blueprints of hardware should be also provided
