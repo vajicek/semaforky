@@ -16,3 +16,5 @@
 * Panel is mounted with 4mm x 40mm metric screws through 44mm x 24mm pillars (they must be sank into the wood ~10mm).
 
 ![Plan](screenshot.png)
+
+![Components](enclosure_components.svg)
