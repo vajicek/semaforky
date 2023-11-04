@@ -44,5 +44,9 @@
     <string name="clockCountdown">Clock countdown</string>
     <string name="linesAB">AB</string>
     <string name="linesCD">CD</string>
+    <string name="delayStart">Odložený začátek</string>
+    <string name="roundStart">Čas začátku</string>
+    <string name="setTiming">Dostřel</string>
+    <string name="customSetLength">Délka dostřelu</string>
     <string formatted="false" name="wifiHotspotControlFailed">Aplikace selhala při pokusu aktivovat Wifi Hotspot. Prosím, aktivujte Wifi Hotspot ručně v Systémové nabídce s ESSID=%s a heslem=%s. Detail chyby: %s</string>
 </resources>

@@ -29,6 +29,7 @@ public class Settings implements Serializable {
     private int language = 0;
     private int roundSets = 10;
     private int setTime = 120;
+    private int customSetTime = 120;
     private int preparationTime = 10;
     private int warningTime = 30;
     private int lines = 1;
@@ -50,12 +51,26 @@ public class Settings implements Serializable {
         this.delayedStartEnabled = delayedStartEnabled;
     }
 
+    public Date getDelayedStartDate() {
+        final Date now = new Date();
+        return new Date(now.getYear(), now.getMonth(), now.getDate(),
+                delayedStartTime.getHours(), delayedStartTime.getMinutes(), delayedStartTime.getSeconds());
+    }
+
     public Time getDelayedStartTime() {
         return delayedStartTime;
     }
 
     public void setDelayedStartTime(Time delayedStartTime) {
         this.delayedStartTime = delayedStartTime;
+    }
+
+    public int getCustomSetTime() {
+        return customSetTime;
+    }
+
+    public void setCustomSetTime(int customSetTime) {
+        this.customSetTime = customSetTime;
     }
 
     public int getLines() {

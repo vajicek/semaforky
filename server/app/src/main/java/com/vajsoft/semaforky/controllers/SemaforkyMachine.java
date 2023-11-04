@@ -3,6 +3,7 @@ package com.vajsoft.semaforky.controllers;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import static com.vajsoft.semaforky.controllers.SemaforkyState.CUSTOM_SET_STARTED;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.FIRE;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.MANUAL_CONTROL;
 import static com.vajsoft.semaforky.controllers.SemaforkyState.READY;
@@ -21,7 +22,7 @@ import com.vajsoft.semaforky.utils.State;
 import com.vajsoft.semaforky.utils.StateMachine;
 
 /**
- * Semaforky state machine. Defines sttate names and state change implementation.
+ * Semaforky state machine. Defines state names and state change implementation.
  */
 public class SemaforkyMachine extends StateMachine<SemaforkyState> {
 
@@ -49,12 +50,13 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
                 //Nothing to do
             }
         }));
-        addState(new State<SemaforkyState>(START_WAITING, new SemaforkyState[]{ROUND_STARTED}) {
-             @Override
-             public void run(State<SemaforkyState> previous) {
-                 semaforky.getScheduler().WaitForRoundStart();
-                 semaforky.getGuiEventReceiver().updateGui();
-             }
+        addState(new State<SemaforkyState>(START_WAITING, new SemaforkyState[]{ROUND_STARTED, ROUND_STOPPED}) {
+            @Override
+            public void run(State<SemaforkyState> previous) {
+                semaforky.getSemaforkyEvents().updateSemaphores(SemaphoreController.SemaphoreLight.NONE);
+                semaforky.getScheduler().WaitForRoundStart();
+                semaforky.getGuiEventReceiver().updateGui();
+            }
         });
         addState(new State<SemaforkyState>(ROUND_STARTED, new SemaforkyState[]{SET_STARTED, ROUND_STOPPED}) {
             @Override
@@ -64,6 +66,14 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
                 currentSet = 1;
                 currentLine = 0;
                 moveTo(SET_STARTED);
+            }
+        });
+        addState(new State<SemaforkyState>(CUSTOM_SET_STARTED, new SemaforkyState[]{READY}) {
+            @Override
+            public void run(State<SemaforkyState> previous) {
+                semaforky.getGuiEventReceiver().updateGui();
+                semaforky.getSemaforkyEvents().playSiren(2);
+                semaforky.getScheduler().StartSet(semaforky.getSettings().getCustomSetTime());
             }
         });
         addState(new State<SemaforkyState>(SET_STARTED, new SemaforkyState[]{READY}) {
@@ -93,9 +103,11 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
                 semaforky.getGuiEventReceiver().updateGui();
             }
         });
-        addState(new State<SemaforkyState>(SET_STOPPED, new SemaforkyState[]{SET_STARTED, ROUND_STOPPED}) {
+        addState(new State<SemaforkyState>(SET_STOPPED, new SemaforkyState[]{SET_STARTED, ROUND_STOPPED, CUSTOM_SET_STARTED}) {
             @Override
             public void run(State<SemaforkyState> previous) {
+                // TODO: IF NOT CUSTOM SET
+
                 semaforky.getScheduler().StopSet();
                 updateSetAndLine();
                 semaforky.getGuiEventReceiver().updateGui();
@@ -140,14 +152,16 @@ public class SemaforkyMachine extends StateMachine<SemaforkyState> {
                 semaforky.getSemaforkyEvents().playSiren(2);
             }
         });
-        addState(new State<SemaforkyState>(ROUND_STOPPED, new SemaforkyState[]{SETTINGS, ROUND_STARTED}) {
+        addState(new State<SemaforkyState>(ROUND_STOPPED, new SemaforkyState[]{SETTINGS, START_WAITING, ROUND_STARTED}) {
             @Override
             public void run(State<SemaforkyState> previous) {
                 semaforky.getSemaforkyEvents().updateClocks(0);
                 semaforky.getSemaforkyEvents().updateSemaphores(SemaphoreController.SemaphoreLight.RED);
                 semaforky.getGuiEventReceiver().updateSetClocks(0);
                 semaforky.getGuiEventReceiver().updateGui();
-                semaforky.getSemaforkyEvents().playSiren(4);
+                if (previous.name != START_WAITING) {
+                    semaforky.getSemaforkyEvents().playSiren(4);
+                }
                 semaforky.getScheduler().EndRound();
             }
         });

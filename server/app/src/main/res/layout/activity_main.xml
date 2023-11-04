@@ -146,7 +146,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onStartSetClick"
-                    android:text="@string/startSet"/>
+                    android:text="@string/startSet" />
 
                 <Button
                     android:id="@+id/btnStopSet"
@@ -154,7 +154,14 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:onClick="onStopSetClick"
-                    android:text="@string/stopSet"/>
+                    android:text="@string/stopSet" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
 
                 <Button
                     android:id="@+id/btnCancelSet"
@@ -163,8 +170,15 @@
                     android:layout_weight="1"
                     android:elevation="0dp"
                     android:onClick="onCancelSetClick"
-                    android:text="@string/cancelSet"/>
+                    android:text="@string/cancelSet" />
 
+                <Button
+                    android:id="@+id/btnCustomSet"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:onClick="onCustomSetClick"
+                    android:text="@string/setTiming" />
             </LinearLayout>
 
         </LinearLayout>

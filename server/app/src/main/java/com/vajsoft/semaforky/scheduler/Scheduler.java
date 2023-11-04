@@ -54,35 +54,47 @@ public class Scheduler {
 
     /// Plan events for round start
     public void WaitForRoundStart() {
-        Date now = new Date();
-        Settings settings = semaforky.getSettings();
-        SemaforkyMachine machine = semaforky.getMachine();
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + settings.getDelayedStartTime().getTime()),
+        final Settings settings = semaforky.getSettings();
+        final SemaforkyMachine machine = semaforky.getMachine();
+
+        // start round even
+        AddEvent(new SemaphoreEvent(settings.getDelayedStartDate(),
                 SemaforkyState.ROUND_STARTED,
                 machine));
+
+        // high frequency clock event
+        AddEvent(new SetClockEvent(new Date(), new Date(), semaforky));
     }
 
     /// Plan events for set start
     public void StartSet() {
+        Settings settings = semaforky.getSettings();
+        StartSet(settings.getSetTime());
+    }
+
+    public void StartSet(int setTime) {
         CancelSetEvents();
         Date now = new Date();
 
         Settings settings = semaforky.getSettings();
         SemaforkyMachine machine = semaforky.getMachine();
 
+        // plan top-level events
         AddEvent(new SemaphoreEvent(now,
                 SemaforkyState.READY,
                 machine));
         AddEvent(new SemaphoreEvent(new Date(now.getTime() + settings.getPreparationTimeTime() * 1000L),
                 SemaforkyState.FIRE,
                 machine));
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.getPreparationTimeTime() + settings.getSetTime() - settings.getWarningTimeTime()) * 1000L),
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.getPreparationTimeTime() + setTime - settings.getWarningTimeTime()) * 1000L),
                 SemaforkyState.WARNING,
                 machine));
-        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.getPreparationTimeTime() + settings.getSetTime()) * 1000L + 500),
+        AddEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.getPreparationTimeTime() + setTime) * 1000L + 500),
                 SemaforkyState.SET_STOPPED,
                 machine));
-        AddEvent(new SetClockEvent(new Date(), new Date(), semaforky));
+
+        // plan high frequency event for clock display
+        AddEvent(new SetClockEvent(new Date(), new Date(), semaforky, new SetClockEvent.SetTiming(settings.getPreparationTimeTime(), setTime)));
     }
 
     public void StopSet() {

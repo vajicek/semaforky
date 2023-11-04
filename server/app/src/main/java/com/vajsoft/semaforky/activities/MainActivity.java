@@ -3,6 +3,7 @@ package com.vajsoft.semaforky.activities;
 /// Copyright (C) 2017, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
@@ -10,11 +11,13 @@ import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import com.vajsoft.semaforky.BuildConfig;
@@ -47,28 +50,20 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
     private HotspotManager hotspotManager;
 
     public void updateRoundClocks(final Date roundStart) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                long diff = (new Date()).getTime() - roundStart.getTime();
-                long seconds = TimeUnit.MILLISECONDS.toSeconds(diff) % 60;
-                long minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60;
-                ((TextView) findViewById(R.id.tvRoundTime)).setText(
-                        String.format(Locale.ROOT, "%1$02d:%2$02d", minutes, seconds)
-                );
-            }
+        runOnUiThread(() -> {
+            long diff = (new Date()).getTime() - roundStart.getTime();
+            long seconds = TimeUnit.MILLISECONDS.toSeconds(diff) % 60;
+            long minutes = TimeUnit.MILLISECONDS.toMinutes(diff) % 60;
+            ((TextView) findViewById(R.id.tvRoundTime)).setText(
+                    String.format(Locale.ROOT, "%1$02d:%2$02d", minutes, seconds)
+            );
         });
     }
 
     public void updateSetClocks(final int remainingSeconds) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                ((TextView) findViewById(R.id.tvSetTime)).setText(
-                        String.format(Locale.ROOT, "%1$03d", remainingSeconds)
-                );
-            }
-        });
+        runOnUiThread(() -> ((TextView) findViewById(R.id.tvSetTime)).setText(
+                String.format(Locale.ROOT, "%1$03d", remainingSeconds)
+        ));
     }
 
     public void updateGui() {
@@ -83,13 +78,15 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
                 findViewById(R.id.btnBeginRound).setEnabled(
                         Arrays.asList(SemaforkyState.STARTED, SemaforkyState.ROUND_STOPPED).contains(stateName));
                 findViewById(R.id.btnEndRound).setEnabled(
-                        Arrays.asList(SemaforkyState.ROUND_STARTED, SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED, SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
+                        Arrays.asList(SemaforkyState.START_WAITING, SemaforkyState.ROUND_STARTED, SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED, SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
                 findViewById(R.id.btnStartSet).setEnabled(
                         Arrays.asList(SemaforkyState.ROUND_STARTED, SemaforkyState.SET_CANCELED, SemaforkyState.SET_STOPPED).contains(stateName));
                 findViewById(R.id.btnStopSet).setEnabled(
                         Arrays.asList(SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
                 findViewById(R.id.btnCancelSet).setEnabled(
                         Arrays.asList(SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING).contains(stateName));
+                findViewById(R.id.btnCustomSet).setEnabled(
+                        Arrays.asList(SemaforkyState.SET_STOPPED).contains(stateName));
 
                 if (optionsMenu != null) {
                     optionsMenu.findItem(R.id.menuItemSettings).setEnabled(
@@ -122,6 +119,26 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
 
     public void onCancelSetClick(View view) {
         machine.moveTo(SemaforkyState.SET_CANCELED);
+    }
+
+    public void onCustomSetClick(View view) {
+        final LayoutInflater li = LayoutInflater.from(this);
+        final View customSetDialog = li.inflate(R.layout.activity_custom_set, null);
+        final AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(this);
+        alertDialogBuilder.setView(customSetDialog);
+        final EditText customSetLength = (EditText) customSetDialog.findViewById(R.id.editCustomSetLength);
+
+        alertDialogBuilder
+                .setCancelable(false)
+                .setPositiveButton("OK",
+                        (dialog, id) -> {
+                            settings.setCustomSetTime(Integer.parseInt((customSetLength.getText().toString())));
+                            machine.moveTo(SemaforkyState.CUSTOM_SET_STARTED);
+                        })
+                .setNegativeButton("Cancel",
+                        (dialog, id) -> dialog.cancel());
+        AlertDialog alertDialog = alertDialogBuilder.create();
+        alertDialog.show();
     }
 
     public void onBeginRoundClicked(View view) {
@@ -258,13 +275,10 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
     private void wifiApStateSetFailed(final String detailMessage) {
         LOGGER.severe("Failed to switch WifiAp");
         final MainActivity self = this;
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                PopupWindow.showMessageBox(self, String.format(self.getResources().getString(R.string.wifiHotspotControlFailed), settings.getEssid(), settings.getPassword(), detailMessage));
-                MenuItem switchWifiAp = optionsMenu.findItem(R.id.menuItemSwitchWifiAp);
-                switchWifiAp.setChecked(!switchWifiAp.isChecked());
-            }
+        runOnUiThread(() -> {
+            PopupWindow.showMessageBox(self, String.format(self.getResources().getString(R.string.wifiHotspotControlFailed), settings.getEssid(), settings.getPassword(), detailMessage));
+            MenuItem switchWifiAp = optionsMenu.findItem(R.id.menuItemSwitchWifiAp);
+            switchWifiAp.setChecked(!switchWifiAp.isChecked());
         });
     }
 
@@ -294,12 +308,7 @@ public class MainActivity extends AppCompatActivity implements GuiEventReceiver.
     }
 
     private void setSemaphore(final SemaphoreController.SemaphoreLight light) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                semaphoreWidget.updateStatus(light);
-            }
-        });
+        runOnUiThread(() -> semaphoreWidget.updateStatus(light));
         semaforkyEvents.updateSemaphores(light);
     }
 }
