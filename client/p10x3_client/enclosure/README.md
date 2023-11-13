@@ -6,7 +6,7 @@
   * 6.5mm plywood
     * 2 x 493mm x 85mm
     * 2 x 320mm x 60mm
-    * 3 x 320mm x 164.3mm
+    * 3 x 320mm x 164.33mm
   * 44mm x 24mm timber
     * 2 x 480mm
   * 18mm x 18mm timber
