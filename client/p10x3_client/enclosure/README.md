@@ -11,7 +11,7 @@
     * 2 x 480mm
   * 18mm x 18mm timber
     * 2 x 492mm
-    * 2 x 284mm
+    * 4 x 284mm
 * Glue wooden parts together or use 3mm x 20mm flat head wood screws.
 * Panel is mounted with 4mm x 40mm metric screws through 44mm x 24mm pillars (they must be sank into the wood ~10mm).
 
