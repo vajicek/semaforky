@@ -3,7 +3,7 @@
 * Version 1
 * Sliding back
 * Material
-  * 6mm plywood
+  * 6.5mm plywood
     * 2 x 86mm x 320mm
     * 1 x 160mm x 320mm
   * 44mm x 24mm timber
