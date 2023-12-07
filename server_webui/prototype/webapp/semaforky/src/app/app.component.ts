@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -612,7 +613,7 @@ class Scheduler {
   standalone: true,
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.css'],
-  imports: [CommonModule, RouterOutlet, HttpClientModule],
+  imports: [CommonModule, RouterOutlet, HttpClientModule, FormsModule],
   providers: [CookieService]
 })
 export class AppComponent {
@@ -640,6 +641,8 @@ export class AppComponent {
   settingsEnabled: boolean = false;
   manualControlEnabled: boolean = false;
 
+  page: number = 1;
+
   constructor(private http: HttpClient,
     protected cookieService: CookieService) {
     this.scheduler = new Scheduler(this);
@@ -647,6 +650,7 @@ export class AppComponent {
     this.settings = new Settings(); // LOAD STATE
     this.restClientController = new RestClientController(http);
 
+    this.loadState();
     this.updateGui();
   }
 
@@ -760,12 +764,49 @@ export class AppComponent {
   }
 
   onSettings(this: AppComponent) {
-    // TODO: finish me
-    console.log("onSettings!");
+    this.page = 2;
   }
 
   onManualControl() {
     // TODO: finish me
     console.log("onManualControl!");
+  }
+
+  onSettingsAccepted() {
+    this.page = 1;
+    this.storeState();
+  }
+
+  onSettingsCanceled() {
+    this.page = 1;
+    this.loadState();
+  }
+
+  loadState() {
+    this.settings.roundSets = parseInt(this.getCookieValue("roundSets", this.settings.roundSets.toString()));
+    this.settings.setTime = parseInt(this.getCookieValue("setTime", this.settings.setTime.toString()));
+    this.settings.customSetTime = parseInt(this.getCookieValue("customSetTime", this.settings.customSetTime.toString()));
+    this.settings.preparationTime = parseInt(this.getCookieValue("preparationTime", this.settings.preparationTime.toString()));
+    this.settings.warningTime = parseInt(this.getCookieValue("warningTime", this.settings.warningTime.toString()));
+    this.settings.lines = parseInt(this.getCookieValue("lines", this.settings.lines.toString()));
+    this.settings.numberOfSets = parseInt(this.getCookieValue("numberOfSets", this.settings.numberOfSets.toString()));
+    this.settings.continuous = this.getCookieValue("continuous", this.settings.continuous.toString()) === "true";
+    this.settings.delayedStartEnabled = this.getCookieValue("delayedStartEnabled", this.settings.delayedStartEnabled.toString()) === "true";
+    this.settings.delayedStartTime = new Date(this.getCookieValue("delayedStartTime", this.settings.delayedStartTime.toString()));
+    this.settings.linesRotation = (<any>LinesRotation)[this.getCookieValue("linesRotation", this.settings.linesRotation.toString())];
+  }
+
+  storeState() {
+    this.setCookieValue("roundSets", this.settings.roundSets.toString());
+    this.setCookieValue("setTime", this.settings.setTime.toString());
+    this.setCookieValue("customSetTime", this.settings.customSetTime.toString());
+    this.setCookieValue("preparationTime", this.settings.preparationTime.toString());
+    this.setCookieValue("warningTime", this.settings.warningTime.toString());
+    this.setCookieValue("lines", this.settings.lines.toString());
+    this.setCookieValue("numberOfSets", this.settings.numberOfSets.toString());
+    this.setCookieValue("continuous", this.settings.continuous.toString());
+    this.setCookieValue("delayedStartEnabled", this.settings.delayedStartEnabled.toString());
+    this.setCookieValue("delayedStartTime", this.settings.delayedStartTime.toString());
+    this.setCookieValue("linesRotation", (<any>LinesRotation)[this.settings.linesRotation]);
   }
 }
