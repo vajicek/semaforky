@@ -3,8 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { HttpClientModule } from '@angular/common/http';
-import { Injectable } from '@angular/core'
-
+import { CookieService } from 'ngx-cookie-service';
 
 enum SemaforkyState {
   STARTED,
@@ -51,7 +50,7 @@ class Settings {
 
 abstract class State {
   name: SemaforkyState;
-  next: Array<SemaforkyState>;;
+  next: Array<SemaforkyState>;
 
   constructor(_name: SemaforkyState, _next: Array<SemaforkyState>) {
     this.name = _name;
@@ -70,6 +69,7 @@ class RestClientController {
   }
 
   updateClocks(this: RestClientController, remainingSeconds: number) {
+    return;
     let encodedValue = remainingSeconds | (30 << 24);
 
     if (this.previousEncodedValue == encodedValue) {
@@ -97,25 +97,17 @@ class RestClientController {
 }
 
 class SemaforkyMachine {
-  states: Array<State> = [];
-  currentState: State|null = null;
-  currentSet: number = 1;
-  currentLine: number = 0;
-  customSet: boolean = false;
-  semaforky: AppComponent;
+  private states: Array<State> = [];
+  private currentState: State|undefined = undefined;
+  private currentSet: number = 1;
+  private currentLine: number = 0;
+  private customSet: boolean = false;
+  private semaforky: AppComponent;
 
   constructor(semaforky: AppComponent) {
     this.semaforky = semaforky;
     this.initializeStates();
-  }
-
-  addState(state: State) {
-    this.states.push(state);
-    return state;
-  }
-
-  setCurrent(state: State) {
-    this.currentState = state;
+    this.loadState();
   }
 
   public moveTo(stateName: SemaforkyState) {
@@ -127,6 +119,47 @@ class SemaforkyMachine {
         state.run(previousState);
       }
     }
+    this.storeState();
+  }
+
+  public getCurrentSet(): number {
+    return this.currentSet;
+  }
+
+  public getCurrentLine(): number {
+    return this.currentLine;
+  }
+
+  public getCurrentState(): State|undefined {
+    return this.currentState;
+  }
+
+  protected loadState() {
+    var currentStateName = this.semaforky.getCookieValue("currentState", "");
+    if (currentStateName != "") {
+      this.currentState = this.states.find(state => state.name.toString() == currentStateName);
+    }
+    this.currentSet = parseInt(this.semaforky.getCookieValue("currentSet", this.currentSet.toString()));
+    this.currentLine = parseInt(this.semaforky.getCookieValue("currentLine", this.currentLine.toString()));
+    this.customSet = this.semaforky.getCookieValue("customSet", this.customSet.toString()) === "true";
+  }
+
+  protected storeState() {
+    if (this.currentState) {
+      this.semaforky.setCookieValue("currentState", this.currentState.name.toString());
+    }
+    this.semaforky.setCookieValue("currentSet", this.currentSet.toString());
+    this.semaforky.setCookieValue("currentLine", this.currentLine.toString());
+    this.semaforky.setCookieValue("customSet", this.customSet.toString());
+  }
+
+  protected addState(state: State) {
+    this.states.push(state);
+    return state;
+  }
+
+  protected setCurrent(state: State) {
+    this.currentState = state;
   }
 
   protected initializeStates() {
@@ -265,6 +298,8 @@ abstract class Event {
     this.time = _time;
   }
 
+  abstract serialize(): Object;
+
   abstract run(): void;
 }
 
@@ -275,6 +310,10 @@ class PriorityQueue<T> {
   constructor(comparator: (a: T, b: T) => number) {
     this._items = [];
     this._comparator = comparator;
+  }
+
+  public toArray(): T[] {
+    return this._items;
   }
 
   public enqueue(item: T): void {
@@ -323,6 +362,15 @@ class SetClockEvent extends Event {
     this.previousValue = -1;
   }
 
+  serialize(this: SetClockEvent): Object {
+    return {
+      "type": "SetClockEvent",
+      "time": this.time,
+      "setStart": this.setStart,
+      "previousValue": this.previousValue
+    };
+  }
+
   run(this: SetClockEvent): void {
     let now = new Date();
     let seconds = (now.getTime() - this.setStart.getTime()) / 1000;
@@ -332,6 +380,7 @@ class SetClockEvent extends Event {
       this.semaforky.restClientController.updateClocks(Math.round(remainingSeconds));
       this.previousValue = remainingSeconds;
     }
+
     this.semaforky.updateSetClocks(remainingSeconds);
 
     // plan the event again
@@ -343,11 +392,11 @@ class SetClockEvent extends Event {
 
   getRemainingSeconds(seconds: number): number {
     let remainingSeconds: number = 0;
-    if (!this.semaforky.machine.currentState) {
+    if (!this.semaforky.machine.getCurrentState()) {
       return -1;
     }
 
-    let currentStateName = this.semaforky.machine.currentState.name;
+    let currentStateName = this.semaforky.machine.getCurrentState()?.name;
 
     if (currentStateName == SemaforkyState.START_WAITING) {
       let sec: number = (this.semaforky.settings.delayedStartTime.getTime() - new Date().getTime()) / 1000;
@@ -374,6 +423,14 @@ class SemaphoreEvent extends Event {
     this.semaforky = _semaforky;
   }
 
+  serialize(this: SemaphoreEvent): Object {
+    return {
+      "type": "SemaphoreEvent",
+      "time": this.time,
+      "nextState": this.nextState
+    };
+  }
+
   run(this: SemaphoreEvent): void {
     this.semaforky.machine.moveTo(this.nextState);
   }
@@ -387,6 +444,14 @@ class RoundClockEvent extends Event {
     super(_time)
     this.roundStart = _roundStart;
     this.semaforky = _semaforky;
+  }
+
+  serialize(this: RoundClockEvent): Object {
+    return {
+      "type": "RoundClockEvent",
+      "time": this.time,
+      "roundStart": this.roundStart
+    };
   }
 
   run(this: RoundClockEvent): void {
@@ -404,9 +469,56 @@ class Scheduler {
     this.semaforky = _semaforky;
     let self = this;
     this.events = new PriorityQueue<Event>(comparator);
+    this.loadState();
     setInterval(() => {
       self.timerHandler();
     }, 50);
+  }
+
+  storeState(this: Scheduler) {
+    var eventList = [];
+    for (var ev of this.events.toArray()) {
+      eventList.push(ev.serialize());
+    }
+    this.semaforky.setCookieValue("events", JSON.stringify(eventList));
+  }
+
+  jsonObjectToEvent(this: Scheduler, event: any): Event|null {
+    switch (event["type"]) {
+      case "RoundClockEvent": {
+        return new RoundClockEvent(
+          new Date(event["time"]),
+          new Date(event["roundStart"]),
+          this.semaforky);
+      }
+      case "SetClockEvent": {
+        return new SetClockEvent(
+          new Date(event["time"]),
+          new Date(event["setStart"]),
+          this.semaforky);
+      }
+      case "SemaphoreEvent": {
+        return new SemaphoreEvent(
+          new Date(event["time"]),
+          event["nextState"],
+          this.semaforky);
+      }
+      default: {
+        console.log("Invalid event");
+        return null;
+      }
+    }
+  }
+
+  loadState(this: Scheduler) {
+    var jsonArray = JSON.parse(this.semaforky.getCookieValue("events", "[]"));
+    for (var i = 0; i < jsonArray.length; i++) {
+      var jsonObject = jsonArray[i];
+      var event = this.jsonObjectToEvent(jsonObject);
+      if (event) {
+        this.events.enqueue(event);
+      }
+    }
   }
 
   timerHandler(this: Scheduler) {
@@ -421,6 +533,7 @@ class Scheduler {
 
   addEvent(this: Scheduler, event: Event) {
     this.events.enqueue(event);
+    this.storeState();
   }
 
   startSet(this: Scheduler) {
@@ -430,6 +543,9 @@ class Scheduler {
   startSetInternal(this: Scheduler, setTime: number) {
     let now = new Date();
     let settings = this.semaforky.settings;
+
+    this.cancelSetEvents();
+
     this.addEvent(new SemaphoreEvent(now,
       SemaforkyState.READY,
       this.semaforky));
@@ -456,6 +572,8 @@ class Scheduler {
 
   waitForRoundStart(this: Scheduler) {
     let settings: Settings = this.semaforky.settings;
+
+    this.cancelSetEvents();
 
     // start round even
     this.addEvent(new SemaphoreEvent(settings.delayedStartTime,
@@ -492,16 +610,17 @@ class Scheduler {
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, HttpClientModule],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css']
+  styleUrls: ['./app.component.css'],
+  imports: [CommonModule, RouterOutlet, HttpClientModule],
+  providers: [CookieService]
 })
 export class AppComponent {
   title = 'semaforky';
-  set = 1;
+  set: number = 1;
   roundTime: Date = new Date(0);
   line: string = "";
-  countdown = 0;
+  countdown: number = 0;
 
   scheduler: Scheduler;
   machine: SemaforkyMachine;
@@ -509,7 +628,6 @@ export class AppComponent {
   restClientController: RestClientController;
 
   color: SemaphoreLight = SemaphoreLight.RED;
-  redHidden = true;
 
   beginRoundEnabled: boolean = false;
   endRoundEnabled: boolean = false;
@@ -522,24 +640,32 @@ export class AppComponent {
   settingsEnabled: boolean = false;
   manualControlEnabled: boolean = false;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient,
+    protected cookieService: CookieService) {
     this.scheduler = new Scheduler(this);
     this.machine = new SemaforkyMachine(this);
-    this.settings = new Settings();
+    this.settings = new Settings(); // LOAD STATE
     this.restClientController = new RestClientController(http);
 
     this.updateGui();
   }
 
-  updateGui(this: AppComponent) {
-    // TODO: finish this
-    console.log("updateGui");
+  setCookieValue(this: AppComponent, key: string, value: string) {
+    this.cookieService.set(key, value);
+  }
 
-    if (!this.machine.currentState) {
+  getCookieValue(this: AppComponent, key: string, defaultValue: string): string {
+    var value = this.cookieService.get(key);
+    return value ? value : defaultValue;
+  }
+
+  updateGui(this: AppComponent) {
+    var currentState = this.machine.getCurrentState();
+    if (!currentState) {
       return;
     }
 
-    let stateName = this.machine.currentState.name;
+    let stateName = currentState.name;
 
     this.updateSet();
 
@@ -566,13 +692,13 @@ export class AppComponent {
   }
 
   updateSet() {
-    if (!this.machine.currentState) {
+    if (!this.machine.getCurrentState()) {
       return;
     }
 
-    let stateName = this.machine.currentState.name;
+    let stateName = this.machine.getCurrentState()?.name;
 
-    this.set = this.machine.currentSet;
+    this.set = this.machine.getCurrentSet();
 
     if (stateName == SemaforkyState.STARTED || stateName == SemaforkyState.ROUND_STOPPED) {
        this.line = "--";
@@ -580,9 +706,9 @@ export class AppComponent {
       this.line = "AB";
     } else if (this.settings.lines == 2) {
       if (this.settings.linesRotation == LinesRotation.SIMPLE) {
-        this.line = this.machine.currentLine == 0 ? "AB" : "CD";
+        this.line = this.machine.getCurrentLine() == 0 ? "AB" : "CD";
       } else {
-        this.line = this.machine.currentLine != this.machine.currentSet % 2 ? "AB" : "CD";
+        this.line = this.machine.getCurrentLine() != this.machine.getCurrentSet() % 2 ? "AB" : "CD";
       }
     }
   }

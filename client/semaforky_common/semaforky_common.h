@@ -433,13 +433,13 @@ void RgbMatrixDisplayProcess64::Init() {
 #include "digits32.h"
 
 /* P10 led pannel pins to ESP 8266
-A D0      2
-B D6      4
-CLK D5    8
-SCK D3    10
-R D7      12
-NOE D8    1
-GND GND   3
+A D0      2     16
+B D6      4     12
+CLK D5    8     14
+SCK D3    10    0
+R D7      12    13
+NOE D8    1     15
+GND GND   3     g
 */
 
 struct MySPIDMD : public SPIDMD {
