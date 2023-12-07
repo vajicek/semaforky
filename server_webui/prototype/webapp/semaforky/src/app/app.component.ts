@@ -464,7 +464,7 @@ class RoundClockEvent extends Event {
 
 class Scheduler {
   private events: PriorityQueue<Event>;
-  semaforky: AppComponent;
+  private semaforky: AppComponent;
 
   constructor(_semaforky: AppComponent) {
     this.semaforky = _semaforky;
@@ -476,7 +476,7 @@ class Scheduler {
     }, 50);
   }
 
-  storeState(this: Scheduler) {
+  private storeState(this: Scheduler) {
     var eventList = [];
     for (var ev of this.events.toArray()) {
       eventList.push(ev.serialize());
@@ -484,7 +484,7 @@ class Scheduler {
     this.semaforky.setCookieValue("events", JSON.stringify(eventList));
   }
 
-  jsonObjectToEvent(this: Scheduler, event: any): Event|null {
+  private jsonObjectToEvent(this: Scheduler, event: any): Event|null {
     switch (event["type"]) {
       case "RoundClockEvent": {
         return new RoundClockEvent(
@@ -511,7 +511,7 @@ class Scheduler {
     }
   }
 
-  loadState(this: Scheduler) {
+  private loadState(this: Scheduler) {
     var jsonArray = JSON.parse(this.semaforky.getCookieValue("events", "[]"));
     for (var i = 0; i < jsonArray.length; i++) {
       var jsonObject = jsonArray[i];
@@ -522,26 +522,27 @@ class Scheduler {
     }
   }
 
-  timerHandler(this: Scheduler) {
+  private timerHandler(this: Scheduler) {
     let now = new Date();
     while (this.events.length > 0 && now.getTime() > this.events.peek().time.getTime()) {
       let event = this.events.dequeue();
+      this.storeState();
       if (event) {
         event.run();
       }
     }
   }
 
-  addEvent(this: Scheduler, event: Event) {
+  public addEvent(this: Scheduler, event: Event) {
     this.events.enqueue(event);
     this.storeState();
   }
 
-  startSet(this: Scheduler) {
+  public startSet(this: Scheduler) {
     this.startSetInternal(this.semaforky.settings.setTime);
   }
 
-  startSetInternal(this: Scheduler, setTime: number) {
+  private startSetInternal(this: Scheduler, setTime: number) {
     let now = new Date();
     let settings = this.semaforky.settings;
 
@@ -563,15 +564,15 @@ class Scheduler {
     this.addEvent(new SetClockEvent(now, now, this.semaforky));
   }
 
-  startCustomSet(this: Scheduler) {
+  public startCustomSet(this: Scheduler) {
     this.startSetInternal(this.semaforky.settings.customSetTime);
   }
 
-  startRound(this: Scheduler) {
+  public startRound(this: Scheduler) {
     this.addEvent(new RoundClockEvent(new Date(), new Date(), this.semaforky));
   }
 
-  waitForRoundStart(this: Scheduler) {
+  public waitForRoundStart(this: Scheduler) {
     let settings: Settings = this.semaforky.settings;
 
     this.cancelSetEvents();
@@ -585,24 +586,25 @@ class Scheduler {
     this.addEvent(new SetClockEvent(new Date(), new Date(), this.semaforky));
   }
 
-  stopSet(this: Scheduler) {
+  public stopSet(this: Scheduler) {
     this.cancelSetEvents();
   }
 
-  cancelSet(this: Scheduler) {
+  public cancelSet(this: Scheduler) {
     this.cancelSetEvents();
   }
 
-  endRound(this: Scheduler) {
+  public endRound(this: Scheduler) {
     this.cancelSetEvents();
     this.removeAllEventsByClass(RoundClockEvent);
   }
 
-  removeAllEventsByClass(this: Scheduler, eventType: any) {
+  private removeAllEventsByClass(this: Scheduler, eventType: any) {
     this.events.remove(a => a instanceof eventType);
+    this.storeState();
   }
 
-  cancelSetEvents(this: Scheduler) {
+  private cancelSetEvents(this: Scheduler) {
     this.removeAllEventsByClass(SemaphoreEvent);
     this.removeAllEventsByClass(SetClockEvent);
   }
