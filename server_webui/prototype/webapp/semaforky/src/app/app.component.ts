@@ -47,6 +47,51 @@ class Settings {
   public linesRotation: LinesRotation = LinesRotation.SIMPLE;
   public delayedStartEnabled: boolean = false;
   public delayedStartTime: Date = new Date(12, 0, 0);
+  public brightness: number = 30;
+  public clockHostname: string = "192.168.4.1";
+  public semaphoreHostname: string = "192.168.4.1";
+  public sirenHostname: string = "192.168.4.1";
+
+  constructor(protected semaforky: AppComponent) {
+  }
+
+  private set(key: string, value: string) {
+    this.semaforky.setCookieValue(key, value);
+  }
+
+  private get(key: string, defaultValue: string): string {
+    return this.semaforky.getCookieValue(key, defaultValue);
+  }
+
+  public loadState() {
+    this.roundSets = parseInt(this.get("roundSets", this.roundSets.toString()));
+    this.setTime = parseInt(this.get("setTime", this.setTime.toString()));
+    this.customSetTime = parseInt(this.get("customSetTime", this.customSetTime.toString()));
+    this.preparationTime = parseInt(this.get("preparationTime", this.preparationTime.toString()));
+    this.warningTime = parseInt(this.get("warningTime", this.warningTime.toString()));
+    this.lines = parseInt(this.get("lines", this.lines.toString()));
+    this.numberOfSets = parseInt(this.get("numberOfSets", this.numberOfSets.toString()));
+    this.continuous = this.get("continuous", this.continuous.toString()) === "true";
+    this.delayedStartEnabled = this.get("delayedStartEnabled", this.delayedStartEnabled.toString()) === "true";
+    this.delayedStartTime = new Date(this.get("delayedStartTime", this.delayedStartTime.toString()));
+    this.linesRotation = (<any>LinesRotation)[this.get("linesRotation", this.linesRotation.toString())];
+    this.brightness = parseInt(this.get("brightness", this.brightness.toString()));
+  }
+
+  public storeState() {
+    this.set("roundSets", this.roundSets.toString());
+    this.set("setTime", this.setTime.toString());
+    this.set("customSetTime", this.customSetTime.toString());
+    this.set("preparationTime", this.preparationTime.toString());
+    this.set("warningTime", this.warningTime.toString());
+    this.set("lines", this.lines.toString());
+    this.set("numberOfSets", this.numberOfSets.toString());
+    this.set("continuous", this.continuous.toString());
+    this.set("delayedStartEnabled", this.delayedStartEnabled.toString());
+    this.set("delayedStartTime", this.delayedStartTime.toString());
+    this.set("linesRotation", (<any>LinesRotation)[this.linesRotation]);
+    this.set("brightness", this.brightness.toString());
+  }
 };
 
 abstract class State {
@@ -66,20 +111,17 @@ type Request = { control: string, value: string }
 class RestClientController {
   previousEncodedValue: number = 0;
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private settings: Settings) {
   }
 
   updateClocks(this: RestClientController, remainingSeconds: number) {
-    return;
-    let encodedValue = remainingSeconds | (30 << 24);
+    let encodedValue = remainingSeconds | (this.settings.brightness << 24);
 
     if (this.previousEncodedValue == encodedValue) {
       return;
     }
 
-    this.http.post("http://192.168.4.1/control",
-    //this.http.post("http://192.168.1.241/control",
-    //this.http.post("http://192.168.1.213/control",
+    this.http.post("http://" + this.settings.clockHostname + "/control",
       { "control": 1, "value": encodedValue}
     ).subscribe();
 
@@ -87,13 +129,15 @@ class RestClientController {
   }
 
   updateSemaphores(this: RestClientController, state: SemaphoreLight) {
-    // TODO: finish me
-    console.log("updateSemaphores");
+    this.http.post("http://" + this.settings.semaphoreHostname + "/control",
+      { "control": 1, "value": state }
+    ).subscribe();
   }
 
   playSiren(this: RestClientController, count: number) {
-    // TODO: finish me
-    console.log("playSirens");
+    this.http.post("http://" + this.settings.sirenHostname + "/control",
+      { "control": 1, "value": count }
+    ).subscribe();
   }
 }
 
@@ -649,23 +693,23 @@ export class AppComponent {
     protected cookieService: CookieService) {
     this.scheduler = new Scheduler(this);
     this.machine = new SemaforkyMachine(this);
-    this.settings = new Settings(); // LOAD STATE
-    this.restClientController = new RestClientController(http);
+    this.settings = new Settings(this);
+    this.restClientController = new RestClientController(http, this.settings);
 
-    this.loadState();
+    this.settings.loadState();
     this.updateGui();
   }
 
-  setCookieValue(this: AppComponent, key: string, value: string) {
+  setCookieValue(key: string, value: string) {
     this.cookieService.set(key, value);
   }
 
-  getCookieValue(this: AppComponent, key: string, defaultValue: string): string {
+  getCookieValue(key: string, defaultValue: string): string {
     var value = this.cookieService.get(key);
     return value ? value : defaultValue;
   }
 
-  updateGui(this: AppComponent) {
+  updateGui() {
     var currentState = this.machine.getCurrentState();
     if (!currentState) {
       return;
@@ -719,19 +763,19 @@ export class AppComponent {
     }
   }
 
-  updateSetClocks(this: AppComponent, remainingSeconds: number) {
+  updateSetClocks(remainingSeconds: number) {
     this.countdown = remainingSeconds;
   }
 
-  updateRoundClocks(this: AppComponent, roundStart: Date) {
+  updateRoundClocks(roundStart: Date) {
     this.roundTime = new Date((new Date()).getTime()  - roundStart.getTime());
   }
 
-  isVisible(this: AppComponent, color: number) {
+  isVisible(color: number) {
     return this.color == color;
   }
 
-  onBeginRound(this: AppComponent) {
+  onBeginRound() {
     if (this.settings.delayedStartEnabled) {
       this.machine.moveTo(SemaforkyState.START_WAITING);
     } else {
@@ -739,76 +783,63 @@ export class AppComponent {
     }
   }
 
-  onEndRound(this: AppComponent) {
+  onEndRound() {
     this.machine.moveTo(SemaforkyState.ROUND_STOPPED);
   }
 
-  onStartSet(this: AppComponent) {
+  onStartSet() {
     this.machine.moveTo(SemaforkyState.SET_STARTED);
   }
 
-  onStopSet(this: AppComponent) {
+  onStopSet() {
     this.machine.moveTo(SemaforkyState.SET_STOPPED);
   }
 
-  onCancelSet(this: AppComponent) {
+  onCancelSet() {
     this.machine.moveTo(SemaforkyState.SET_CANCELED);
   }
 
-  onCustomSet(this: AppComponent) {
+  onCustomSet() {
     // TODO: finish me
     console.log("onCustomSet!");
   }
 
-  onDiagostic(this: AppComponent) {
+  onDiagostic() {
     // TODO: finish me
     console.log("onDiagostic!");
   }
 
-  onSettings(this: AppComponent) {
+  onSettings() {
     this.page = 2;
   }
 
   onManualControl() {
-    // TODO: finish me
-    console.log("onManualControl!");
+    this.page = 3;
   }
 
   onSettingsAccepted() {
     this.page = 1;
-    this.storeState();
+    this.settings.storeState();
   }
 
   onSettingsCanceled() {
     this.page = 1;
-    this.loadState();
+    this.settings.loadState();
   }
 
-  loadState() {
-    this.settings.roundSets = parseInt(this.getCookieValue("roundSets", this.settings.roundSets.toString()));
-    this.settings.setTime = parseInt(this.getCookieValue("setTime", this.settings.setTime.toString()));
-    this.settings.customSetTime = parseInt(this.getCookieValue("customSetTime", this.settings.customSetTime.toString()));
-    this.settings.preparationTime = parseInt(this.getCookieValue("preparationTime", this.settings.preparationTime.toString()));
-    this.settings.warningTime = parseInt(this.getCookieValue("warningTime", this.settings.warningTime.toString()));
-    this.settings.lines = parseInt(this.getCookieValue("lines", this.settings.lines.toString()));
-    this.settings.numberOfSets = parseInt(this.getCookieValue("numberOfSets", this.settings.numberOfSets.toString()));
-    this.settings.continuous = this.getCookieValue("continuous", this.settings.continuous.toString()) === "true";
-    this.settings.delayedStartEnabled = this.getCookieValue("delayedStartEnabled", this.settings.delayedStartEnabled.toString()) === "true";
-    this.settings.delayedStartTime = new Date(this.getCookieValue("delayedStartTime", this.settings.delayedStartTime.toString()));
-    this.settings.linesRotation = (<any>LinesRotation)[this.getCookieValue("linesRotation", this.settings.linesRotation.toString())];
+  onSetSirene(beeps: number) {
   }
 
-  storeState() {
-    this.setCookieValue("roundSets", this.settings.roundSets.toString());
-    this.setCookieValue("setTime", this.settings.setTime.toString());
-    this.setCookieValue("customSetTime", this.settings.customSetTime.toString());
-    this.setCookieValue("preparationTime", this.settings.preparationTime.toString());
-    this.setCookieValue("warningTime", this.settings.warningTime.toString());
-    this.setCookieValue("lines", this.settings.lines.toString());
-    this.setCookieValue("numberOfSets", this.settings.numberOfSets.toString());
-    this.setCookieValue("continuous", this.settings.continuous.toString());
-    this.setCookieValue("delayedStartEnabled", this.settings.delayedStartEnabled.toString());
-    this.setCookieValue("delayedStartTime", this.settings.delayedStartTime.toString());
-    this.setCookieValue("linesRotation", (<any>LinesRotation)[this.settings.linesRotation]);
+  onSetSemaphore(color: number) {
+  }
+
+  onSetClock(value: number) {
+  }
+
+  onSetClockCountdown(countdown: number) {
+  }
+
+  onBackToMain() {
+    this.page = 1;
   }
 }

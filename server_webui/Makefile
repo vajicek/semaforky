@@ -13,6 +13,9 @@ install_esp:
 	arduino-cli compile --fqbn esp8266:esp8266:d1 prototype
 	arduino-cli upload -p /dev/ttyUSB0 --fqbn esp8266:esp8266:d1 prototype
 
+install_p10x3:
+	arduino-cli compile --fqbn esp8266:esp8266:d1 p10x3
+	arduino-cli upload -p /dev/ttyUSB0 --fqbn esp8266:esp8266:d1 p10x3
 
 sketch          := foo.ino
 boardconfig     := esp8266:esp8266:generic:eesz=4M1M
