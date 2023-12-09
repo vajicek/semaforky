@@ -3,6 +3,7 @@ ARDUINO_CLI ?= arduino-cli
 MKSPIFFS    ?= mkspiffs
 BC          ?= bc
 DEVICE      := /dev/ttyUSB0
+ESPTOOL_PY  := ${HOME}/.arduino15/packages/esp8266/hardware/esp8266/3.0.2/tools/esptool/esptool.py
 
 # DEPENDENCISE AND PREREQUISITES
 install_common:
@@ -35,14 +36,13 @@ filesystem.bin:
 
 #TODO: FINISH THIS
 flash-fs: filesystem.bin
-	BUILD_SPIFFS_START_HEX=0x300000
-	python ${HOME}/.arduino15/packages/esp8266/hardware/esp8266/3.0.2/tools/esptool/esptool.py \
-	  --chip esp32 \
+	python3 ${ESPTOOL_PY} \
+	  --chip esp8266 \
 	  --port ${DEVICE} \
 	  --baud 460800 \
 	  --before default_reset \
 	  --after hard_reset \
-	  write_flash $${BUILD_SPIFFS_START_HEX} filesystem.bin
+	  write_flash 0x300000 filesystem.bin
 
 # BUILD AND INSTALL APPLICATIONS
 install_prototype: DIR=prototype
