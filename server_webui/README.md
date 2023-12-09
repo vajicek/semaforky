@@ -11,3 +11,4 @@ Any Web Browser          |  Hardware running REST/WEB server
 
 * [ESPAsyncTCP](https://github.com/me-no-dev/ESPAsyncTCP)
 * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer)
+* [ArduinoJson](https://github.com/bblanchon/ArduinoJson)

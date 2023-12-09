@@ -4,11 +4,11 @@
 #include "common.h"
 
 BaseSettings baseSettings{
-  true, // serve spa
-  true, // hotspot
-  "semaforky", // dns
-  "semaforky", // ssid
-  "semaforky"}; // password
+	true, // serve spa
+	true, // hotspot
+	"semaforky", // dns
+	"semaforky", // ssid
+	"semaforky"}; // password
 P10x3 client(&baseSettings);
 
 void setup(void) { client.Init(); }

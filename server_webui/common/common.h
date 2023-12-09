@@ -4,7 +4,7 @@
 #define double_buffer
 
 #include <Arduino.h>
-#include <ArduinoJson.h>
+//#include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <DMD2.h>
 #include <ESP8266WiFi.h>
