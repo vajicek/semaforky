@@ -114,7 +114,12 @@ class RestClientController {
   constructor(private http: HttpClient, private settings: Settings) {
   }
 
-  updateClocks(this: RestClientController, remainingSeconds: number) {
+  scan() {
+    // this.http.get("http://" + this.settings.clockHostname + "/ping")
+    //   .subscribe();
+  }
+
+  updateClocks(remainingSeconds: number) {
     let encodedValue = remainingSeconds | (this.settings.brightness << 24);
 
     if (this.previousEncodedValue == encodedValue) {
@@ -128,13 +133,13 @@ class RestClientController {
     this.previousEncodedValue = encodedValue;
   }
 
-  updateSemaphores(this: RestClientController, state: SemaphoreLight) {
+  updateSemaphores(state: SemaphoreLight) {
     this.http.post("http://" + this.settings.semaphoreHostname + "/control",
       { "control": 1, "value": state }
     ).subscribe();
   }
 
-  playSiren(this: RestClientController, count: number) {
+  playSiren(count: number) {
     this.http.post("http://" + this.settings.sirenHostname + "/control",
       { "control": 1, "value": count }
     ).subscribe();

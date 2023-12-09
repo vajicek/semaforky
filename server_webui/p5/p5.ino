@@ -3,7 +3,13 @@
 
 #include "common.h"
 
-P5 client(false, false, "p5_01");
+BaseSettings baseSettings{
+	false, // serve spa
+	false, // hotspot
+	"p5-01", // dns
+	"semaforky", // ssid
+	"semaforky"}; // password
+P5 client(&baseSettings);
 
 void setup(void) { client.Init(); }
 

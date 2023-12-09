@@ -16,9 +16,6 @@
 #include <SPI.h>
 #include <Ticker.h>
 
-static constexpr char *ssid = "semaforky";
-static constexpr char *password = "semaforky";
-
 struct StackedDMD : public SPIDMD {
 	StackedDMD() : SPIDMD(3, 1) {}
 
@@ -93,12 +90,22 @@ void setupHotspot(const char *ssid, const char *password) {
 	Serial.println(WiFi.softAPIP());
 }
 
+struct BaseSettings {
+	bool hostSpa;
+	bool hotspot;
+	const char *dns;
+	const char *ssid;
+	const char *password;
+};
+
 class Base {
  protected:
 	int value;
 	bool hostSpa;
-	bool hotSpot;
+	bool hotspot;
 	const char *dns;
+	const char *ssid;
+	const char *password;
 
 	void setCrossOrigin(AsyncWebServerResponse *response);
 	void sendCrossOriginHeader(AsyncWebServerRequest *request);
@@ -108,14 +115,16 @@ class Base {
 	AsyncWebServer server;
 
  public:
-	Base(bool hostSpa, bool hotSpot, const char *dns);
+	Base(BaseSettings *baseSettings);
 
 	void Init();
 	void Execute();
 };
 
-Base::Base(bool hostSpa, bool hotSpot, const char *dns)
-	: server{80}, hostSpa{hostSpa}, hotSpot{hotSpot}, dns{dns} {}
+Base::Base(BaseSettings *baseSettings)
+	: ssid{baseSettings->ssid}, password{baseSettings->password}, server{80},
+	  hostSpa{baseSettings->hostSpa}, hotspot{baseSettings->hotspot},
+	  dns{baseSettings->dns} {}
 
 void Base::setCrossOrigin(AsyncWebServerResponse *response) {
 	response->addHeader("Access-Control-Allow-Origin", "*");
@@ -149,10 +158,13 @@ void Base::restServerRouting() {
 	}
 
 	server.addHandler(new AsyncCallbackJsonWebHandler(
-	  "/control",
-	  [this](AsyncWebServerRequest *request, JsonVariant &json) { this->control(request, json); }));
-	server.on("/control", HTTP_OPTIONS,
-	  [this](AsyncWebServerRequest *request) { this->sendCrossOriginHeader(request); } );
+		"/control", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+			this->control(request, json);
+		}));
+	server.on(
+		"/control", HTTP_OPTIONS, [this](AsyncWebServerRequest *request) {
+			this->sendCrossOriginHeader(request);
+		});
 }
 
 void Base::Init() {
@@ -167,7 +179,7 @@ void Base::Init() {
 	}
 
 	// Initialize Wifi
-	if (hotSpot) {
+	if (hotspot) {
 		setupHotspot(ssid, password);
 	} else {
 		connectToHotspot(ssid, password);
@@ -208,7 +220,7 @@ class P10x3 : public Base {
 	void Init();
 	void Execute();
 
-	P10x3(bool hostSpa, bool hotSpot, const char *dns);
+	P10x3(BaseSettings *baseSettings);
 };
 
 void P10x3::drawDigits() {
@@ -259,8 +271,7 @@ void P10x3::Execute() {
 	updateDisplay();
 }
 
-P10x3::P10x3(bool hostSpa, bool hotSpot, const char *dns)
-	: Base(hostSpa, hotSpot, dns) {}
+P10x3::P10x3(BaseSettings *baseSettings) : Base(baseSettings) {}
 
 ///////////////////////////////////////
 
@@ -275,11 +286,10 @@ class Siren : public Base {
 	void Init();
 	void Execute();
 
-	Siren(bool hostSpa, bool hotSpot, const char *dns);
+	Siren(BaseSettings *baseSettings);
 };
 
-Siren::Siren(bool hostSpa, bool hotSpot, const char *dns)
-	: Base(hostSpa, hotSpot, dns) {}
+Siren::Siren(BaseSettings *baseSettings) : Base(baseSettings) {}
 
 void Siren::Init() {
 	Base::Init();
@@ -302,7 +312,7 @@ void Siren::Execute() {
 ///////////////////////////////////////
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
-  return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
+	return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
 }
 
 class Px : public Base {
@@ -319,14 +329,13 @@ class Px : public Base {
 	void Init();
 	void Execute();
 
-	Px(bool hostSpa, bool hotSpot, const char *dns, PxMATRIX *_display,
-		int digitWidth, int _digitHeight, int _digitSize,
-		const uint16_t *_colors);
+	Px(BaseSettings *baseSettings, PxMATRIX *_display, int digitWidth,
+		int _digitHeight, int _digitSize, const uint16_t *_colors);
 };
 
-Px::Px(bool hostSpa, bool hotSpot, const char *dns, PxMATRIX *_display,
-	int _digitWidth, int _digitHeight, int _digitSize, const uint16_t *_colors)
-	: Base(hostSpa, hotSpot, dns), display(_display), digitWidth(_digitWidth),
+Px::Px(BaseSettings *baseSettings, PxMATRIX *_display, int _digitWidth,
+	int _digitHeight, int _digitSize, const uint16_t *_colors)
+	: Base(baseSettings), display(_display), digitWidth(_digitWidth),
 	  digitHeight(_digitHeight), digitSize(_digitSize), oldValue(-1),
 	  colors(_colors) {}
 
@@ -358,10 +367,10 @@ void Px::Execute() {
 	computeDigits(digits, 4, time);
 	for (int i = 3; i > 0; i--) {
 		if (digits[i] >= 0) {
-			display->drawChar((i - 1) * digitWidth, digitHeight,   // coords
-				'0' + digits[i],								   // character
-				colors[color], colors[color],					   // colors
-				digitSize);										   // size
+			display->drawChar((i - 1) * digitWidth, digitHeight, // coords
+				'0' + digits[i], // character
+				colors[color], colors[color], // colors
+				digitSize); // size
 		}
 	}
 	display->showBuffer();
@@ -376,22 +385,23 @@ void Px::Execute() {
 #define P10_OE 2
 
 const uint16_t P10_COLORS[] = {
-	color565(255, 255, 255),   // white
-	color565(255, 0, 0),	   // red
-	color565(0, 255, 0),	   // green
-	color565(255, 165, 0)	   // orange
+	color565(255, 255, 255), // white
+	color565(255, 0, 0), // red
+	color565(0, 255, 0), // green
+	color565(255, 165, 0) // orange
 };
 
 class P10 : public Px {
  protected:
 	PxMATRIX display;
+
  public:
-	P10();
+	P10(BaseSettings *baseSettings);
 };
 
-P10::P10()
+P10::P10(BaseSettings *baseSettings)
 	: display(32, 16, P10_LAT, P10_OE, P10_A, P10_B, P10_C),
-	  Px(hostSpa, hotSpot, dns, &display, 11, 1, 2, P10_COLORS) {}
+	  Px(baseSettings, &display, 11, 1, 2, P10_COLORS) {}
 
 //////////////////////////
 
@@ -405,27 +415,27 @@ P10::P10()
 #define P5_OE 2
 
 const uint16_t P5_COLORS[] = {
-	color565(255, 255, 255),   // white
-	color565(0, 0, 255),	   // red
-	color565(0, 255, 0),	   // green
-	color565(0, 165, 255)	   // orange
+	color565(255, 255, 255), // white
+	color565(0, 0, 255), // red
+	color565(0, 255, 0), // green
+	color565(0, 165, 255) // orange
 };
 
 class P5 : public Px {
-protected:
+ protected:
 	PxMATRIX display;
-public:
-	P5(bool hostSpa, bool hotSpot, const char *dns);
+
+ public:
+	P5(BaseSettings *baseSettings);
 	virtual void Init();
 };
 
-P5::P5(bool hostSpa, bool hotSpot, const char *dns)
+P5::P5(BaseSettings *baseSettings)
 	: display(64, 32, P5_LAT, P5_OE, P5_A, P5_B, P5_C, P5_D),
-	  Px(hostSpa, hotSpot, dns, &display, 21, 32, 1, P5_COLORS) {}
+	  Px(baseSettings, &display, 21, 32, 1, P5_COLORS) {}
 
 void P5::Init() {
 	Px::Init();
 	display.setFont(&FixedWidthDigit);
 	display.setTextWrap(false);
 }
-

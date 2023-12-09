@@ -18,7 +18,8 @@ install_p10x3:
 	arduino-cli upload -p /dev/ttyUSB0 --fqbn esp8266:esp8266:d1 p10x3
 
 install_common:
-	ln -s ${PWD}/common ~/Arduino/libraries
+	#ln -s ${PWD}/common ~/Arduino/libraries
+	ln -s ${PWD}/common ~/Arduino/arduino-1.8.2/libraries
 
 sketch          := foo.ino
 boardconfig     := esp8266:esp8266:generic:eesz=4M1M

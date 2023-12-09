@@ -3,7 +3,13 @@
 
 #include "common.h"
 
-Siren client(true, true, "semaforky");
+BaseSettings baseSettings{
+	false, // serve spa
+	false, // hotspot
+	"sirene", // dns
+	"semaforky", // ssid
+	"semaforky"}; // password
+Siren client(&baseSettings);
 
 void setup(void) { client.Init(); }
 
