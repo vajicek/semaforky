@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { HttpClientModule } from '@angular/common/http';
 import { CookieService } from 'ngx-cookie-service';
 
@@ -48,9 +48,8 @@ class Settings {
   public delayedStartEnabled: boolean = false;
   public delayedStartTime: Date = new Date(12, 0, 0);
   public brightness: number = 30;
-  public clockHostname: string = "192.168.4.1";
-  public semaphoreHostname: string = "192.168.4.1";
-  public sirenHostname: string = "192.168.4.1";
+  public network: string = "192.168.4.0";
+  public clientsByCapability: Map<string, string[]> = new Map<string, string[]>();
 
   constructor(protected semaforky: AppComponent) {
   }
@@ -76,6 +75,8 @@ class Settings {
     this.delayedStartTime = new Date(this.get("delayedStartTime", this.delayedStartTime.toString()));
     this.linesRotation = (<any>LinesRotation)[this.get("linesRotation", this.linesRotation.toString())];
     this.brightness = parseInt(this.get("brightness", this.brightness.toString()));
+    this.network = this.get("network", this.network)
+    this.clientsByCapability = new Map<string, string[]>(JSON.parse(this.get("clientsByCapability", "[]")));
   }
 
   public storeState() {
@@ -91,6 +92,8 @@ class Settings {
     this.set("delayedStartTime", this.delayedStartTime.toString());
     this.set("linesRotation", (<any>LinesRotation)[this.linesRotation]);
     this.set("brightness", this.brightness.toString());
+    this.set("network", this.network);
+    this.set("clientsByCapability", JSON.stringify(Array.from(this.clientsByCapability.entries())));
   }
 };
 
@@ -110,45 +113,122 @@ type Request = { control: string, value: string }
 
 class RestClientController {
   previousEncodedValue: number = 0;
+  progress: number = 0;
 
-  constructor(private http: HttpClient, private settings: Settings) {
+  constructor(private http: HttpClient, private semaforky: AppComponent) {
+  }
+
+  getAllClients(): Set<string> {
+    var addresses: Set<string> = new Set<string>();
+    this.semaforky.settings.clientsByCapability.forEach((addressesWithCapability, capability) => {
+      addressesWithCapability.forEach(addressWithCapability=>{
+        if (!addresses.has(addressWithCapability)) {
+          addresses.add(addressWithCapability)
+        }
+      });
+    });
+    return addresses;
+  }
+
+  updateProgess(increment: number = 0) {
+    this.progress += increment;
+    this.semaforky.scanEnabled = (this.progress == 0);
+    this.semaforky.clients = this.getAllClients().size;
+    if (this.progress == 0) {
+      this.semaforky.settings.storeState();
+    }
+  }
+
+  updateCapabilitiesMap(clientAddress: string, capabilities: string) {
+    var capabilitiesArray: string[] = capabilities.split(",");
+    capabilitiesArray.forEach(capability => {
+      if (this.semaforky.settings.clientsByCapability.has(capability)) {
+        this.semaforky.settings.clientsByCapability.get(capability)?.push(clientAddress);
+      } else {
+        this.semaforky.settings.clientsByCapability.set(capability, [clientAddress]);
+      }
+    });
+  }
+
+  queryCapabilities(address: string){
+    var self = this;
+    this.http
+      .post("http://" + address + "/capabilities",
+        { headers: new HttpHeaders({ timeout: `${5000}` }) })
+      .subscribe({
+        next(response: any) {
+          self.updateCapabilitiesMap(address, response.capabilities.toString());
+          self.updateProgess(-1);
+        },
+        error(error) {
+          self.updateProgess(-1);
+        },
+      });
   }
 
   scan() {
-    // this.http.get("http://" + this.settings.clockHostname + "/ping")
-    //   .subscribe();
+    this.semaforky.settings.clientsByCapability.clear();
+    this.updateProgess(254);
+    var network = this.semaforky.settings.network;
+    var lastIndex = network.lastIndexOf(".");
+    var networkPrefix = network.substring(0, lastIndex + 1);
+    for (var i = 1; i < 255; i++) {
+      this.queryCapabilities(networkPrefix + i);
+    }
+  }
+
+  getClients(capability: string): string[] {
+    var retval = this.semaforky.settings.clientsByCapability.get(capability);
+    if (retval == undefined) {
+      return [];
+    }
+    return retval;
   }
 
   updateClocks(remainingSeconds: number) {
-    let encodedValue = remainingSeconds | (this.settings.brightness << 24);
+    let encodedValue = remainingSeconds | (this.semaforky.settings.brightness << 24);
 
     if (this.previousEncodedValue == encodedValue) {
       return;
     }
 
-    this.http.post("http://" + this.settings.clockHostname + "/control",
-      { "control": 1, "value": encodedValue}
-    ).subscribe();
+    this.getClients("clock").forEach(address => {
+      this.http.post("http://" + address + "/control",
+        { "control": 1, "value": encodedValue }
+      ).subscribe();
+    });
 
     this.previousEncodedValue = encodedValue;
   }
 
   updateSemaphores(state: SemaphoreLight) {
-    this.http.post("http://" + this.settings.semaphoreHostname + "/control",
-      { "control": 1, "value": state }
-    ).subscribe();
+    this.getClients("semaphore").forEach(address => {
+      this.http.post("http://" + address + "/control",
+        { "control": 1, "value": state }
+      ).subscribe();
+    });
+  }
+
+  updateLines(lines: string) {
+    this.getClients("lines").forEach(address => {
+      this.http.post("http://" + address + "/control",
+        { "control": 1, "value": lines }
+      ).subscribe();
+    });
   }
 
   playSiren(count: number) {
-    this.http.post("http://" + this.settings.sirenHostname + "/control",
-      { "control": 1, "value": count }
-    ).subscribe();
+    this.getClients("siren").forEach(address => {
+      this.http.post("http://" + address + "/control",
+        { "control": 1, "value": count }
+      ).subscribe();
+    });
   }
 }
 
 class SemaforkyMachine {
   private states: Array<State> = [];
-  private currentState: State|undefined = undefined;
+  private currentState: State | undefined = undefined;
   private currentSet: number = 1;
   private currentLine: number = 0;
   private customSet: boolean = false;
@@ -180,8 +260,23 @@ class SemaforkyMachine {
     return this.currentLine;
   }
 
-  public getCurrentState(): State|undefined {
+  public getCurrentState(): State | undefined {
     return this.currentState;
+  }
+
+  public getCurrentLineOrder(): string {
+    if (this.currentState?.name != SemaforkyState.STARTED && this.currentState?.name != SemaforkyState.ROUND_STOPPED) {
+      if (this.semaforky.settings.lines == 1) {
+        return "AB";
+      } else if (this.semaforky.settings.lines == 2) {
+        if (this.semaforky.settings.linesRotation == LinesRotation.SIMPLE) {
+          return this.semaforky.machine.getCurrentLine() == 0 ? "AB" : "CD";
+        } else {
+          return this.semaforky.machine.getCurrentLine() != this.semaforky.machine.getCurrentSet() % 2 ? "AB" : "CD";
+        }
+      }
+    }
+    return "--";
   }
 
   protected loadState() {
@@ -222,6 +317,7 @@ class SemaforkyMachine {
     this.addState(new class extends State {
       run(previous: State) {
         self.semaforky.restClientController.updateSemaphores(SemaphoreLight.NONE);
+        self.semaforky.restClientController.updateLines(self.getCurrentLineOrder());
         self.semaforky.scheduler.waitForRoundStart();
         self.semaforky.updateGui();
       }
@@ -314,6 +410,7 @@ class SemaforkyMachine {
         self.semaforky.scheduler.cancelSet();
         self.semaforky.updateGui();
         self.semaforky.restClientController.playSiren(2);
+        self.semaforky.restClientController.updateLines(self.getCurrentLineOrder());
       }
     }(SemaforkyState.SET_CANCELED, [SemaforkyState.ROUND_STOPPED, SemaforkyState.SET_STARTED, SemaforkyState.CUSTOM_SET_STARTED]));
     this.addState(new class extends State {
@@ -533,7 +630,7 @@ class Scheduler {
     this.semaforky.setCookieValue("events", JSON.stringify(eventList));
   }
 
-  private jsonObjectToEvent(this: Scheduler, event: any): Event|null {
+  private jsonObjectToEvent(this: Scheduler, event: any): Event | null {
     switch (event["type"]) {
       case "RoundClockEvent": {
         return new RoundClockEvent(
@@ -688,9 +785,11 @@ export class AppComponent {
   cancelSetEnabled: boolean = false;
   customSetEnabled: boolean = false;
 
-  diagnosticEnabled: boolean = false;
+  scanEnabled: boolean = false;
   settingsEnabled: boolean = false;
   manualControlEnabled: boolean = false;
+
+  clients: number = 0;
 
   page: number = 1;
 
@@ -699,7 +798,7 @@ export class AppComponent {
     this.scheduler = new Scheduler(this);
     this.machine = new SemaforkyMachine(this);
     this.settings = new Settings(this);
-    this.restClientController = new RestClientController(http, this.settings);
+    this.restClientController = new RestClientController(http, this);
 
     this.settings.loadState();
     this.updateGui();
@@ -731,7 +830,7 @@ export class AppComponent {
     this.customSetEnabled = [SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED].includes(stateName);
     this.cancelSetEnabled = [SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING].includes(stateName);
 
-    this.diagnosticEnabled = true;
+    this.scanEnabled = true;
     this.settingsEnabled = [SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED].includes(stateName);
     this.manualControlEnabled = [SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED].includes(stateName);
 
@@ -750,22 +849,8 @@ export class AppComponent {
     if (!this.machine.getCurrentState()) {
       return;
     }
-
-    let stateName = this.machine.getCurrentState()?.name;
-
     this.set = this.machine.getCurrentSet();
-
-    if (stateName == SemaforkyState.STARTED || stateName == SemaforkyState.ROUND_STOPPED) {
-       this.line = "--";
-    } else if (this.settings.lines == 1) {
-      this.line = "AB";
-    } else if (this.settings.lines == 2) {
-      if (this.settings.linesRotation == LinesRotation.SIMPLE) {
-        this.line = this.machine.getCurrentLine() == 0 ? "AB" : "CD";
-      } else {
-        this.line = this.machine.getCurrentLine() != this.machine.getCurrentSet() % 2 ? "AB" : "CD";
-      }
-    }
+    this.line = this.machine.getCurrentLineOrder();
   }
 
   updateSetClocks(remainingSeconds: number) {
@@ -773,7 +858,7 @@ export class AppComponent {
   }
 
   updateRoundClocks(roundStart: Date) {
-    this.roundTime = new Date((new Date()).getTime()  - roundStart.getTime());
+    this.roundTime = new Date((new Date()).getTime() - roundStart.getTime());
   }
 
   isVisible(color: number) {
@@ -809,9 +894,10 @@ export class AppComponent {
     console.log("onCustomSet!");
   }
 
-  onDiagostic() {
+  onScan() {
     // TODO: finish me
     console.log("onDiagostic!");
+    this.restClientController.scan();
   }
 
   onSettings() {

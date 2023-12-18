@@ -60,21 +60,69 @@ int decodeBrightnessValue(int value) { return (value & 0xff000000) >> 24; }
 ///////////////////////////////////////////////////////////////////
 
 void connectToHotspot(const char *ssid, const char *password) {
-	// Init WIFI
+	int connection_indicating_led = D4;
+	int connection_waiting_counter = 0;
+
+	// setup wifi module to station mode
+	Serial.print("Connecting to ");
+	Serial.println(ssid);
 	WiFi.mode(WIFI_STA);
 	WiFi.begin(ssid, password);
-	Serial.println("");
 
-	// Wait for connection
-	while (WiFi.status() != WL_CONNECTED) {
-		delay(500);
-		Serial.print(".");
+	// led indication
+	pinMode(connection_indicating_led, OUTPUT);
+
+	int status = WL_IDLE_STATUS;
+	for (int i = 0; i < 300; i++) {
+	// serial report
+	Serial.print(status);
+
+	// led indication
+	digitalWrite(connection_indicating_led,
+		((connection_waiting_counter++ / 10) % 2) ? LOW  : HIGH);
+
+	status = WiFi.status();
+	if (status == WL_CONNECTED) {
+		break;
 	}
-	Serial.println("");
-	Serial.print("Connected to ");
-	Serial.println(ssid);
-	Serial.print("IP address: ");
-	Serial.println(WiFi.localIP());
+
+	delay(100);
+	}
+
+	// turn off led
+	digitalWrite(connection_indicating_led, HIGH);
+
+	if (status == WL_CONNECTED) {
+		Serial.println("Connected to AP...");
+		Serial.println(ssid);
+		Serial.print("IP address: ");
+		Serial.println(WiFi.localIP());
+	} else {
+		Serial.println("");
+		switch (status) {
+			case WL_IDLE_STATUS:
+			Serial.println("status = WL_IDLE_STATUS");
+			break;
+			case WL_NO_SSID_AVAIL:
+			Serial.println("status = WL_NO_SSID_AVAIL");
+			break;
+			case WL_CONNECTED:
+			Serial.println("status = WL_CONNECTED");
+			break;
+			case WL_CONNECT_FAILED:
+			Serial.println("status = WL_CONNECT_FAILED");
+			break;
+			case WL_WRONG_PASSWORD:
+			Serial.println("status = WL_WRONG_PASSWORD");
+			break;
+			case WL_DISCONNECTED:
+			Serial.println("status = WL_DISCONNECTED");
+			break;
+		}
+		Serial.println("Restarting...");
+		delay(3000);
+		ESP.reset();
+	}
 }
 
 void setupHotspot(const char *ssid, const char *password) {
@@ -95,35 +143,31 @@ struct BaseSettings {
 	const char *dns;
 	const char *ssid;
 	const char *password;
+	const char *capabilities;
 };
 
 class Base {
  protected:
 	int value;
-	bool hostSpa;
-	bool hotspot;
-	const char *dns;
-	const char *ssid;
-	const char *password;
+	const BaseSettings *settings;
 
 	void setCrossOrigin(AsyncWebServerResponse *response);
 	void sendCrossOriginHeader(AsyncWebServerRequest *request);
 	void control(AsyncWebServerRequest *request, JsonVariant &json);
+	void capabilities(AsyncWebServerRequest *request, JsonVariant &json);
 	void restServerRouting();
 
 	AsyncWebServer server;
 
  public:
-	Base(BaseSettings *baseSettings);
+	Base(const BaseSettings *baseSettings);
 
 	void Init();
 	void Execute();
 };
 
-Base::Base(BaseSettings *baseSettings)
-	: ssid{baseSettings->ssid}, password{baseSettings->password}, server{80},
-	  hostSpa{baseSettings->hostSpa}, hotspot{baseSettings->hotspot},
-	  dns{baseSettings->dns} {}
+Base::Base(const BaseSettings *baseSettings)
+	: server{80}, settings{baseSettings} {}
 
 void Base::setCrossOrigin(AsyncWebServerResponse *response) {
 	response->addHeader("Access-Control-Allow-Origin", "*");
@@ -132,14 +176,14 @@ void Base::setCrossOrigin(AsyncWebServerResponse *response) {
 	response->addHeader("Access-Control-Allow-Headers", "*");
 }
 
-void Base::sendCrossOriginHeader(AsyncWebServerRequest *request) {
+void Base::sendCrossOriginHeader(AsyncWebServerRequest * request) {
 	AsyncWebServerResponse *response = request->beginResponse(204);
 	response->addHeader("access-control-allow-credentials", "false");
 	setCrossOrigin(response);
 	request->send(response);
 }
 
-void Base::control(AsyncWebServerRequest *request, JsonVariant &json) {
+void Base::control(AsyncWebServerRequest * request, JsonVariant & json) {
 	const JsonObject &postObj = json.as<JsonObject>();
 	if (!postObj.containsKey("value")) {
 		request->send(200);
@@ -151,26 +195,47 @@ void Base::control(AsyncWebServerRequest *request, JsonVariant &json) {
 	}
 }
 
+void Base::capabilities(AsyncWebServerRequest * request, JsonVariant & json) {
+	DynamicJsonDocument doc(512);
+	doc["capabilities"] = settings->capabilities;
+
+	String buf;
+	serializeJson(doc, buf);
+
+	AsyncWebServerResponse *response = request->beginResponse(200, F("application/json"), buf);
+	setCrossOrigin(response);
+	request->send(response);
+}
+
 void Base::restServerRouting() {
-	if (hostSpa) {
+	if (settings->hostSpa) {
+		Serial.println("Hosting SPA");
 		server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html");
 	}
 
-	server.addHandler(new AsyncCallbackJsonWebHandler(
-		"/control", [this](AsyncWebServerRequest *request, JsonVariant &json) {
+	auto optionsCallback = [this](AsyncWebServerRequest *request) {
+		this->sendCrossOriginHeader(request);
+	};
+
+	server.addHandler(new AsyncCallbackJsonWebHandler("/control",
+		[this](AsyncWebServerRequest *request, JsonVariant &json) {
 			this->control(request, json);
 		}));
-	server.on(
-		"/control", HTTP_OPTIONS, [this](AsyncWebServerRequest *request) {
-			this->sendCrossOriginHeader(request);
-		});
+	server.on("/control", HTTP_OPTIONS, optionsCallback);
+
+	server.addHandler(new AsyncCallbackJsonWebHandler("/capabilities",
+		[this](AsyncWebServerRequest *request, JsonVariant &json) {
+			this->capabilities(request, json);
+		}));
+	server.on("/capabilities", HTTP_OPTIONS, optionsCallback);
 }
 
 void Base::Init() {
 	Serial.begin(115200);
 
-	if (hostSpa) {
+	if (settings->hostSpa) {
 		// Initialize SPIFFS
+		Serial.println("Initializing SPIFFS");
 		if (!SPIFFS.begin()) {
 			Serial.println("An Error has occurred while mounting SPIFFS");
 			return;
@@ -178,14 +243,14 @@ void Base::Init() {
 	}
 
 	// Initialize Wifi
-	if (hotspot) {
-		setupHotspot(ssid, password);
+	if (settings->hotspot) {
+		setupHotspot(settings->ssid, settings->password);
 	} else {
-		connectToHotspot(ssid, password);
+		connectToHotspot(settings->ssid, settings->password);
 	}
 
 	// Initialize mDNS
-	if (MDNS.begin(dns, WiFi.localIP())) {
+	if (MDNS.begin(settings->dns, WiFi.localIP())) {
 		Serial.println("MDNS responder started");
 	}
 	MDNS.addService("http", "tcp", 80);

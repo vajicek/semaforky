@@ -1,14 +1,15 @@
 /// Copyright (C) 2023, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-#include "common.h"
+#include "semaforky_webui_common.h"
 
 BaseSettings baseSettings{
 	false, // serve spa
 	false, // hotspot
-	"sirene", // dns
+	"siren", // dns
 	"semaforky", // ssid
-	"semaforky"}; // password
+	"semaforky", // password
+	"siren"}; // capabilities
 Siren client(&baseSettings);
 
 void setup(void) { client.Init(); }

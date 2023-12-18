@@ -1,14 +1,15 @@
 /// Copyright (C) 2023, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-#include "common.h"
+#include "semaforky_webui_common.h"
 
 BaseSettings baseSettings{
-	false, // serve spa
-	false, // hotspot
+	true, // serve spa
+	true, // hotspot
 	"p5-01", // dns
 	"semaforky", // ssid
-	"semaforky"}; // password
+	"semaforky", // password
+	"clock,semaphore"}; // capabilities
 P5 client(&baseSettings);
 
 void setup(void) { client.Init(); }

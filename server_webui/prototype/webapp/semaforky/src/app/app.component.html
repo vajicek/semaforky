@@ -52,7 +52,7 @@
 <div class="content">
   <div *ngIf="page==1" class="main">
     <div class="menu">
-      <button type="button" [disabled]="!diagnosticEnabled" (click)="onDiagostic()" clickable>Diagnostic</button>
+      <button type="button" [disabled]="!scanEnabled" (click)="onScan()" clickable>Scan</button>
       <button type="button" [disabled]="!settingsEnabled" (click)="onSettings()" clickable>Settings</button>
       <button type="button" [disabled]="!manualControlEnabled" (click)="onManualControl()" clickable>Manual Control</button>
     </div>
@@ -105,6 +105,24 @@
       <button type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>Stop Set</button>
       <button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>Cancel Set</button>
       <button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>Custom Set</button>
+    </div>
+    <div>
+      <div>
+        <div class="left">Clients</div>
+        <div class="right">{{clients}}</div>
+      </div>
+      <div>
+        <div class="left">Clocks</div>
+        <div class="right">{{restClientController.getClients('clock').length}}</div>
+      </div>
+      <div>
+        <div class="left">Semaphores</div>
+        <div class="right">{{restClientController.getClients('semaphore').length}}</div>
+      </div>
+      <div>
+        <div class="left">Sirens</div>
+        <div class="right">{{restClientController.getClients('siren').length}}</div>
+      </div>
     </div>
   </div>
   <div *ngIf="page==2" class="settings">
@@ -177,6 +195,12 @@
         <div class="left">Brightness</div>
         <div class="right">
           <input [(ngModel)]="settings.brightness" type="number">
+        </div>
+      </div>
+      <div>
+        <div class="left">Network</div>
+        <div class="right">
+          <input [(ngModel)]="settings.network" type="string">
         </div>
       </div>
     </div>

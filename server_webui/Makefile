@@ -7,7 +7,7 @@ ESPTOOL_PY  := ${HOME}/.arduino15/packages/esp8266/hardware/esp8266/3.0.2/tools/
 
 # DEPENDENCISE AND PREREQUISITES
 install_common:
-	ln -s ${PWD}/common ~/Arduino/libraries
+	ln -s ${PWD}/semaforky_webui_common ~/Arduino/libraries
 
 install_deps:
 	$(ARDUINO_CLI) config init
@@ -15,6 +15,10 @@ install_deps:
 	$(ARDUINO_CLI) lib install --git-url https://github.com/bblanchon/ArduinoJson.git
 	$(ARDUINO_CLI) lib install --git-url https://github.com/me-no-dev/ESPAsyncTCP.git
 	$(ARDUINO_CLI) lib install --git-url https://github.com/me-no-dev/ESPAsyncWebServer.git
+
+# SERVER WEBAPP
+serve_ng:
+	cd prototype/webapp/semaforky && ../node_modules/.bin/ng serve
 
 # BUILD WEBAPP
 setup_ng:
@@ -25,13 +29,14 @@ build_webapp:
 	mkdir -p prototype/data && cp prototype/webapp/semaforky/dist/semaforky/browser/* prototype/data
 
 # CREATE WEBAPP FILESYSTEM PACKAGE
+
 filesystem.bin:
-	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) --show-properties prototype)
-	BUILD_SPIFFS_BLOCKSIZE=$$(echo "$$PROPS"|grep "^build.spiffs_blocksize"|cut -d= -f2)
-	BUILD_SPIFFS_END=$$(echo "$$PROPS"|grep "^build.spiffs_end"|cut -d= -f2| sed 's/x//')
-	BUILD_SPIFFS_PAGESIZE=$$(echo "$$PROPS"|grep "^build.spiffs_pagesize"|cut -d= -f2)
-	BUILD_SPIFFS_START=$$(echo "$$PROPS"|grep "^build.spiffs_start"|cut -d= -f2| sed 's/x//')
-	BUILD_SPIFFS_SIZE=$$(echo "ibase=16;$${BUILD_SPIFFS_END}-$${BUILD_SPIFFS_START}"|bc -q)
+	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) --show-properties prototype); \
+	BUILD_SPIFFS_BLOCKSIZE=$$(echo "$$PROPS"|grep "^build.spiffs_blocksize"|cut -d= -f2); \
+	BUILD_SPIFFS_END=$$(echo "$$PROPS"|grep "^build.spiffs_end"|cut -d= -f2| sed 's/x//'); \
+	BUILD_SPIFFS_PAGESIZE=$$(echo "$$PROPS"|grep "^build.spiffs_pagesize"|cut -d= -f2); \
+	BUILD_SPIFFS_START=$$(echo "$$PROPS"|grep "^build.spiffs_start"|cut -d= -f2| sed 's/x//'); \
+	BUILD_SPIFFS_SIZE=$$(echo "ibase=16;$${BUILD_SPIFFS_END}-$${BUILD_SPIFFS_START}"|bc -q); \
 	$(MKSPIFFS) -c prototype/data -p $$BUILD_SPIFFS_PAGESIZE -b $$BUILD_SPIFFS_BLOCKSIZE -s $$BUILD_SPIFFS_SIZE $@
 
 #TODO: FINISH THIS

@@ -1,14 +1,15 @@
 /// Copyright (C) 2023, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-#include "common.h"
+#include "semaforky_webui_common.h"
 
 BaseSettings baseSettings{
 	false, // serve spa
 	false, // hotspot
 	"p10-01", // dns
 	"semaforky", // ssid
-	"semaforky"}; // password
+	"semaforky", // password
+	"clock,semaphore"}; // capabilities
 P10 client(&baseSettings);
 
 void setup(void) { client.Init(); }
