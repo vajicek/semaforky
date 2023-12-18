@@ -47,7 +47,7 @@ flash-fs: filesystem.bin
 	  --baud 460800 \
 	  --before default_reset \
 	  --after hard_reset \
-	  write_flash 0x300000 filesystem.bin
+	  write_flash 0x200000 filesystem.bin
 
 # BUILD AND INSTALL APPLICATIONS
 install_prototype: DIR=prototype
