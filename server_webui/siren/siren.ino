@@ -6,7 +6,7 @@
 BaseSettings baseSettings{
 	false, // serve spa
 	false, // hotspot
-	"siren", // dns
+	"siren-01", // dns
 	"semaforky", // ssid
 	"semaforky", // password
 	"siren"}; // capabilities

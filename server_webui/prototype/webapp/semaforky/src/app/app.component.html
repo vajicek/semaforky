@@ -109,7 +109,7 @@
     <div>
       <div>
         <div class="left">Clients</div>
-        <div class="right">{{clients}}</div>
+        <div class="right">{{restClientController.getAllClients().size}}</div>
       </div>
       <div>
         <div class="left">Clocks</div>
@@ -122,6 +122,10 @@
       <div>
         <div class="left">Sirens</div>
         <div class="right">{{restClientController.getClients('siren').length}}</div>
+      </div>
+      <div>
+        <div class="left">Lines</div>
+        <div class="right">{{restClientController.getClients('lines').length}}</div>
       </div>
     </div>
   </div>
@@ -214,10 +218,10 @@
       Semaphores
     </div>
     <div class="actions">
-      <button type="button" (click)="onSetSemaphore(1)" clickable>Red</button>
-      <button type="button" (click)="onSetSemaphore(2)" clickable>Green</button>
-      <button type="button" (click)="onSetSemaphore(3)" clickable>Yellow</button>
-      <button type="button" (click)="onSetSemaphore(0)" clickable>Off</button>
+      <button type="button" (click)="onSetSemaphore(SemaphoreLight.RED)" clickable>Red</button>
+      <button type="button" (click)="onSetSemaphore(SemaphoreLight.GREEN)" clickable>Green</button>
+      <button type="button" (click)="onSetSemaphore(SemaphoreLight.YELLOW)" clickable>Yellow</button>
+      <button type="button" (click)="onSetSemaphore(SemaphoreLight.NONE)" clickable>Off</button>
     </div>
     <div>
       Sirene

@@ -28,10 +28,10 @@ enum LinesRotation {
 }
 
 enum SemaphoreLight {
-  NONE,
-  RED,
-  GREEN,
-  YELLOW
+  NONE = 0,
+  RED = 1,
+  GREEN = 2,
+  YELLOW = 3
 }
 
 class Settings {
@@ -112,6 +112,8 @@ abstract class State {
 type Request = { control: string, value: string }
 
 class RestClientController {
+  semaphoreLight: SemaphoreLight = SemaphoreLight.NONE;
+  remainingSeconds: number = 0;
   previousEncodedValue: number = 0;
   progress: number = 0;
 
@@ -121,7 +123,7 @@ class RestClientController {
   getAllClients(): Set<string> {
     var addresses: Set<string> = new Set<string>();
     this.semaforky.settings.clientsByCapability.forEach((addressesWithCapability, capability) => {
-      addressesWithCapability.forEach(addressWithCapability=>{
+      addressesWithCapability.forEach(addressWithCapability => {
         if (!addresses.has(addressWithCapability)) {
           addresses.add(addressWithCapability)
         }
@@ -133,7 +135,6 @@ class RestClientController {
   updateProgess(increment: number = 0) {
     this.progress += increment;
     this.semaforky.scanEnabled = (this.progress == 0);
-    this.semaforky.clients = this.getAllClients().size;
     if (this.progress == 0) {
       this.semaforky.settings.storeState();
     }
@@ -150,7 +151,7 @@ class RestClientController {
     });
   }
 
-  queryCapabilities(address: string){
+  queryCapabilities(address: string) {
     var self = this;
     this.http
       .post("http://" + address + "/capabilities",
@@ -185,12 +186,21 @@ class RestClientController {
     return retval;
   }
 
+  getEncodedValue() {
+    return this.remainingSeconds |
+      (this.semaforky.settings.brightness << 24) |
+      (Number(this.semaphoreLight) << 16);
+  }
+
   updateClocks(remainingSeconds: number) {
-    let encodedValue = remainingSeconds | (this.semaforky.settings.brightness << 24);
+    this.remainingSeconds = remainingSeconds;
+    let encodedValue = this.getEncodedValue();
 
     if (this.previousEncodedValue == encodedValue) {
       return;
     }
+
+    console.log(encodedValue);
 
     this.getClients("clock").forEach(address => {
       this.http.post("http://" + address + "/control",
@@ -201,10 +211,12 @@ class RestClientController {
     this.previousEncodedValue = encodedValue;
   }
 
-  updateSemaphores(state: SemaphoreLight) {
+  updateSemaphores(semaphoreLight: SemaphoreLight) {
+    this.semaphoreLight = semaphoreLight;
+    let encodedValue = this.getEncodedValue();
     this.getClients("semaphore").forEach(address => {
       this.http.post("http://" + address + "/control",
-        { "control": 1, "value": state }
+        { "control": 1, "value": encodedValue }
       ).subscribe();
     });
   }
@@ -336,6 +348,7 @@ class SemaforkyMachine {
         self.customSet = true;
         self.semaforky.updateGui();
         self.semaforky.restClientController.playSiren(2);
+        self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
         self.semaforky.scheduler.startCustomSet();
       }
     }(SemaforkyState.CUSTOM_SET_STARTED, [SemaforkyState.READY]));
@@ -343,6 +356,7 @@ class SemaforkyMachine {
       run(previous: State) {
         self.semaforky.updateGui();
         self.semaforky.restClientController.playSiren(2);
+        self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
         self.semaforky.scheduler.startSet();
       }
     }(SemaforkyState.SET_STARTED, [SemaforkyState.READY]));
@@ -354,11 +368,13 @@ class SemaforkyMachine {
     this.addState(new class extends State {
       run(previous: State) {
         self.semaforky.updateGui();
+        self.semaforky.restClientController.updateSemaphores(SemaphoreLight.GREEN);
         self.semaforky.restClientController.playSiren(1);
       }
     }(SemaforkyState.FIRE, [SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED, SemaforkyState.WARNING, SemaforkyState.ROUND_STOPPED]));
     this.addState(new class extends State {
       run(previous: State) {
+        self.semaforky.restClientController.updateSemaphores(SemaphoreLight.YELLOW);
         self.semaforky.updateGui();
       }
     }(SemaforkyState.WARNING, [SemaforkyState.SET_CANCELED, SemaforkyState.SET_STOPPED, SemaforkyState.ROUND_STOPPED]));
@@ -378,8 +394,8 @@ class SemaforkyMachine {
         if (self.currentLine == 0) {
           // remain stopped (or handle special cases) if set is over
           self.semaforky.restClientController.playSiren(3);
-          self.semaforky.restClientController.updateClocks(0);
           self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
+          self.semaforky.restClientController.updateClocks(0);
           if (self.semaforky.settings.continuous) {
             if (self.currentSet <= self.semaforky.settings.numberOfSets) {
               self.moveTo(SemaforkyState.SET_STARTED);
@@ -409,14 +425,15 @@ class SemaforkyMachine {
         self.customSet = false;
         self.semaforky.scheduler.cancelSet();
         self.semaforky.updateGui();
+        self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
         self.semaforky.restClientController.playSiren(2);
         self.semaforky.restClientController.updateLines(self.getCurrentLineOrder());
       }
     }(SemaforkyState.SET_CANCELED, [SemaforkyState.ROUND_STOPPED, SemaforkyState.SET_STARTED, SemaforkyState.CUSTOM_SET_STARTED]));
     this.addState(new class extends State {
       run(previous: State) {
-        self.semaforky.restClientController.updateClocks(0);
         self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
+        self.semaforky.restClientController.updateClocks(0);
         self.semaforky.updateSetClocks(0);
         self.semaforky.updateGui();
         if (previous.name != SemaforkyState.START_WAITING) {
@@ -765,6 +782,8 @@ class Scheduler {
   providers: [CookieService]
 })
 export class AppComponent {
+  SemaphoreLight: typeof SemaphoreLight = SemaphoreLight;
+
   title = 'semaforky';
   set: number = 1;
   roundTime: Date = new Date(0);
@@ -788,8 +807,6 @@ export class AppComponent {
   scanEnabled: boolean = false;
   settingsEnabled: boolean = false;
   manualControlEnabled: boolean = false;
-
-  clients: number = 0;
 
   page: number = 1;
 
@@ -919,15 +936,19 @@ export class AppComponent {
   }
 
   onSetSirene(beeps: number) {
+    this.restClientController.playSiren(beeps);
   }
 
-  onSetSemaphore(color: number) {
+  onSetSemaphore(color: SemaphoreLight) {
+    this.restClientController.updateSemaphores(color);
   }
 
   onSetClock(value: number) {
+    this.restClientController.updateClocks(value);
   }
 
   onSetClockCountdown(countdown: number) {
+    console.log("NotImplemented");
   }
 
   onBackToMain() {

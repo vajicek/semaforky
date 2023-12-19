@@ -148,6 +148,7 @@ struct BaseSettings {
 
 class Base {
  protected:
+	int stations;
 	int value;
 	const BaseSettings *settings;
 
@@ -167,7 +168,7 @@ class Base {
 };
 
 Base::Base(const BaseSettings *baseSettings)
-	: server{80}, settings{baseSettings} {}
+	: stations{0}, server{80}, settings{baseSettings} {}
 
 void Base::setCrossOrigin(AsyncWebServerResponse *response) {
 	response->addHeader("Access-Control-Allow-Origin", "*");
@@ -261,7 +262,16 @@ void Base::Init() {
 	Serial.println("HTTP server started");
 }
 
-void Base::Execute() { MDNS.update(); }
+void Base::Execute() {
+	if (settings->hotspot){
+		if (WiFi.softAPgetStationNum() != stations) {
+			stations = WiFi.softAPgetStationNum();
+			Serial.print("Total Connections: ");
+			Serial.println(stations);
+		}
+	}
+	MDNS.update();
+}
 
 ///////////////////////////////////////
 
