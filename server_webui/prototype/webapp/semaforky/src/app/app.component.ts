@@ -112,7 +112,6 @@ abstract class State {
 type Request = { control: string, value: string }
 
 class RestClientController {
-  semaphoreLight: SemaphoreLight = SemaphoreLight.NONE;
   remainingSeconds: number = 0;
   previousEncodedValue: number = 0;
   progress: number = 0;
@@ -120,7 +119,7 @@ class RestClientController {
   constructor(private http: HttpClient, private semaforky: AppComponent) {
   }
 
-  getAllClients(): Set<string> {
+  public getAllClients(): Set<string> {
     var addresses: Set<string> = new Set<string>();
     this.semaforky.settings.clientsByCapability.forEach((addressesWithCapability, capability) => {
       addressesWithCapability.forEach(addressWithCapability => {
@@ -132,7 +131,7 @@ class RestClientController {
     return addresses;
   }
 
-  updateProgess(increment: number = 0) {
+  protected updateProgess(increment: number = 0) {
     this.progress += increment;
     this.semaforky.scanEnabled = (this.progress == 0);
     if (this.progress == 0) {
@@ -140,7 +139,7 @@ class RestClientController {
     }
   }
 
-  updateCapabilitiesMap(clientAddress: string, capabilities: string) {
+  protected updateCapabilitiesMap(clientAddress: string, capabilities: string) {
     var capabilitiesArray: string[] = capabilities.split(",");
     capabilitiesArray.forEach(capability => {
       if (this.semaforky.settings.clientsByCapability.has(capability)) {
@@ -151,7 +150,7 @@ class RestClientController {
     });
   }
 
-  queryCapabilities(address: string) {
+  protected queryCapabilities(address: string) {
     var self = this;
     this.http
       .post("http://" + address + "/capabilities",
@@ -167,7 +166,7 @@ class RestClientController {
       });
   }
 
-  scan() {
+  public scan() {
     this.semaforky.settings.clientsByCapability.clear();
     this.updateProgess(254);
     var network = this.semaforky.settings.network;
@@ -178,7 +177,7 @@ class RestClientController {
     }
   }
 
-  getClients(capability: string): string[] {
+  public getClients(capability: string): string[] {
     var retval = this.semaforky.settings.clientsByCapability.get(capability);
     if (retval == undefined) {
       return [];
@@ -186,21 +185,19 @@ class RestClientController {
     return retval;
   }
 
-  getEncodedValue() {
+  protected getEncodedValue() {
     return this.remainingSeconds |
       (this.semaforky.settings.brightness << 24) |
-      (Number(this.semaphoreLight) << 16);
+      (Number(this.semaforky.semaphoreLight) << 16);
   }
 
-  updateClocks(remainingSeconds: number) {
+  public updateClocks(remainingSeconds: number) {
     this.remainingSeconds = remainingSeconds;
     let encodedValue = this.getEncodedValue();
 
     if (this.previousEncodedValue == encodedValue) {
       return;
     }
-
-    console.log(encodedValue);
 
     this.getClients("clock").forEach(address => {
       this.http.post("http://" + address + "/control",
@@ -211,8 +208,7 @@ class RestClientController {
     this.previousEncodedValue = encodedValue;
   }
 
-  updateSemaphores(semaphoreLight: SemaphoreLight) {
-    this.semaphoreLight = semaphoreLight;
+  public updateSemaphores(semaphoreLight: SemaphoreLight) {
     let encodedValue = this.getEncodedValue();
     this.getClients("semaphore").forEach(address => {
       this.http.post("http://" + address + "/control",
@@ -221,7 +217,7 @@ class RestClientController {
     });
   }
 
-  updateLines(lines: string) {
+  public updateLines(lines: string) {
     this.getClients("lines").forEach(address => {
       this.http.post("http://" + address + "/control",
         { "control": 1, "value": lines }
@@ -229,7 +225,7 @@ class RestClientController {
     });
   }
 
-  playSiren(count: number) {
+  public playSiren(count: number) {
     this.getClients("siren").forEach(address => {
       this.http.post("http://" + address + "/control",
         { "control": 1, "value": count }
@@ -526,7 +522,7 @@ class SetClockEvent extends Event {
     this.previousValue = -1;
   }
 
-  serialize(this: SetClockEvent): Object {
+  public serialize(this: SetClockEvent): Object {
     return {
       "type": "SetClockEvent",
       "time": this.time,
@@ -535,7 +531,7 @@ class SetClockEvent extends Event {
     };
   }
 
-  run(this: SetClockEvent): void {
+  public run(this: SetClockEvent): void {
     let now = new Date();
     let seconds = (now.getTime() - this.setStart.getTime()) / 1000;
     let remainingSeconds = this.getRemainingSeconds(seconds);
@@ -554,7 +550,7 @@ class SetClockEvent extends Event {
       this.semaforky));
   }
 
-  getRemainingSeconds(seconds: number): number {
+  private getRemainingSeconds(seconds: number): number {
     let remainingSeconds: number = 0;
     if (!this.semaforky.machine.getCurrentState()) {
       return -1;
@@ -587,7 +583,7 @@ class SemaphoreEvent extends Event {
     this.semaforky = _semaforky;
   }
 
-  serialize(this: SemaphoreEvent): Object {
+  public serialize(this: SemaphoreEvent): Object {
     return {
       "type": "SemaphoreEvent",
       "time": this.time,
@@ -595,7 +591,7 @@ class SemaphoreEvent extends Event {
     };
   }
 
-  run(this: SemaphoreEvent): void {
+  public run(this: SemaphoreEvent): void {
     this.semaforky.machine.moveTo(this.nextState);
   }
 }
@@ -610,7 +606,7 @@ class RoundClockEvent extends Event {
     this.semaforky = _semaforky;
   }
 
-  serialize(this: RoundClockEvent): Object {
+  public serialize(this: RoundClockEvent): Object {
     return {
       "type": "RoundClockEvent",
       "time": this.time,
@@ -618,7 +614,7 @@ class RoundClockEvent extends Event {
     };
   }
 
-  run(this: RoundClockEvent): void {
+  public run(this: RoundClockEvent): void {
     let now: Date = new Date();
     this.semaforky.updateRoundClocks(this.roundStart);
     this.semaforky.scheduler.addEvent(new RoundClockEvent(new Date(now.getTime() + 200), this.roundStart, this.semaforky));
@@ -789,13 +785,12 @@ export class AppComponent {
   roundTime: Date = new Date(0);
   line: string = "";
   countdown: number = 0;
+  semaphoreLight: SemaphoreLight = SemaphoreLight.RED;
 
   scheduler: Scheduler;
   machine: SemaforkyMachine;
   settings: Settings;
   restClientController: RestClientController;
-
-  color: SemaphoreLight = SemaphoreLight.RED;
 
   beginRoundEnabled: boolean = false;
   endRoundEnabled: boolean = false;
@@ -821,16 +816,16 @@ export class AppComponent {
     this.updateGui();
   }
 
-  setCookieValue(key: string, value: string) {
+  public setCookieValue(key: string, value: string) {
     this.cookieService.set(key, value);
   }
 
-  getCookieValue(key: string, defaultValue: string): string {
+  public getCookieValue(key: string, defaultValue: string): string {
     var value = this.cookieService.get(key);
     return value ? value : defaultValue;
   }
 
-  updateGui() {
+  public updateGui() {
     var currentState = this.machine.getCurrentState();
     if (!currentState) {
       return;
@@ -852,17 +847,17 @@ export class AppComponent {
     this.manualControlEnabled = [SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED].includes(stateName);
 
     if (stateName == SemaforkyState.READY) {
-      this.color = SemaphoreLight.RED;
+      this.semaphoreLight = SemaphoreLight.RED;
     } else if (stateName == SemaforkyState.FIRE) {
-      this.color = SemaphoreLight.GREEN;
+      this.semaphoreLight = SemaphoreLight.GREEN;
     } else if (stateName == SemaforkyState.WARNING) {
-      this.color = SemaphoreLight.YELLOW;
+      this.semaphoreLight = SemaphoreLight.YELLOW;
     } else {
-      this.color = SemaphoreLight.NONE;
+      this.semaphoreLight = SemaphoreLight.NONE;
     }
   }
 
-  updateSet() {
+  private updateSet() {
     if (!this.machine.getCurrentState()) {
       return;
     }
@@ -870,19 +865,19 @@ export class AppComponent {
     this.line = this.machine.getCurrentLineOrder();
   }
 
-  updateSetClocks(remainingSeconds: number) {
+  public updateSetClocks(remainingSeconds: number) {
     this.countdown = remainingSeconds;
   }
 
-  updateRoundClocks(roundStart: Date) {
+  public updateRoundClocks(roundStart: Date) {
     this.roundTime = new Date((new Date()).getTime() - roundStart.getTime());
   }
 
-  isVisible(color: number) {
-    return this.color == color;
+  public isVisible(semaphoreLight: SemaphoreLight) {
+    return this.semaphoreLight == semaphoreLight;
   }
 
-  onBeginRound() {
+  public onBeginRound() {
     if (this.settings.delayedStartEnabled) {
       this.machine.moveTo(SemaforkyState.START_WAITING);
     } else {
@@ -890,68 +885,66 @@ export class AppComponent {
     }
   }
 
-  onEndRound() {
+  public onEndRound() {
     this.machine.moveTo(SemaforkyState.ROUND_STOPPED);
   }
 
-  onStartSet() {
+  public onStartSet() {
     this.machine.moveTo(SemaforkyState.SET_STARTED);
   }
 
-  onStopSet() {
+  public onStopSet() {
     this.machine.moveTo(SemaforkyState.SET_STOPPED);
   }
 
-  onCancelSet() {
+  public onCancelSet() {
     this.machine.moveTo(SemaforkyState.SET_CANCELED);
   }
 
-  onCustomSet() {
+  public onCustomSet() {
     // TODO: finish me
     console.log("onCustomSet!");
   }
 
-  onScan() {
-    // TODO: finish me
-    console.log("onDiagostic!");
+  public onScan() {
     this.restClientController.scan();
   }
 
-  onSettings() {
+  public onSettings() {
     this.page = 2;
   }
 
-  onManualControl() {
+  public onManualControl() {
     this.page = 3;
   }
 
-  onSettingsAccepted() {
+  public onSettingsAccepted() {
     this.page = 1;
     this.settings.storeState();
   }
 
-  onSettingsCanceled() {
+  public onSettingsCanceled() {
     this.page = 1;
     this.settings.loadState();
   }
 
-  onSetSirene(beeps: number) {
+  public onSetSirene(beeps: number) {
     this.restClientController.playSiren(beeps);
   }
 
-  onSetSemaphore(color: SemaphoreLight) {
-    this.restClientController.updateSemaphores(color);
+  public onSetSemaphore(semaphoreLight: SemaphoreLight) {
+    this.restClientController.updateSemaphores(semaphoreLight);
   }
 
-  onSetClock(value: number) {
+  public onSetClock(value: number) {
     this.restClientController.updateClocks(value);
   }
 
-  onSetClockCountdown(countdown: number) {
+  public onSetClockCountdown(countdown: number) {
     console.log("NotImplemented");
   }
 
-  onBackToMain() {
+  public onBackToMain() {
     this.page = 1;
   }
 }
