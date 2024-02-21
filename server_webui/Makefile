@@ -30,7 +30,7 @@ build_webapp:
 
 # CREATE WEBAPP FILESYSTEM PACKAGE
 
-filesystem.bin:
+filesystem.bin: prototype/data/main.js
 	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) --show-properties prototype); \
 	BUILD_SPIFFS_BLOCKSIZE=$$(echo "$$PROPS"|grep "^build.spiffs_blocksize"|cut -d= -f2); \
 	BUILD_SPIFFS_END=$$(echo "$$PROPS"|grep "^build.spiffs_end"|cut -d= -f2| sed 's/x//'); \

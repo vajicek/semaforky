@@ -27,6 +27,12 @@ enum LinesRotation {
   ALTERNATING
 }
 
+enum LineOrder {
+  AB = 1,
+  CD = 2,
+  UNDEFINED = 3
+}
+
 enum SemaphoreLight {
   NONE = 0,
   RED = 1,
@@ -212,15 +218,15 @@ class RestClientController {
     let encodedValue = this.getEncodedValue();
     this.getClients("semaphore").forEach(address => {
       this.http.post("http://" + address + "/control",
-        { "control": 1, "value": encodedValue }
+        { "control": 2, "value": encodedValue }
       ).subscribe();
     });
   }
 
-  public updateLines(lines: string) {
+  public updateLines(lines: LineOrder) {
     this.getClients("lines").forEach(address => {
       this.http.post("http://" + address + "/control",
-        { "control": 1, "value": lines }
+        { "control": 3, "value": lines }
       ).subscribe();
     });
   }
@@ -228,7 +234,7 @@ class RestClientController {
   public playSiren(count: number) {
     this.getClients("siren").forEach(address => {
       this.http.post("http://" + address + "/control",
-        { "control": 1, "value": count }
+        { "control": 4, "value": count }
       ).subscribe();
     });
   }
@@ -272,19 +278,21 @@ class SemaforkyMachine {
     return this.currentState;
   }
 
-  public getCurrentLineOrder(): string {
+  public getCurrentLineOrder(): LineOrder {
     if (this.currentState?.name != SemaforkyState.STARTED && this.currentState?.name != SemaforkyState.ROUND_STOPPED) {
       if (this.semaforky.settings.lines == 1) {
-        return "AB";
+        return LineOrder.AB;
       } else if (this.semaforky.settings.lines == 2) {
         if (this.semaforky.settings.linesRotation == LinesRotation.SIMPLE) {
-          return this.semaforky.machine.getCurrentLine() == 0 ? "AB" : "CD";
+          return this.semaforky.machine.getCurrentLine() == 0 ?
+            LineOrder.AB : LineOrder.CD;
         } else {
-          return this.semaforky.machine.getCurrentLine() != this.semaforky.machine.getCurrentSet() % 2 ? "AB" : "CD";
+          return this.semaforky.machine.getCurrentLine() != this.semaforky.machine.getCurrentSet() % 2 ?
+            LineOrder.AB : LineOrder.CD;
         }
       }
     }
-    return "--";
+    return LineOrder.UNDEFINED;
   }
 
   protected loadState() {
@@ -320,6 +328,7 @@ class SemaforkyMachine {
     this.setCurrent(this.addState(new class extends State {
       run(previous: State) {
         //Nothing to do
+        // TODO: LINES
       }
     }(SemaforkyState.STARTED, [SemaforkyState.ROUND_STARTED, SemaforkyState.SETTINGS, SemaforkyState.MANUAL_CONTROL, SemaforkyState.START_WAITING])));
     this.addState(new class extends State {
@@ -392,6 +401,7 @@ class SemaforkyMachine {
           self.semaforky.restClientController.playSiren(3);
           self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
           self.semaforky.restClientController.updateClocks(0);
+          self.semaforky.restClientController.updateLines(self.getCurrentLineOrder());
           if (self.semaforky.settings.continuous) {
             if (self.currentSet <= self.semaforky.settings.numberOfSets) {
               self.moveTo(SemaforkyState.SET_STARTED);
@@ -432,6 +442,7 @@ class SemaforkyMachine {
         self.semaforky.restClientController.updateClocks(0);
         self.semaforky.updateSetClocks(0);
         self.semaforky.updateGui();
+        // TODO: LINES
         if (previous.name != SemaforkyState.START_WAITING) {
           self.semaforky.restClientController.playSiren(4);
         }
@@ -783,7 +794,7 @@ export class AppComponent {
   title = 'semaforky';
   set: number = 1;
   roundTime: Date = new Date(0);
-  line: string = "";
+  line: LineOrder = LineOrder.UNDEFINED;
   countdown: number = 0;
   semaphoreLight: SemaphoreLight = SemaphoreLight.RED;
 

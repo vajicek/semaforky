@@ -14,13 +14,31 @@
 #include <PxMatrix.h>
 #include <SPI.h>
 #include <Ticker.h>
+#include <Simpletimer.h>
 
 struct StackedDMD : public SPIDMD {
-	StackedDMD() : SPIDMD(3, 1) {}
+	unsigned int mapping[3 * 16 * 32];
+
+	StackedDMD() : SPIDMD(3, 1) {
+		computeMapping();
+	}
+
+	void computeMapping() {
+		for (int y = 0; y < 32; y++) {
+			for (int x = 0; x < 3 * 16; x++) {
+				unsigned int tx, ty;
+				mapPanelCoords(x, y, &tx, &ty);
+				mapping[y * (3 * 16) + x] = (tx | ty << 16);
+			}
+		}
+	}
 
 	void setPixel(unsigned int x1, unsigned int y1, DMDGraphicsMode mode) {
 		unsigned int x, y;
-		mapPanelCoords(x1, y1, &x, &y);
+		unsigned xy = mapping[y1 * (3 * 16) + x1];
+		x = xy & 0xFFFF;
+		y = xy >> 16;
+		// mapPanelCoords(x1, y1, &x, &y);
 		SPIDMD::setPixel(x, y, mode);
 	}
 
@@ -128,6 +146,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 void setupHotspot(const char *ssid, const char *password) {
 	Serial.println();
 
+	WiFi.disconnect();
 	WiFi.mode(WIFI_AP);
 
 	Serial.print("Setting soft-AP ... ");
@@ -149,6 +168,7 @@ struct BaseSettings {
 class Base {
  protected:
 	int stations;
+	int controlValue = 1;
 	int value;
 	const BaseSettings *settings;
 
@@ -192,7 +212,13 @@ void Base::control(AsyncWebServerRequest * request, JsonVariant & json) {
 		AsyncWebServerResponse *response = request->beginResponse(200);
 		setCrossOrigin(response);
 		request->send(response);
+		controlValue = postObj[F("control")];
 		value = postObj[F("value")];
+
+		Serial.print("controlValue=");
+		Serial.print(controlValue);
+		Serial.print(", value=");
+		Serial.println(value);
 	}
 }
 
@@ -265,9 +291,11 @@ void Base::Init() {
 void Base::Execute() {
 	if (settings->hotspot){
 		if (WiFi.softAPgetStationNum() != stations) {
-			stations = WiFi.softAPgetStationNum();
+			auto info_stations = WiFi.softAPgetStationNum();
 			Serial.print("Total Connections: ");
 			Serial.println(stations);
+			Serial.println(info_stations);
+			stations = info_stations;
 		}
 	}
 	MDNS.update();
@@ -276,10 +304,11 @@ void Base::Execute() {
 ///////////////////////////////////////
 
 #include "digits32.h"
+#include "abcd32.h"
 
 class P10x3 : public Base {
  private:
-	Ticker displayTicker;
+	Simpletimer P10x3DisplayTimer;
 	StackedDMD dmd;
 	StackedDMD buffer;
 
@@ -288,9 +317,11 @@ class P10x3 : public Base {
 
 	void updateDisplay();
 	void drawDigits();
-	void redrawDisplay();
+	void drawLetters();
 
  public:
+	void redrawDisplay();
+
 	void Init();
 	void Execute();
 
@@ -316,20 +347,39 @@ void P10x3::drawDigits() {
 	dmd.setBrightness(brightness);
 }
 
+void P10x3::drawLetters() {
+	buffer.fillScreen(false);
+	if (value == 1) {
+		buffer.drawChar(0, 0, 'A', GRAPHICS_ON, Abcd32);
+		buffer.drawChar(24, 0, 'B', GRAPHICS_ON, Abcd32);
+	} else if(value == 2) {
+		buffer.drawChar(0, 0, 'C', GRAPHICS_ON, Abcd32);
+		buffer.drawChar(24, 0, 'D', GRAPHICS_ON, Abcd32);
+	}
+}
+
 void P10x3::updateDisplay() {
-	if (oldValue != value) {
-		oldValue = value;
-		drawDigits();
-		bufferSwapped = false;
+	if (controlValue == 3) {
+		if (oldValue != value) {
+			oldValue = value;
+			drawLetters();
+			bufferSwapped = false;
+		}
+	} else if (controlValue == 1) {
+		if (oldValue != value) {
+			oldValue = value;
+			drawDigits();
+			bufferSwapped = false;
+		}
 	}
 }
 
 void P10x3::redrawDisplay() {
+	dmd.scanDisplay();
 	if (!bufferSwapped) {
 		dmd.swapBuffers(buffer);
 		bufferSwapped = true;
 	}
-	dmd.scanDisplay();
 }
 
 void P10x3::Init() {
@@ -337,12 +387,14 @@ void P10x3::Init() {
 
 	// Initialize Display
 	dmd.beginNoTimer();
-	displayTicker.attach(0.003, [this]() { this->redrawDisplay(); });
 }
 
 void P10x3::Execute() {
 	Base::Execute();
 	updateDisplay();
+    if (P10x3DisplayTimer.timer(250)) {
+		redrawDisplay();
+    }
 }
 
 P10x3::P10x3(BaseSettings *baseSettings) : Base(baseSettings) {}
