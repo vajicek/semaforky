@@ -552,16 +552,28 @@ const comparator = (a: Event, b: Event) => {
   return 0;
 }
 
+class SetTiming {
+  preparationTimeTime: number;
+  setTime: number;
+
+  constructor(_preparationTimeTime: number, _setTime: number) {
+    this.preparationTimeTime = _preparationTimeTime;
+    this.setTime = _setTime;
+  }
+}
+
 class SetClockEvent extends Event {
   setStart: Date;
   semaforky: AppComponent;
   previousValue: number;
+  setTiming: SetTiming;
 
-  constructor(_time: Date, _start: Date, _semaforky: AppComponent) {
+  constructor(_time: Date, _start: Date, _semaforky: AppComponent, _setTiming: SetTiming) {
     super(_time)
     this.setStart = _start;
     this.semaforky = _semaforky;
     this.previousValue = -1;
+    this.setTiming = _setTiming;
   }
 
   public serialize(this: SetClockEvent): Object {
@@ -569,7 +581,9 @@ class SetClockEvent extends Event {
       "type": "SetClockEvent",
       "time": this.time,
       "setStart": this.setStart,
-      "previousValue": this.previousValue
+      "previousValue": this.previousValue,
+      "preparationTimeTime": this.setTiming.preparationTimeTime,
+      "setTime": this.setTiming.setTime
     };
   }
 
@@ -589,7 +603,8 @@ class SetClockEvent extends Event {
     this.semaforky.scheduler.addEvent(new SetClockEvent(
       new Date(now.getTime() + 100),
       this.setStart,
-      this.semaforky));
+      this.semaforky,
+      this.setTiming));
   }
 
   private getRemainingSeconds(seconds: number): number {
@@ -604,9 +619,9 @@ class SetClockEvent extends Event {
       let sec: number = (this.semaforky.settings.delayedStartTime.getTime() - new Date().getTime()) / 1000;
       remainingSeconds = Math.max(Math.min(sec, 999), 0);
     } else if (currentStateName == SemaforkyState.READY) {
-      remainingSeconds = Math.max(this.semaforky.settings.preparationTime - seconds, 0);
+      remainingSeconds = Math.max(this.setTiming.preparationTimeTime - seconds, 0);
     } else if (currentStateName == SemaforkyState.FIRE || currentStateName == SemaforkyState.WARNING) {
-      remainingSeconds = Math.max(this.semaforky.settings.preparationTime + this.semaforky.settings.setTime - seconds, 0);
+      remainingSeconds = Math.max(this.setTiming.preparationTimeTime + this.setTiming.setTime - seconds, 0);
     } else if (currentStateName == SemaforkyState.MANUAL_CONTROL) {
       remainingSeconds = Math.max(this.semaforky.settings.setTime - seconds, 0);
     }
@@ -697,7 +712,8 @@ class Scheduler {
         return new SetClockEvent(
           new Date(event["time"]),
           new Date(event["setStart"]),
-          this.semaforky);
+          this.semaforky,
+          new SetTiming(event["preparationTimeTime"], event["setTime"]));
       }
       case "SemaphoreEvent": {
         return new SemaphoreEvent(
@@ -755,14 +771,14 @@ class Scheduler {
     this.addEvent(new SemaphoreEvent(new Date(now.getTime() + settings.preparationTime * 1000),
       SemaforkyState.FIRE,
       this.semaforky));
-    this.addEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.setTime + settings.preparationTime - settings.warningTime) * 1000),
+    this.addEvent(new SemaphoreEvent(new Date(now.getTime() + (setTime + settings.preparationTime - settings.warningTime) * 1000),
       SemaforkyState.WARNING,
       this.semaforky));
-    this.addEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.preparationTime + settings.setTime) * 1000 + 500),
+    this.addEvent(new SemaphoreEvent(new Date(now.getTime() + (settings.preparationTime + setTime) * 1000 + 500),
       SemaforkyState.SET_STOPPED,
       this.semaforky));
 
-    this.addEvent(new SetClockEvent(now, now, this.semaforky));
+    this.addEvent(new SetClockEvent(now, now, this.semaforky, new SetTiming(settings.preparationTime, setTime)));
   }
 
   public startCustomSet(this: Scheduler) {
@@ -784,7 +800,7 @@ class Scheduler {
       this.semaforky));
 
     // high frequency clock event
-    this.addEvent(new SetClockEvent(new Date(), new Date(), this.semaforky));
+    this.addEvent(new SetClockEvent(new Date(), new Date(), this.semaforky, new SetTiming(settings.preparationTime, settings.setTime)));
   }
 
   public stopSet(this: Scheduler) {
@@ -944,8 +960,7 @@ export class AppComponent {
   }
 
   public onCustomSet() {
-    // TODO: finish me
-    console.log("onCustomSet!");
+    this.machine.moveTo(SemaforkyState.CUSTOM_SET_STARTED);
   }
 
   public onScan() {

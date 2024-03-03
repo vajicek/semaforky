@@ -105,6 +105,12 @@
       <button type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>Stop Set</button>
       <button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>Cancel Set</button>
       <button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>Custom Set</button>
+      <div>
+        <div class="left">Custom Set Time</div>
+        <div class="right">
+          <input [(ngModel)]="settings.customSetTime" type="number">
+        </div>
+      </div>
     </div>
     <div>
       <div>
