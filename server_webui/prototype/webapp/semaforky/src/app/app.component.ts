@@ -223,6 +223,19 @@ class RestClientController {
     });
   }
 
+  public playAudio(count: number) {
+    let audio = new Audio();
+    audio.addEventListener('ended', function () {
+      count--;
+      if (count > 0){
+        this.play();
+      }
+    }, false);
+    audio.src = "buzzer.wav";
+    audio.load();
+    audio.play();
+  }
+
   public updateLines(lines: LineOrder) {
     this.getClients("lines").forEach(address => {
       this.http.post("http://" + address + "/control",
@@ -232,6 +245,7 @@ class RestClientController {
   }
 
   public playSiren(count: number) {
+    this.playAudio(count);
     this.getClients("siren").forEach(address => {
       this.http.post("http://" + address + "/control",
         { "control": 4, "value": count }
