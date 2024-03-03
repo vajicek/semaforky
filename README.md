@@ -1,6 +1,8 @@
 # semaforky
 Android/Arduino-based DIY system for remote controlled signaling for sport events
 
+**NEW!: Next-gen version is based on web app hosted by the device on its own wifi network. See [server_webui](server_webui).**
+
 Semaforky is client-server software for Android (server) and several Arduino-based controllers (clients) of various signaling devices:
 - Semaphore lights (red, yellow, green)
 - Segment clock display
