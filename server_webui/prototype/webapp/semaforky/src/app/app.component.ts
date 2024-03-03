@@ -238,6 +238,18 @@ class RestClientController {
       ).subscribe();
     });
   }
+
+  public countdown(count: number, start: boolean) {
+    let encodedValue = count |
+      (start ? (1 << 16) : 0) |
+      (this.semaforky.settings.brightness << 24);
+
+    this.getClients("countdown").forEach(address => {
+      this.http.post("http://" + address + "/control",
+        { "control": 5, "value": encodedValue }
+      ).subscribe();
+    });
+  }
 }
 
 class SemaforkyMachine {
@@ -368,6 +380,7 @@ class SemaforkyMachine {
     this.addState(new class extends State {
       run(previous: State) {
         self.semaforky.updateGui();
+        self.semaforky.restClientController.countdown(self.semaforky.settings.preparationTime, true);
       }
     }(SemaforkyState.READY, [SemaforkyState.FIRE, SemaforkyState.SET_CANCELED]));
     this.addState(new class extends State {
@@ -375,6 +388,7 @@ class SemaforkyMachine {
         self.semaforky.updateGui();
         self.semaforky.restClientController.updateSemaphores(SemaphoreLight.GREEN);
         self.semaforky.restClientController.playSiren(1);
+        self.semaforky.restClientController.countdown(self.semaforky.settings.setTime, true);
       }
     }(SemaforkyState.FIRE, [SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED, SemaforkyState.WARNING, SemaforkyState.ROUND_STOPPED]));
     this.addState(new class extends State {
@@ -401,6 +415,7 @@ class SemaforkyMachine {
           self.semaforky.restClientController.playSiren(3);
           self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
           self.semaforky.restClientController.updateClocks(0);
+          self.semaforky.restClientController.countdown(self.semaforky.countdown, false);
           self.semaforky.restClientController.updateLines(self.getCurrentLineOrder());
           if (self.semaforky.settings.continuous) {
             if (self.currentSet <= self.semaforky.settings.numberOfSets) {
@@ -434,12 +449,14 @@ class SemaforkyMachine {
         self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
         self.semaforky.restClientController.playSiren(2);
         self.semaforky.restClientController.updateLines(self.getCurrentLineOrder());
+        self.semaforky.restClientController.countdown(self.semaforky.countdown, false);
       }
     }(SemaforkyState.SET_CANCELED, [SemaforkyState.ROUND_STOPPED, SemaforkyState.SET_STARTED, SemaforkyState.CUSTOM_SET_STARTED]));
     this.addState(new class extends State {
       run(previous: State) {
         self.semaforky.restClientController.updateSemaphores(SemaphoreLight.RED);
         self.semaforky.restClientController.updateClocks(0);
+        self.semaforky.restClientController.countdown(0, false);
         self.semaforky.updateSetClocks(0);
         self.semaforky.updateGui();
         // TODO: LINES
@@ -949,10 +966,11 @@ export class AppComponent {
 
   public onSetClock(value: number) {
     this.restClientController.updateClocks(value);
+    this.restClientController.countdown(value, false);
   }
 
   public onSetClockCountdown(countdown: number) {
-    console.log("NotImplemented");
+    this.restClientController.countdown(countdown, true);
   }
 
   public onBackToMain() {

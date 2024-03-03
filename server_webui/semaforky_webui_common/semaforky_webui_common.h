@@ -4,17 +4,20 @@
 #define double_buffer
 
 #include <Arduino.h>
-#include <AsyncJson.h>
 #include <DMD2.h>
+
+#include <WiFiClient.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
+
+#include <AsyncJson.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
+
 #include <FS.h>
 #include <PxMatrix.h>
 #include <SPI.h>
 #include <Ticker.h>
-#include <Simpletimer.h>
 
 struct StackedDMD : public SPIDMD {
 	unsigned int mapping[3 * 16 * 32];
@@ -169,7 +172,8 @@ class Base {
  protected:
 	int stations;
 	int controlValue = 1;
-	int value;
+	int value = 0;
+
 	const BaseSettings *settings;
 
 	void setCrossOrigin(AsyncWebServerResponse *response);
@@ -298,6 +302,7 @@ void Base::Execute() {
 			stations = info_stations;
 		}
 	}
+
 	MDNS.update();
 }
 
@@ -306,14 +311,21 @@ void Base::Execute() {
 #include "digits32.h"
 #include "abcd32.h"
 
+struct Countdown {
+	int start_ms;
+	int start_value;
+	int brightness;
+	bool running;
+};
+
 class P10x3 : public Base {
  private:
-	Simpletimer P10x3DisplayTimer;
 	StackedDMD dmd;
 	StackedDMD buffer;
 
 	int oldValue = -1;
 	bool bufferSwapped = false;
+	Countdown countdown;
 
 	void updateDisplay();
 	void drawDigits();
@@ -330,7 +342,6 @@ class P10x3 : public Base {
 
 void P10x3::drawDigits() {
 	auto time = decodeTimeValue(value);
-	auto color = decodeColorValue(value);
 	auto brightness = decodeBrightnessValue(value);
 
 	buffer.fillScreen(false);
@@ -371,15 +382,30 @@ void P10x3::updateDisplay() {
 			drawDigits();
 			bufferSwapped = false;
 		}
+	} else if (controlValue == 5) {
+		if (oldValue != value) { // start countdown
+			countdown = Countdown{millis(),
+				decodeTimeValue(value),
+				decodeBrightnessValue(value),
+				decodeColorValue(value) > 0};
+		}
+		value = countdown.start_value;
+		if (countdown.running) {
+			value -= (millis() - countdown.start_ms) / 1000;
+		}
+		value = std::max(value, 0) | (countdown.brightness << 24);
+		oldValue = value;
+		drawDigits();
+		bufferSwapped = false;
 	}
 }
 
 void P10x3::redrawDisplay() {
-	dmd.scanDisplay();
 	if (!bufferSwapped) {
 		dmd.swapBuffers(buffer);
 		bufferSwapped = true;
 	}
+	dmd.scanDisplay();
 }
 
 void P10x3::Init() {
@@ -392,9 +418,7 @@ void P10x3::Init() {
 void P10x3::Execute() {
 	Base::Execute();
 	updateDisplay();
-    if (P10x3DisplayTimer.timer(250)) {
-		redrawDisplay();
-    }
+	redrawDisplay();
 }
 
 P10x3::P10x3(BaseSettings *baseSettings) : Base(baseSettings) {}
