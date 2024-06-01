@@ -9,7 +9,7 @@ BaseSettings baseSettings{
   "p10x3-01", // dns
   "semaforky", // ssid
   "semaforky", // password
-  "countdown,lines"}; // capabilities
+  "countdown,lines,siren"}; // capabilities
 P10x3 client(&baseSettings);
 
 void setup(void) {

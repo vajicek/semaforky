@@ -311,11 +311,19 @@ void Base::Execute() {
 #include "digits32.h"
 #include "abcd32.h"
 
+// Wemos D1 mini
+#define P10x3_SIREN_AUDIO_PIN 5
+
 struct Countdown {
 	int start_ms;
 	int start_value;
 	int brightness;
 	bool running;
+};
+
+struct SirenState {
+	int count;
+	int start_ms;
 };
 
 class P10x3 : public Base {
@@ -326,6 +334,7 @@ class P10x3 : public Base {
 	int oldValue = -1;
 	bool bufferSwapped = false;
 	Countdown countdown;
+	SirenState siren;
 
 	void updateDisplay();
 	void drawDigits();
@@ -397,7 +406,17 @@ void P10x3::updateDisplay() {
 		oldValue = value;
 		drawDigits();
 		bufferSwapped = false;
+	} else if (controlValue == 4) {
+		if (oldValue != value) { // start siren
+			siren = SirenState{value, millis()};
+		}
+		oldValue = value;
 	}
+
+	//
+	int i = (millis() - siren.start_ms) / 500;
+	int on = (i > (2 * siren.count)) ? LOW : (i % 2 ? HIGH : LOW);
+	digitalWrite(P10x3_SIREN_AUDIO_PIN, on);
 }
 
 void P10x3::redrawDisplay() {
@@ -413,6 +432,9 @@ void P10x3::Init() {
 
 	// Initialize Display
 	dmd.beginNoTimer();
+
+	// Init siren
+	pinMode(P10x3_SIREN_AUDIO_PIN, OUTPUT);
 }
 
 void P10x3::Execute() {
