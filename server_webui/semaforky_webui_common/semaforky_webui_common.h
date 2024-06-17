@@ -174,6 +174,10 @@ class Base {
 	int controlValue = 1;
 	int value = 0;
 
+	// int controlValue = 3;
+	// int value = 1;
+	//int value = 0xff000000 | 0x7B;
+
 	const BaseSettings *settings;
 
 	void setCrossOrigin(AsyncWebServerResponse *response);
@@ -311,19 +315,11 @@ void Base::Execute() {
 #include "digits32.h"
 #include "abcd32.h"
 
-// Wemos D1 mini
-#define P10x3_SIREN_AUDIO_PIN 5
-
 struct Countdown {
 	int start_ms;
 	int start_value;
 	int brightness;
 	bool running;
-};
-
-struct SirenState {
-	int count;
-	int start_ms;
 };
 
 class P10x3 : public Base {
@@ -334,7 +330,6 @@ class P10x3 : public Base {
 	int oldValue = -1;
 	bool bufferSwapped = false;
 	Countdown countdown;
-	SirenState siren;
 
 	void updateDisplay();
 	void drawDigits();
@@ -406,17 +401,7 @@ void P10x3::updateDisplay() {
 		oldValue = value;
 		drawDigits();
 		bufferSwapped = false;
-	} else if (controlValue == 4) {
-		if (oldValue != value) { // start siren
-			siren = SirenState{value, millis()};
-		}
-		oldValue = value;
 	}
-
-	//
-	int i = (millis() - siren.start_ms) / 500;
-	int on = (i > (2 * siren.count)) ? LOW : (i % 2 ? HIGH : LOW);
-	digitalWrite(P10x3_SIREN_AUDIO_PIN, on);
 }
 
 void P10x3::redrawDisplay() {
@@ -432,9 +417,6 @@ void P10x3::Init() {
 
 	// Initialize Display
 	dmd.beginNoTimer();
-
-	// Init siren
-	pinMode(P10x3_SIREN_AUDIO_PIN, OUTPUT);
 }
 
 void P10x3::Execute() {
@@ -496,40 +478,47 @@ class Px : public Base {
 	int digitSize;
 	int oldValue;
 	const uint16_t *colors;
+	int panelWidth;
+
+protected:
+	void updateDisplay();
+	virtual void drawDigits();
+	virtual void drawLetters();
 
  public:
 	void Init();
 	void Execute();
 
 	Px(BaseSettings *baseSettings, PxMATRIX *_display, int digitWidth,
-		int _digitHeight, int _digitSize, const uint16_t *_colors);
+		int _digitHeight, int _digitSize, const uint16_t *_colors,
+		int _panelWidth);
 };
 
 Px::Px(BaseSettings *baseSettings, PxMATRIX *_display, int _digitWidth,
-	int _digitHeight, int _digitSize, const uint16_t *_colors)
+	int _digitHeight, int _digitSize, const uint16_t *_colors, int _panelWidth)
 	: Base(baseSettings), display(_display), digitWidth(_digitWidth),
 	  digitHeight(_digitHeight), digitSize(_digitSize), oldValue(-1),
-	  colors(_colors) {}
+	  colors(_colors), panelWidth(_panelWidth) {}
 
-void Px::Init() {
-	Base::Init();
-
-	// Initialize Display
-	display->begin(8);
-	display->clearDisplay();
-	displayTicker.attach_ms(4, [this]() { this->display->display(); });
+void Px::updateDisplay() {
+	if (controlValue == 3) {
+		if (oldValue != value) {
+			oldValue = value;
+			display->fillScreen(color565(0, 0, 0));
+			drawLetters();
+			display->showBuffer();
+		}
+	} else if (controlValue == 1) {
+		if (oldValue != value) {
+			oldValue = value;
+			display->fillScreen(color565(0, 0, 0));
+			drawDigits();
+			display->showBuffer();
+		}
+	}
 }
 
-void Px::Execute() {
-	Base::Execute();
-
-	if (oldValue == value) {
-		return;
-	}
-	oldValue = value;
-
-	display->fillScreen(color565(0, 0, 0));
-
+void Px::drawDigits() {
 	auto time = decodeTimeValue(value);
 	auto color = decodeColorValue(value);
 	auto brightness = decodeBrightnessValue(value);
@@ -545,7 +534,35 @@ void Px::Execute() {
 				digitSize); // size
 		}
 	}
-	display->showBuffer();
+}
+
+void Px::drawLetters() {
+	display->setBrightness(255);
+
+	auto x_offset = (panelWidth - (2 * digitWidth)) / 2;
+
+	if (value == 1) {
+		display->drawChar(x_offset, digitHeight, 'A', colors[0], colors[0], digitSize);
+		display->drawChar(x_offset + digitWidth, digitHeight, 'B', colors[0], colors[0], digitSize);
+	} else if(value == 2) {
+		display->drawChar(x_offset, digitHeight, 'C', colors[0], colors[0], digitSize);
+		display->drawChar(x_offset + digitWidth, digitHeight, 'D', colors[0], colors[0], digitSize);
+	}
+}
+
+void Px::Init() {
+	Base::Init();
+
+	// Initialize Display
+	display->begin(8);
+
+	display->clearDisplay();
+	displayTicker.attach_ms(4, [this]() { this->display->display(); });
+}
+
+void Px::Execute() {
+	Base::Execute();
+	updateDisplay();
 }
 
 //////////////////////////
@@ -573,11 +590,12 @@ class P10 : public Px {
 
 P10::P10(BaseSettings *baseSettings)
 	: display(32, 16, P10_LAT, P10_OE, P10_A, P10_B, P10_C),
-	  Px(baseSettings, &display, 11, 1, 2, P10_COLORS) {}
+	  Px(baseSettings, &display, 11, 1, 2, P10_COLORS, 32) {}
 
 //////////////////////////
 
 #include "digits_font.h"
+#include "abcd_font.h"
 
 #define P5_LAT 16
 #define P5_A 5
@@ -596,18 +614,34 @@ const uint16_t P5_COLORS[] = {
 class P5 : public Px {
  protected:
 	PxMATRIX display;
+	scan_patterns scanPatterns;
+
+	void drawDigits();
+	void drawLetters();
 
  public:
-	P5(BaseSettings *baseSettings);
+	P5(BaseSettings *baseSettings, scan_patterns scanPatterns);
 	virtual void Init();
 };
 
-P5::P5(BaseSettings *baseSettings)
+void P5::drawDigits() {
+	display.setFont(&FixedWidthDigit);
+	Px::drawDigits();
+}
+
+void P5::drawLetters(){
+	display.setFont(&FixedWidthAbcd);
+	Px::drawLetters();
+}
+
+P5::P5(BaseSettings *baseSettings, scan_patterns scanPatterns=LINE)
 	: display(64, 32, P5_LAT, P5_OE, P5_A, P5_B, P5_C, P5_D),
-	  Px(baseSettings, &display, 21, 32, 1, P5_COLORS) {}
+	  scanPatterns(scanPatterns),
+	  Px(baseSettings, &display, 21, 32, 1, P5_COLORS, 64) {}
 
 void P5::Init() {
 	Px::Init();
+	display.setScanPattern(scanPatterns);
 	display.setFont(&FixedWidthDigit);
 	display.setTextWrap(false);
 }

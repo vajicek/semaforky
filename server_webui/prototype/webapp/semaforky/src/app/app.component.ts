@@ -52,10 +52,15 @@ class Settings {
   public numberOfSets: number = 10;
   public linesRotation: LinesRotation = LinesRotation.SIMPLE;
   public delayedStartEnabled: boolean = false;
-  public delayedStartTime: Date = new Date(12, 0, 0);
+  public delayedStartTime: string = "12:00:00";
   public brightness: number = 30;
   public network: string = "192.168.4.0";
+  public soundEnabled: boolean = false;
   public clientsByCapability: Map<string, string[]> = new Map<string, string[]>();
+
+  public getDelayedStartTime(): Date {
+    return new Date(new Date().toDateString() + " " + this.delayedStartTime);
+  }
 
   constructor(protected semaforky: AppComponent) {
   }
@@ -78,10 +83,11 @@ class Settings {
     this.numberOfSets = parseInt(this.get("numberOfSets", this.numberOfSets.toString()));
     this.continuous = this.get("continuous", this.continuous.toString()) === "true";
     this.delayedStartEnabled = this.get("delayedStartEnabled", this.delayedStartEnabled.toString()) === "true";
-    this.delayedStartTime = new Date(this.get("delayedStartTime", this.delayedStartTime.toString()));
+    this.delayedStartTime = this.get("delayedStartTime", this.delayedStartTime);
     this.linesRotation = (<any>LinesRotation)[this.get("linesRotation", this.linesRotation.toString())];
     this.brightness = parseInt(this.get("brightness", this.brightness.toString()));
     this.network = this.get("network", this.network)
+    this.soundEnabled = this.get("soundEnabled", this.soundEnabled.toString()) === "true";
     this.clientsByCapability = new Map<string, string[]>(JSON.parse(this.get("clientsByCapability", "[]")));
   }
 
@@ -94,11 +100,12 @@ class Settings {
     this.set("lines", this.lines.toString());
     this.set("numberOfSets", this.numberOfSets.toString());
     this.set("continuous", this.continuous.toString());
+    this.set("delayedStartTime", this.delayedStartTime);
     this.set("delayedStartEnabled", this.delayedStartEnabled.toString());
-    this.set("delayedStartTime", this.delayedStartTime.toString());
     this.set("linesRotation", (<any>LinesRotation)[this.linesRotation]);
     this.set("brightness", this.brightness.toString());
     this.set("network", this.network);
+    this.set("soundEnabled", this.soundEnabled.toString());
     this.set("clientsByCapability", JSON.stringify(Array.from(this.clientsByCapability.entries())));
   }
 };
@@ -121,8 +128,10 @@ class RestClientController {
   remainingSeconds: number = 0;
   previousEncodedValue: number = 0;
   progress: number = 0;
+  audio: any = null;
 
   constructor(private http: HttpClient, private semaforky: AppComponent) {
+    this.audio = this.initAudio();
   }
 
   public getAllClients(): Set<string> {
@@ -223,17 +232,27 @@ class RestClientController {
     });
   }
 
-  public playAudio(count: number) {
-    let audio = new Audio();
-    audio.addEventListener('ended', function () {
-      count--;
-      if (count > 0){
-        this.play();
-      }
-    }, false);
+  private initAudio() {
+    var audio = new Audio();
     audio.src = "buzzer.wav";
     audio.load();
-    audio.play();
+    return audio;
+  }
+
+  public playAudio(count: number) {
+    if (this.semaforky.settings.soundEnabled) {
+      var self = this;
+      var handler = function () {
+        count--;
+        if (count > 0) {
+          self.audio.play();
+        } else {
+          self.audio.removeEventListener('ended', handler);
+        }
+      }
+      this.audio.addEventListener('ended', handler, false);
+      this.audio.play();
+    }
   }
 
   public updateLines(lines: LineOrder) {
@@ -616,7 +635,7 @@ class SetClockEvent extends Event {
     let currentStateName = this.semaforky.machine.getCurrentState()?.name;
 
     if (currentStateName == SemaforkyState.START_WAITING) {
-      let sec: number = (this.semaforky.settings.delayedStartTime.getTime() - new Date().getTime()) / 1000;
+      let sec: number = (this.semaforky.settings.getDelayedStartTime().getTime() - new Date().getTime()) / 1000;
       remainingSeconds = Math.max(Math.min(sec, 999), 0);
     } else if (currentStateName == SemaforkyState.READY) {
       remainingSeconds = Math.max(this.setTiming.preparationTimeTime - seconds, 0);
@@ -795,7 +814,7 @@ class Scheduler {
     this.cancelSetEvents();
 
     // start round even
-    this.addEvent(new SemaphoreEvent(settings.delayedStartTime,
+    this.addEvent(new SemaphoreEvent(settings.getDelayedStartTime(),
       SemaforkyState.ROUND_STARTED,
       this.semaforky));
 

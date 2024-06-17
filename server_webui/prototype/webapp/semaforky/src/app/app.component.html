@@ -201,14 +201,19 @@
       <div>
         <div class="left">Time of start</div>
         <div class="right">
-          <input [ngModel]="settings.delayedStartTime| date:'HH:mm:ss': 'UTC'"
-            (ngModelChange)="settings.delayedStartTime=$event">
+          <input [(ngModel)]="settings.delayedStartTime" type="string">
         </div>
       </div>
       <div>
         <div class="left">Brightness</div>
         <div class="right">
           <input [(ngModel)]="settings.brightness" type="number">
+        </div>
+      </div>
+      <div>
+        <div class="left">Sound</div>
+        <div class="right">
+          <input type="checkbox" [(ngModel)]="settings.soundEnabled">
         </div>
       </div>
       <div>

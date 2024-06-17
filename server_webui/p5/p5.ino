@@ -5,13 +5,16 @@
 
 BaseSettings baseSettings{
 	true, // serve spa
+//  false, // hotspot
 	true, // hotspot
 	"p5-01", // dns
 	"semaforky", // ssid
 	"semaforky", // password
-	"clock,semaphore"}; // capabilities
-P5 client(&baseSettings);
+	"clock,semaphore,lines"}; // capabilities
+//P5 client(&baseSettings, WZAGZIG2);
+P5 client(&baseSettings, LINE);
 
 void setup(void) { client.Init(); }
 
 void loop(void) { client.Execute(); }
+

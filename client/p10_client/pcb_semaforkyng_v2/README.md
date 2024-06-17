@@ -26,6 +26,4 @@
 |U6            |IC 555                 ||
 |R4            |270k Ohm               ||
 |R5            |1M Ohm                 ||
-|R6            |100 Ohm                ||
-|U8            |TIP 120                ||
 |U1            |WeMos D1 Mini Pro V3.0 |[link](https://www.aliexpress.com/item/1005004344044423.html)|
