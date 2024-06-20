@@ -74,7 +74,7 @@
         <div class="right" [ngSwitch]="line">
           <span *ngSwitchCase="1">AB</span>
           <span *ngSwitchCase="2">CD</span>
-          <span *ngSwitchDefault="3"></span>
+          <span *ngSwitchCase="3"></span>
         </div>
       </div>
     </div>
@@ -109,6 +109,8 @@
       <button type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>Stop Set</button>
       <button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>Cancel Set</button>
       <button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>Custom Set</button>
+      <button type="button" [disabled]="!pauseEnabled" (click)="onPauseSet()" clickable>Pause</button>
+      <button type="button" [disabled]="!resumeEnabled" (click)="onResumeSet()" clickable>Resume</button>
       <div>
         <div class="left">Custom Set Time</div>
         <div class="right">

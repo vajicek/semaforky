@@ -19,7 +19,8 @@ enum SemaforkyState {
   SET_CANCELED,
   ROUND_STOPPED,
   SETTINGS,
-  MANUAL_CONTROL
+  MANUAL_CONTROL,
+  SET_PAUSED
 }
 
 enum LinesRotation {
@@ -412,24 +413,39 @@ class SemaforkyMachine {
     }(SemaforkyState.SET_STARTED, [SemaforkyState.READY]));
     this.addState(new class extends State {
       run(previous: State) {
+        if (previous.name == SemaforkyState.SET_PAUSED) {
+          self.semaforky.scheduler.resume();
+          self.semaforky.updateGui();
+          return;
+        }
         self.semaforky.updateGui();
         self.semaforky.restClientController.countdown(self.semaforky.settings.preparationTime, true);
       }
-    }(SemaforkyState.READY, [SemaforkyState.FIRE, SemaforkyState.SET_CANCELED]));
+    }(SemaforkyState.READY, [SemaforkyState.FIRE, SemaforkyState.SET_CANCELED, SemaforkyState.SET_PAUSED]));
     this.addState(new class extends State {
       run(previous: State) {
+        if (previous.name == SemaforkyState.SET_PAUSED) {
+          self.semaforky.scheduler.resume();
+          self.semaforky.updateGui();
+          return;
+        }
         self.semaforky.updateGui();
         self.semaforky.restClientController.updateSemaphores(SemaphoreLight.GREEN);
         self.semaforky.restClientController.playSiren(1);
         self.semaforky.restClientController.countdown(self.semaforky.settings.setTime, true);
       }
-    }(SemaforkyState.FIRE, [SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED, SemaforkyState.WARNING, SemaforkyState.ROUND_STOPPED]));
+    }(SemaforkyState.FIRE, [SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED, SemaforkyState.WARNING, SemaforkyState.ROUND_STOPPED, SemaforkyState.SET_PAUSED]));
     this.addState(new class extends State {
       run(previous: State) {
+        if (previous.name == SemaforkyState.SET_PAUSED) {
+          self.semaforky.scheduler.resume();
+          self.semaforky.updateGui();
+          return;
+        }
         self.semaforky.restClientController.updateSemaphores(SemaphoreLight.YELLOW);
         self.semaforky.updateGui();
       }
-    }(SemaforkyState.WARNING, [SemaforkyState.SET_CANCELED, SemaforkyState.SET_STOPPED, SemaforkyState.ROUND_STOPPED]));
+    }(SemaforkyState.WARNING, [SemaforkyState.SET_CANCELED, SemaforkyState.SET_STOPPED, SemaforkyState.ROUND_STOPPED, SemaforkyState.SET_PAUSED]));
     this.addState(new class extends State {
       run(previous: State) {
         self.semaforky.scheduler.stopSet();
@@ -474,6 +490,15 @@ class SemaforkyMachine {
         }
       }
     }(SemaforkyState.SET_STOPPED, [SemaforkyState.ROUND_STOPPED, SemaforkyState.SET_STARTED, SemaforkyState.CUSTOM_SET_STARTED]));
+
+    this.addState(new class extends State {
+      run(previous: State) {
+        self.semaforky.pausedState = previous;
+        self.semaforky.scheduler.pause();
+        self.semaforky.updateGui();
+      }
+    }(SemaforkyState.SET_PAUSED, [SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING]));
+
     this.addState(new class extends State {
       run(previous: State) {
         self.customSet = false;
@@ -522,6 +547,10 @@ abstract class Event {
   abstract serialize(): Object;
 
   abstract run(): void;
+
+  public timeShift(diff: number) {
+    this.time = new Date(this.time.getTime() + diff);
+  }
 }
 
 class PriorityQueue<T> {
@@ -626,6 +655,11 @@ class SetClockEvent extends Event {
       this.setTiming));
   }
 
+  public override  timeShift(diff: number) {
+    super.timeShift(diff);
+    this.setStart = new Date(this.setStart.getTime() + diff);
+  }
+
   private getRemainingSeconds(seconds: number): number {
     let remainingSeconds: number = 0;
     if (!this.semaforky.machine.getCurrentState()) {
@@ -700,6 +734,7 @@ class RoundClockEvent extends Event {
 class Scheduler {
   private events: PriorityQueue<Event>;
   private semaforky: AppComponent;
+  private paused: Date|null = null;
 
   constructor(_semaforky: AppComponent) {
     this.semaforky = _semaforky;
@@ -759,6 +794,9 @@ class Scheduler {
   }
 
   private timerHandler(this: Scheduler) {
+    if (this.paused != null) {
+      return;
+    }
     let now = new Date();
     while (this.events.length > 0 && now.getTime() > this.events.peek().time.getTime()) {
       let event = this.events.dequeue();
@@ -835,6 +873,22 @@ class Scheduler {
     this.removeAllEventsByClass(RoundClockEvent);
   }
 
+  public pause(this: Scheduler) {
+    this.paused = new Date();
+  }
+
+  public resume(this: Scheduler) {
+    if (this.paused == null) {
+      return;
+    }
+    let now = new Date();
+    let diff = now.getTime() - this.paused.getTime();
+    for (var ev of this.events.toArray()) {
+      ev.timeShift(diff);
+    }
+    this.paused = null;
+  }
+
   private removeAllEventsByClass(this: Scheduler, eventType: any) {
     this.events.remove(a => a instanceof eventType);
     this.storeState();
@@ -869,12 +923,16 @@ export class AppComponent {
   settings: Settings;
   restClientController: RestClientController;
 
+  pausedState: State|null = null;
+
   beginRoundEnabled: boolean = false;
   endRoundEnabled: boolean = false;
   startSetEnabled: boolean = false;
   stopSetEnabled: boolean = false;
   cancelSetEnabled: boolean = false;
   customSetEnabled: boolean = false;
+  pauseEnabled: boolean = false;
+  resumeEnabled: boolean = false;
 
   scanEnabled: boolean = false;
   settingsEnabled: boolean = false;
@@ -918,6 +976,8 @@ export class AppComponent {
     this.stopSetEnabled = [SemaforkyState.FIRE, SemaforkyState.WARNING].includes(stateName);
     this.customSetEnabled = [SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED].includes(stateName);
     this.cancelSetEnabled = [SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING].includes(stateName);
+    this.pauseEnabled = [SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING].includes(stateName);
+    this.resumeEnabled = [SemaforkyState.SET_PAUSED].includes(stateName);
 
     this.scanEnabled = true;
     this.settingsEnabled = [SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED].includes(stateName);
@@ -976,6 +1036,16 @@ export class AppComponent {
 
   public onCancelSet() {
     this.machine.moveTo(SemaforkyState.SET_CANCELED);
+  }
+
+  public onPauseSet() {
+    this.machine.moveTo(SemaforkyState.SET_PAUSED);
+  }
+
+  public onResumeSet() {
+    if (this.pausedState != null) {
+      this.machine.moveTo(this.pausedState.name);
+    }
   }
 
   public onCustomSet() {
