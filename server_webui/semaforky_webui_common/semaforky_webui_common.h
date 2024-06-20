@@ -508,7 +508,7 @@ void Px::updateDisplay() {
 			drawLetters();
 			display->showBuffer();
 		}
-	} else if (controlValue == 1) {
+	} else if (controlValue == 1 || controlValue == 2) {
 		if (oldValue != value) {
 			oldValue = value;
 			display->fillScreen(color565(0, 0, 0));

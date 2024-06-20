@@ -71,7 +71,11 @@
       </div>
       <div>
         <div class="left">Line</div>
-        <div class="right">{{line}}</div>
+        <div class="right" [ngSwitch]="line">
+          <span *ngSwitchCase="1">AB</span>
+          <span *ngSwitchCase="2">CD</span>
+          <span *ngSwitchDefault="3"></span>
+        </div>
       </div>
     </div>
     <div class="countdown">
@@ -145,8 +149,8 @@
         <div class="left">Line Rotation</div>
         <div class="right">
           <select [(ngModel)]="settings.linesRotation">
-            <option value="0">Simple</option>
-            <option value="1">Alternating</option>
+            <option value="SIMPLE">Simple</option>
+            <option value="ALTERNATING">Alternating</option>
           </select>
         </div>
       </div>
