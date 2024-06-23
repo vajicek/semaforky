@@ -24,8 +24,8 @@ enum SemaforkyState {
 }
 
 enum LinesRotation {
-  SIMPLE,
-  ALTERNATING
+  SIMPLE = 0,
+  ALTERNATING = 1
 }
 
 enum LineOrder {
@@ -130,6 +130,7 @@ class RestClientController {
   previousEncodedValue: number = 0;
   progress: number = 0;
   audio: any = null;
+  semaphoreLight: SemaphoreLight = SemaphoreLight.NONE;
 
   constructor(private http: HttpClient, private semaforky: AppComponent) {
     this.audio = this.initAudio();
@@ -204,7 +205,7 @@ class RestClientController {
   protected getEncodedValue() {
     return this.remainingSeconds |
       (this.semaforky.settings.brightness << 24) |
-      (Number(this.semaforky.semaphoreLight) << 16);
+      (Number(this.semaphoreLight) << 16);
   }
 
   public updateClocks(remainingSeconds: number) {
@@ -215,22 +216,18 @@ class RestClientController {
       return;
     }
 
-    this.getClients("clock").forEach(address => {
-      this.http.post("http://" + address + "/control",
-        { "control": 1, "value": encodedValue }
-      ).subscribe();
-    });
+    this.control("clock", 1, encodedValue);
 
     this.previousEncodedValue = encodedValue;
   }
 
   public updateSemaphores(semaphoreLight: SemaphoreLight) {
-    let encodedValue = this.getEncodedValue();
-    this.getClients("semaphore").forEach(address => {
-      this.http.post("http://" + address + "/control",
-        { "control": 2, "value": encodedValue }
-      ).subscribe();
-    });
+    this.semaphoreLight = semaphoreLight;
+    this.control("semaphore", 2, this.getEncodedValue());
+  }
+
+  public updateLines(lines: LineOrder) {
+    this.control("lines", 3, lines);
   }
 
   private initAudio() {
@@ -256,31 +253,22 @@ class RestClientController {
     }
   }
 
-  public updateLines(lines: LineOrder) {
-    this.getClients("lines").forEach(address => {
-      this.http.post("http://" + address + "/control",
-        { "control": 3, "value": lines }
-      ).subscribe();
-    });
-  }
-
   public playSiren(count: number) {
     this.playAudio(count);
-    this.getClients("siren").forEach(address => {
-      this.http.post("http://" + address + "/control",
-        { "control": 4, "value": count }
-      ).subscribe();
-    });
+    this.control("siren", 4, count);
   }
 
   public countdown(count: number, start: boolean) {
     let encodedValue = count |
       (start ? (1 << 16) : 0) |
       (this.semaforky.settings.brightness << 24);
+    this.control("countdown", 5, encodedValue);
+  }
 
-    this.getClients("countdown").forEach(address => {
+  private control(clients: string, control: number, value: number) {
+    this.getClients(clients).forEach(address => {
       this.http.post("http://" + address + "/control",
-        { "control": 5, "value": encodedValue }
+        { "control": control, "value": value }
       ).subscribe();
     });
   }
