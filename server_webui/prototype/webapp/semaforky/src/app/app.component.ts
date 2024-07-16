@@ -277,6 +277,7 @@ class RestClientController {
 class SemaforkyMachine {
   private states: Array<State> = [];
   private currentState: State | undefined = undefined;
+  private currentRound: number = 1;
   private currentSet: number = 1;
   private currentLine: number = 0;
   private customSet: boolean = false;
@@ -304,6 +305,10 @@ class SemaforkyMachine {
     return this.currentSet;
   }
 
+  public getCurrentRound(): number {
+    return this.currentRound;
+  }
+
   public getCurrentLine(): number {
     return this.currentLine;
   }
@@ -318,9 +323,9 @@ class SemaforkyMachine {
         return LineOrder.AB;
       } else if (this.semaforky.settings.lines == 2) {
         if (this.semaforky.settings.linesRotation == LinesRotation.SIMPLE) {
-          return this.semaforky.machine.getCurrentLine() == 0 ?
+          return (this.semaforky.machine.getCurrentLine() + this.semaforky.machine.getCurrentRound()) % 2 == 1 ?
             LineOrder.AB : LineOrder.CD;
-        } else {
+        } else if (this.semaforky.settings.linesRotation == LinesRotation.ALTERNATING) {
           return this.semaforky.machine.getCurrentLine() != this.semaforky.machine.getCurrentSet() % 2 ?
             LineOrder.AB : LineOrder.CD;
         }
@@ -505,6 +510,7 @@ class SemaforkyMachine {
         self.semaforky.restClientController.countdown(0, false);
         self.semaforky.updateSetClocks(0);
         self.semaforky.updateGui();
+        self.currentRound++;
         // TODO: LINES
         if (previous.name != SemaforkyState.START_WAITING) {
           self.semaforky.restClientController.playSiren(4);
@@ -572,7 +578,7 @@ class PriorityQueue<T> {
   }
 
   public remove(fnc: (obj: T) => boolean) {
-    this._items = this._items.filter(obj => fnc(obj));
+    this._items = this._items.filter(obj => !fnc(obj));
   }
 }
 
@@ -643,7 +649,7 @@ class SetClockEvent extends Event {
       this.setTiming));
   }
 
-  public override  timeShift(diff: number) {
+  public override timeShift(diff: number) {
     super.timeShift(diff);
     this.setStart = new Date(this.setStart.getTime() + diff);
   }
@@ -901,6 +907,7 @@ export class AppComponent {
 
   title = 'semaforky';
   set: number = 1;
+  round: number = 1;
   roundTime: Date = new Date(0);
   line: LineOrder = LineOrder.UNDEFINED;
   countdown: number = 0;
@@ -977,7 +984,7 @@ export class AppComponent {
       this.semaphoreLight = SemaphoreLight.GREEN;
     } else if (stateName == SemaforkyState.WARNING) {
       this.semaphoreLight = SemaphoreLight.YELLOW;
-    } else {
+    } else if (stateName != SemaforkyState.SET_PAUSED) {
       this.semaphoreLight = SemaphoreLight.NONE;
     }
   }
@@ -987,6 +994,7 @@ export class AppComponent {
       return;
     }
     this.set = this.machine.getCurrentSet();
+    this.round = this.machine.getCurrentRound();
     this.line = this.machine.getCurrentLineOrder();
   }
 
