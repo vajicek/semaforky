@@ -305,9 +305,12 @@ export class SemaforkyMachine {
               self.semaforky.countdown,
               false
             );
-            self.semaforky.restClientController.updateLines(
-              self.getCurrentLineOrder()
-            );
+            // Show Lines with a delay
+            window.setTimeout(() => {
+                self.semaforky.restClientController.updateLines(
+                                self.getCurrentLineOrder()
+                              );
+            }, 2000);
             if (self.semaforky.settings.continuous) {
               if (self.currentSet <= self.semaforky.settings.numberOfSets) {
                 self.moveTo(SemaforkyState.SET_STARTED);

@@ -25,9 +25,9 @@
       <div>
         <div class="left">Line</div>
         <div class="right" [ngSwitch]="line">
-          <span *ngSwitchCase="1">AB</span>
-          <span *ngSwitchCase="2">CD</span>
-          <span *ngSwitchCase="3"></span>
+          <span *ngSwitchCase="LineOrder.AB">AB</span>
+          <span *ngSwitchCase="LineOrder.CD">CD</span>
+          <span *ngSwitchCase="LineOrder.UNDEFINED"></span>
         </div>
       </div>
     </div>

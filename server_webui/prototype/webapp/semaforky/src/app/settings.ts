@@ -1,8 +1,8 @@
 import { AppComponent } from './app.component';
 
 export enum LinesRotation {
-    SIMPLE = 0,
-    ALTERNATING = 1
+    SIMPLE = "SIMPLE",
+    ALTERNATING = "ALTERNATING"
 }
 
 export enum LineOrder {

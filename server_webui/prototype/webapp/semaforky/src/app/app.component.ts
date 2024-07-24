@@ -20,6 +20,7 @@ import { Scheduler } from "./scheduler";
 })
 export class AppComponent {
   SemaphoreLight: typeof SemaphoreLight = SemaphoreLight;
+  LineOrder: typeof LineOrder = LineOrder;
 
   title = "semaforky";
   set: number = 1;
