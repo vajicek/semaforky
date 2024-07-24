@@ -330,7 +330,7 @@ export class Scheduler {
     );
     this.addEvent(
       new SemaphoreEvent(
-        new Date(now.getTime() + settings.preparationTime * 1000),
+        new Date(now.getTime() + settings.preparationTime * 1000 - 500),
         SemaforkyState.FIRE,
         this.semaforky
       )

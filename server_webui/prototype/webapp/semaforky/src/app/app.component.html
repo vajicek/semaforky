@@ -1,54 +1,3 @@
-<style>
-  .content {
-    width: 100%;
-    max-width: 360px;
-    margin-bottom: 3rem;
-  }
-
-  .table {
-    min-width: 300px;
-    height: 100%;
-    overflow: auto;
-  }
-
-  .left {
-    float: left;
-    width: 185px;
-    margin-right: -185px;
-    overflow: auto;
-  }
-
-  .right {
-    margin-left: 185px;
-    min-height: 1em;
-    overflow: auto;
-  }
-
-  .countdown {
-    min-height: 100px;
-    width: 100%;
-    font-size: 5em;
-  }
-  .semaphore{
-    min-height: 100px;
-    width: 100%;
-  }
-  .menu button {
-    width: 120px;
-    height: 35px;
-  }
-
-  .actions button {
-    width: 150px;
-    height: 35px;
-  }
-
-  .redLight, .greenLight, .yellowLight {
-    display: inline-block;
-    width: 33%;
-  }
-</style>
-
 <div class="content">
   <div *ngIf="page==1" class="main">
     <div class="menu">
@@ -155,8 +104,8 @@
         <div class="left">Line Rotation</div>
         <div class="right">
           <select [(ngModel)]="settings.linesRotation">
-            <option value="0">Simple</option>
-            <option value="1">Alternating</option>
+            <option value="SIMPLE">Simple</option>
+            <option value="ALTERNATING">Alternating</option>
           </select>
         </div>
       </div>
@@ -277,8 +226,6 @@
     <div class="actions">
       <button type="button" (click)="onBackToMain()" clickable>Back</button>
     </div>
-  </div>
-  <div *ngIf="page==4" class="diagnostic">
   </div>
 </div>
 

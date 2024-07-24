@@ -1,32 +1,33 @@
-import { Component } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
-import { HttpClientModule } from '@angular/common/http';
-import { CookieService } from 'ngx-cookie-service';
-import { Settings, LineOrder, SemaphoreLight } from './settings';
-import { SemaforkyMachine, State, SemaforkyState } from './states';
-import { RestClientController } from './client';
-import { Scheduler } from './scheduler';
+import { Component } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { CommonModule } from "@angular/common";
+import { RouterOutlet } from "@angular/router";
+import { HttpClient } from "@angular/common/http";
+import { HttpClientModule } from "@angular/common/http";
+import { CookieService } from "ngx-cookie-service";
+import { Settings, LineOrder, SemaphoreLight } from "./settings";
+import { SemaforkyMachine, State, SemaforkyState } from "./states";
+import { RestClientController } from "./client";
+import { Scheduler } from "./scheduler";
 
 @Component({
-  selector: 'app-root',
+  selector: "app-root",
   standalone: true,
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  templateUrl: "./app.component.html",
+  styleUrls: ["./app.component.css"],
   imports: [CommonModule, RouterOutlet, HttpClientModule, FormsModule],
-  providers: [CookieService]
+  providers: [CookieService],
 })
 export class AppComponent {
   SemaphoreLight: typeof SemaphoreLight = SemaphoreLight;
 
-  title = 'semaforky';
+  title = "semaforky";
   set: number = 1;
   round: number = 1;
   roundTime: Date = new Date(0);
   line: LineOrder = LineOrder.UNDEFINED;
   countdown: number = 0;
+  clockTime: number = 0;
   semaphoreLight: SemaphoreLight = SemaphoreLight.RED;
 
   scheduler: Scheduler;
@@ -34,7 +35,7 @@ export class AppComponent {
   settings: Settings;
   restClientController: RestClientController;
 
-  pausedState: State|null = null;
+  pausedState: State | null = null;
 
   beginRoundEnabled: boolean = false;
   endRoundEnabled: boolean = false;
@@ -51,8 +52,10 @@ export class AppComponent {
 
   page: number = 1;
 
-  constructor(private http: HttpClient,
-    protected cookieService: CookieService) {
+  constructor(
+    private http: HttpClient,
+    protected cookieService: CookieService
+  ) {
     this.scheduler = new Scheduler(this);
     this.machine = new SemaforkyMachine(this);
     this.settings = new Settings(this);
@@ -81,18 +84,52 @@ export class AppComponent {
 
     this.updateSet();
 
-    this.beginRoundEnabled = [SemaforkyState.STARTED, SemaforkyState.ROUND_STOPPED].includes(stateName);
-    this.endRoundEnabled = [SemaforkyState.START_WAITING, SemaforkyState.ROUND_STARTED, SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED, SemaforkyState.FIRE, SemaforkyState.WARNING].includes(stateName);
-    this.startSetEnabled = [SemaforkyState.ROUND_STARTED, SemaforkyState.SET_CANCELED, SemaforkyState.SET_STOPPED].includes(stateName);
-    this.stopSetEnabled = [SemaforkyState.FIRE, SemaforkyState.WARNING].includes(stateName);
-    this.customSetEnabled = [SemaforkyState.SET_STOPPED, SemaforkyState.SET_CANCELED].includes(stateName);
-    this.cancelSetEnabled = [SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING].includes(stateName);
-    this.pauseEnabled = [SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING].includes(stateName);
+    this.beginRoundEnabled = [
+      SemaforkyState.STARTED,
+      SemaforkyState.ROUND_STOPPED,
+    ].includes(stateName);
+    this.endRoundEnabled = [
+      SemaforkyState.START_WAITING,
+      SemaforkyState.ROUND_STARTED,
+      SemaforkyState.SET_STOPPED,
+      SemaforkyState.SET_CANCELED,
+      SemaforkyState.FIRE,
+      SemaforkyState.WARNING,
+    ].includes(stateName);
+    this.startSetEnabled = [
+      SemaforkyState.ROUND_STARTED,
+      SemaforkyState.SET_CANCELED,
+      SemaforkyState.SET_STOPPED,
+    ].includes(stateName);
+    this.stopSetEnabled = [
+      SemaforkyState.FIRE,
+      SemaforkyState.WARNING,
+    ].includes(stateName);
+    this.customSetEnabled = [
+      SemaforkyState.SET_STOPPED,
+      SemaforkyState.SET_CANCELED,
+    ].includes(stateName);
+    this.cancelSetEnabled = [
+      SemaforkyState.READY,
+      SemaforkyState.FIRE,
+      SemaforkyState.WARNING,
+    ].includes(stateName);
+    this.pauseEnabled = [
+      SemaforkyState.READY,
+      SemaforkyState.FIRE,
+      SemaforkyState.WARNING,
+    ].includes(stateName);
     this.resumeEnabled = [SemaforkyState.SET_PAUSED].includes(stateName);
 
     this.scanEnabled = true;
-    this.settingsEnabled = [SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED].includes(stateName);
-    this.manualControlEnabled = [SemaforkyState.ROUND_STOPPED, SemaforkyState.STARTED].includes(stateName);
+    this.settingsEnabled = [
+      SemaforkyState.ROUND_STOPPED,
+      SemaforkyState.STARTED,
+    ].includes(stateName);
+    this.manualControlEnabled = [
+      SemaforkyState.ROUND_STOPPED,
+      SemaforkyState.STARTED,
+    ].includes(stateName);
 
     if (stateName == SemaforkyState.READY) {
       this.semaphoreLight = SemaphoreLight.RED;
@@ -119,7 +156,7 @@ export class AppComponent {
   }
 
   public updateRoundClocks(roundStart: Date) {
-    this.roundTime = new Date((new Date()).getTime() - roundStart.getTime());
+    this.roundTime = new Date(new Date().getTime() - roundStart.getTime());
   }
 
   public isVisible(semaphoreLight: SemaphoreLight) {
@@ -192,11 +229,13 @@ export class AppComponent {
 
   public onSetSemaphore(semaphoreLight: SemaphoreLight) {
     this.restClientController.updateSemaphores(semaphoreLight);
+    this.restClientController.updateClocks(this.clockTime);
   }
 
   public onSetClock(value: number) {
-    this.restClientController.updateClocks(value);
-    this.restClientController.countdown(value, false);
+    this.clockTime = value;
+    this.restClientController.updateClocks(this.clockTime);
+    this.restClientController.countdown(this.clockTime, false);
   }
 
   public onSetClockCountdown(countdown: number) {
