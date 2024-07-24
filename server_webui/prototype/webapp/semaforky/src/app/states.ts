@@ -305,11 +305,11 @@ export class SemaforkyMachine {
               self.semaforky.countdown,
               false
             );
-            // Show Lines with a delay
+            // show Lines with a delay
             window.setTimeout(() => {
-                self.semaforky.restClientController.updateLines(
-                                self.getCurrentLineOrder()
-                              );
+                self.semaforky
+                    .restClientController
+                    .updateLines(self.getCurrentLineOrder());
             }, 2000);
             if (self.semaforky.settings.continuous) {
               if (self.currentSet <= self.semaforky.settings.numberOfSets) {
