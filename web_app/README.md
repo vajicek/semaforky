@@ -18,3 +18,37 @@ Any Web Browser          |  Hardware running REST/WEB server
     * [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
     * DMD2
     * Adafruit GFX Library
+
+## Use devcontainer
+
+Build dev container.
+```bash
+make build_devcontainer
+```
+
+Run dev container.
+```bash
+make devcontainer
+```
+
+### Web application
+Build **web app**.
+```bash
+make setup_ng && make build_webapp
+```
+
+### Device application
+Install dependencies for **device application**.
+```bash
+make install_deps
+```
+
+Build and install **device application**, e.g. for p5 device (connected to /dev/ttyUSB0).
+```bash
+make install_p5
+```
+
+Build filesystem for **web app** server and flash it to a device (connected to /dev/ttyUSB0).
+```bash
+make filesystem.bin && make flash-fs
+```

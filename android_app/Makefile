@@ -17,8 +17,8 @@ uninstall_app:
 	cd server && adb shell pm uninstall -k com.vajsoft.semaforky
 
 build_sketch:
-	arduino-cli compile --fqbn esp8266:esp8266:d1 client/${CLIENT}_client
-	arduino-cli upload -p /dev/ttyUSB0 --fqbn esp8266:esp8266:d1 client/${CLIENT}_client
+	arduino-cli compile --fqbn esp8266:esp8266:d1 devices/${CLIENT}_client
+	arduino-cli upload -p /dev/ttyUSB0 --fqbn esp8266:esp8266:d1 devices/${CLIENT}_client
 
 build_client_p10:
 	$(MAKE) CLIENT=p10 build_sketch
