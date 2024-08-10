@@ -153,7 +153,7 @@ void setupHotspot(const char *ssid, const char *password) {
 	WiFi.mode(WIFI_AP);
 
 	Serial.print("Setting soft-AP ... ");
-	Serial.println(WiFi.softAP(ssid, password) ? "Ready" : "Failed!");
+	Serial.println(WiFi.softAP(ssid, password, random(1, 13)) ? "Ready" : "Failed!");
 
 	Serial.print("Soft-AP IP address = ");
 	Serial.println(WiFi.softAPIP());
