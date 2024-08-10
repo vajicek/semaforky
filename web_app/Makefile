@@ -57,13 +57,13 @@ flash-fs: filesystem.bin
 	  write_flash 0x200000 filesystem.bin
 
 # BUILD AND INSTALL APPLICATIONS
-install_prototype: DIR=prototype
+install_app: DIR=app
 install_p5: DIR=p5
 install_p10x3: DIR=p10x3
 install_p10: DIR=p10
 install_siren: DIR=siren
 
-install_prototype install_p5 install_p10x3 install_siren:
+install_app install_p5 install_p10x3 install_siren:
 	$(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) devices/${DIR}
 	$(ARDUINO_CLI) upload -p ${DEVICE} --fqbn $(BOARDCONFIG) devices/${DIR}
 
