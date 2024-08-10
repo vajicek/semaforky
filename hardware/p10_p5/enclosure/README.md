@@ -20,3 +20,6 @@
 
 ## Components
 ![Components](enclosure_components.svg)
+
+## The result
+![Enclosure](../../../doc/client_hardware.jpg)
