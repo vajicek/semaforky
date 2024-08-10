@@ -71,4 +71,4 @@ build_devcontainer:
 	docker build -f ./Dockerfile . -t semaforky
 
 devcontainer:
-	docker run -it --rm --name devcontainer -v $(PWD):/tmp/home semaforky /bin/bash
+	docker run -it --rm --name devcontainer -v $(PWD):/tmp/home -w /tmp/home semaforky /bin/bash
