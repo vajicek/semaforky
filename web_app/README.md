@@ -18,6 +18,7 @@ Any Web Browser          |  Hardware running REST/WEB server
     * [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
     * DMD2
     * Adafruit GFX Library
+    * Fork of [PxMatrix](https://github.com/vajicek/PxMatrix.git) (new scan pattern added)
 
 ## Use devcontainer
 
