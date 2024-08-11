@@ -1,6 +1,6 @@
 .content {
   width: 100%;
-  max-width: 360px;
+  max-width: 100%;
   margin-bottom: 3rem;
 }
 
@@ -10,37 +10,37 @@
   overflow: auto;
 }
 
+.row {
+  display: table-row;
+}
+
 .left {
-  float: left;
+  display: table-cell;
   width: 185px;
-  margin-right: -185px;
-  overflow: auto;
 }
 
 .right {
-  margin-left: 185px;
-  min-height: 1em;
-  overflow: auto;
+  display: table-cell;
 }
 
 .countdown {
-  min-height: 100px;
+  min-height: 123px;
   width: 100%;
   font-size: 5em;
 }
 
 .semaphore {
-  min-height: 100px;
+  min-height: 123px;
   width: 100%;
 }
 
 .menu button {
-  width: 120px;
+  width: 33%;
   height: 35px;
 }
 
 .actions button {
-  width: 150px;
+  width: 50%;
   height: 35px;
 }
 

@@ -5,10 +5,6 @@
       <button type="button" [disabled]="!settingsEnabled" (click)="onSettings()" clickable>Settings</button>
       <button type="button" [disabled]="!manualControlEnabled" (click)="onManualControl()" clickable>Manual Control</button>
     </div>
-    <div class="actions">
-      <button type="button" [disabled]="!beginRoundEnabled" (click)="onBeginRound()" clickable>Begin Round</button>
-      <button type="button" [disabled]="!endRoundEnabled" (click)="onEndRound()" clickable>End Round</button>
-    </div>
     <div class="table">
       <div>
         <div class="left">Round</div>
@@ -58,12 +54,22 @@
       </div>
     </div>
     <div class="actions">
+      <button type="button" [disabled]="!beginRoundEnabled" (click)="onBeginRound()" clickable>Begin Round</button>
+      <button type="button" [disabled]="!endRoundEnabled" (click)="onEndRound()" clickable>End Round</button>
+    </div>
+    <div class="actions">
       <button type="button" [disabled]="!startSetEnabled" (click)="onStartSet()" clickable>Start Set</button>
       <button type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>Stop Set</button>
-      <button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>Cancel Set</button>
+    </div>
+    <div class="actions">
       <button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>Custom Set</button>
-      <button type="button" [disabled]="!pauseEnabled" (click)="onPauseSet()" clickable>Pause</button>
+      <button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>Cancel Set</button>
+    </div>
+    <div class="actions">
       <button type="button" [disabled]="!resumeEnabled" (click)="onResumeSet()" clickable>Resume</button>
+      <button type="button" [disabled]="!pauseEnabled" (click)="onPauseSet()" clickable>Pause</button>
+    </div>
+    <div class="actions">
       <div>
         <div class="left">Custom Set Time</div>
         <div class="right">
@@ -100,7 +106,7 @@
   </div>
   <div *ngIf="page==2" class="settings">
     <div class="table">
-      <div>
+      <div class="row">
         <div class="left">Line Rotation</div>
         <div class="right">
           <select [(ngModel)]="settings.linesRotation">
@@ -109,73 +115,73 @@
           </select>
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Lines</div>
         <div class="right">
           <input [(ngModel)]="settings.lines" type="number">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Rounds</div>
         <div class="right">
           <input [(ngModel)]="settings.roundSets" type="number">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Set Time</div>
         <div class="right">
           <input [(ngModel)]="settings.setTime" type="number">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Preparation Time</div>
         <div class="right">
           <input [(ngModel)]="settings.preparationTime" type="number">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Warning Time</div>
         <div class="right">
           <input [(ngModel)]="settings.warningTime" type="number">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Continuous</div>
         <div class="right">
           <input type="checkbox" [(ngModel)]="settings.continuous">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Number of sets</div>
         <div class="right">
           <input [(ngModel)]="settings.numberOfSets" type="number">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Delayed start</div>
         <div class="right">
           <input type="checkbox" [(ngModel)]="settings.delayedStartEnabled">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Time of start</div>
         <div class="right">
           <input [(ngModel)]="settings.delayedStartTime" type="string">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Brightness</div>
         <div class="right">
           <input [(ngModel)]="settings.brightness" type="number">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Sound</div>
         <div class="right">
           <input type="checkbox" [(ngModel)]="settings.soundEnabled">
         </div>
       </div>
-      <div>
+      <div class="row">
         <div class="left">Network</div>
         <div class="right">
           <input [(ngModel)]="settings.network" type="string">
