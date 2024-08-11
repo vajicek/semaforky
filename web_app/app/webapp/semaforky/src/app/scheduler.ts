@@ -3,10 +3,7 @@ import { SemaforkyState } from "./states";
 import { AppComponent } from "./app.component";
 
 abstract class Event {
-  time: Date;
-
-  constructor(_time: Date) {
-    this.time = _time;
+  constructor(public time: Date) {
   }
 
   abstract serialize(): Object;
@@ -19,12 +16,9 @@ abstract class Event {
 }
 
 class PriorityQueue<T> {
-  private _items: T[];
-  private _comparator: (a: T, b: T) => number;
+  private _items: T[] = [];
 
-  constructor(comparator: (a: T, b: T) => number) {
-    this._items = [];
-    this._comparator = comparator;
+  constructor(private _comparator: (a: T, b: T) => number) {
   }
 
   public toArray(): T[] {
@@ -66,32 +60,23 @@ const comparator = (a: Event, b: Event) => {
 };
 
 class SetTiming {
-  preparationTimeTime: number;
-  setTime: number;
-
-  constructor(_preparationTimeTime: number, _setTime: number) {
-    this.preparationTimeTime = _preparationTimeTime;
-    this.setTime = _setTime;
+  constructor(
+    public preparationTimeTime: number,
+    public setTime: number
+  ) {
   }
 }
 
 class SetClockEvent extends Event {
-  setStart: Date;
-  semaforky: AppComponent;
-  previousValue: number;
-  setTiming: SetTiming;
+  previousValue: number = -1;
 
   constructor(
     _time: Date,
-    _start: Date,
-    _semaforky: AppComponent,
-    _setTiming: SetTiming
+    private setStart: Date,
+    private semaforky: AppComponent,
+    private setTiming: SetTiming
   ) {
     super(_time);
-    this.setStart = _start;
-    this.semaforky = _semaforky;
-    this.previousValue = -1;
-    this.setTiming = _setTiming;
   }
 
   public serialize(this: SetClockEvent): Object {
@@ -171,17 +156,12 @@ class SetClockEvent extends Event {
 }
 
 class SemaphoreEvent extends Event {
-  nextState: SemaforkyState;
-  semaforky: AppComponent;
-
   constructor(
     _time: Date,
-    _nextState: SemaforkyState,
-    _semaforky: AppComponent
+    private nextState: SemaforkyState,
+    private semaforky: AppComponent
   ) {
     super(_time);
-    this.nextState = _nextState;
-    this.semaforky = _semaforky;
   }
 
   public serialize(this: SemaphoreEvent): Object {
@@ -198,13 +178,12 @@ class SemaphoreEvent extends Event {
 }
 
 class RoundClockEvent extends Event {
-  roundStart: Date;
-  semaforky: AppComponent;
-
-  constructor(_time: Date, _roundStart: Date, _semaforky: AppComponent) {
+  constructor(
+    _time: Date,
+    private roundStart: Date,
+    private semaforky: AppComponent
+  ) {
     super(_time);
-    this.roundStart = _roundStart;
-    this.semaforky = _semaforky;
   }
 
   public serialize(this: RoundClockEvent): Object {
@@ -229,14 +208,13 @@ class RoundClockEvent extends Event {
 }
 
 export class Scheduler {
-  private events: PriorityQueue<Event>;
-  private semaforky: AppComponent;
+  private events: PriorityQueue<Event> = new PriorityQueue<Event>(comparator);
   private paused: Date | null = null;
 
-  constructor(_semaforky: AppComponent) {
-    this.semaforky = _semaforky;
+  constructor(
+    private semaforky: AppComponent
+  ) {
     let self = this;
-    this.events = new PriorityQueue<Event>(comparator);
     this.loadState();
     setInterval(() => {
       self.timerHandler();
@@ -244,11 +222,12 @@ export class Scheduler {
   }
 
   private storeState(this: Scheduler) {
+    let settings = this.semaforky.settings;
     var eventList = [];
     for (var ev of this.events.toArray()) {
       eventList.push(ev.serialize());
     }
-    this.semaforky.setCookieValue("events", JSON.stringify(eventList));
+    settings.setCookieValue("events", JSON.stringify(eventList));
   }
 
   private jsonObjectToEvent(this: Scheduler, event: any): Event | null {
@@ -283,7 +262,8 @@ export class Scheduler {
   }
 
   private loadState(this: Scheduler) {
-    var jsonArray = JSON.parse(this.semaforky.getCookieValue("events", "[]"));
+    let settings = this.semaforky.settings;
+    var jsonArray = JSON.parse(settings.getCookieValue("events", "[]"));
     for (var i = 0; i < jsonArray.length; i++) {
       var jsonObject = jsonArray[i];
       var event = this.jsonObjectToEvent(jsonObject);
@@ -339,7 +319,7 @@ export class Scheduler {
       new SemaphoreEvent(
         new Date(
           now.getTime() +
-            (setTime + settings.preparationTime - settings.warningTime) * 1000
+          (setTime + settings.preparationTime - settings.warningTime) * 1000
         ),
         SemaforkyState.WARNING,
         this.semaforky

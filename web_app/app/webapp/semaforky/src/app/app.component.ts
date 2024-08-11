@@ -59,20 +59,11 @@ export class AppComponent {
   ) {
     this.scheduler = new Scheduler(this);
     this.machine = new SemaforkyMachine(this);
-    this.settings = new Settings(this);
+    this.settings = new Settings(cookieService);
     this.restClientController = new RestClientController(http, this);
 
     this.settings.loadState();
     this.updateGui();
-  }
-
-  public setCookieValue(key: string, value: string) {
-    this.cookieService.set(key, value);
-  }
-
-  public getCookieValue(key: string, defaultValue: string): string {
-    var value = this.cookieService.get(key);
-    return value ? value : defaultValue;
   }
 
   public updateGui() {
@@ -120,9 +111,10 @@ export class AppComponent {
       SemaforkyState.FIRE,
       SemaforkyState.WARNING,
     ].includes(stateName);
-    this.resumeEnabled = [SemaforkyState.SET_PAUSED].includes(stateName);
-
-    this.scanEnabled = true;
+    this.resumeEnabled = [
+      SemaforkyState.SET_PAUSED
+    ].includes(stateName);
+    this.scanEnabled = !this.restClientController.isScanning();
     this.settingsEnabled = [
       SemaforkyState.ROUND_STOPPED,
       SemaforkyState.STARTED,

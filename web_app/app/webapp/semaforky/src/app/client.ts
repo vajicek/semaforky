@@ -11,7 +11,10 @@ export class RestClientController {
   audio: any = null;
   semaphoreLight: SemaphoreLight = SemaphoreLight.NONE;
 
-  constructor(private http: HttpClient, private semaforky: AppComponent) {
+  constructor(
+    private http: HttpClient,
+    private semaforky: AppComponent
+  ) {
     this.audio = this.initAudio();
   }
 
@@ -29,10 +32,10 @@ export class RestClientController {
     return addresses;
   }
 
-  protected updateProgess(increment: number = 0) {
+  protected updateProgress(increment: number = 0) {
     this.progress += increment;
-    this.semaforky.scanEnabled = this.progress == 0;
-    if (this.progress == 0) {
+    this.semaforky.scanEnabled = this.isScanning();
+    if (!this.isScanning()) {
       this.semaforky.settings.storeState();
     }
   }
@@ -61,17 +64,17 @@ export class RestClientController {
       .subscribe({
         next(response: any) {
           self.updateCapabilitiesMap(address, response.capabilities.toString());
-          self.updateProgess(-1);
+          self.updateProgress(-1);
         },
         error(error) {
-          self.updateProgess(-1);
+          self.updateProgress(-1);
         },
       });
   }
 
   public scan() {
     this.semaforky.settings.clientsByCapability.clear();
-    this.updateProgess(254);
+    this.updateProgress(254);
     var network = this.semaforky.settings.network;
     var lastIndex = network.lastIndexOf(".");
     var networkPrefix = network.substring(0, lastIndex + 1);
@@ -80,12 +83,16 @@ export class RestClientController {
     }
   }
 
+  public isScanning(): boolean {
+    return this.progress == 0;
+  }
+
   public getClients(capability: string): string[] {
-    var retval = this.semaforky.settings.clientsByCapability.get(capability);
-    if (retval == undefined) {
+    var clients = this.semaforky.settings.clientsByCapability.get(capability);
+    if (clients == undefined) {
       return [];
     }
-    return retval;
+    return clients;
   }
 
   protected getEncodedValue() {

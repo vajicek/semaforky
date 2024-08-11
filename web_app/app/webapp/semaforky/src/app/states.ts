@@ -20,12 +20,10 @@ export enum SemaforkyState {
 }
 
 export abstract class State {
-  name: SemaforkyState;
-  next: Array<SemaforkyState>;
-
-  constructor(_name: SemaforkyState, _next: Array<SemaforkyState>) {
-    this.name = _name;
-    this.next = _next;
+  constructor(
+    public name: SemaforkyState,
+    public next: Array<SemaforkyState>
+  ) {
   }
 
   abstract run(previous: State): void;
@@ -38,10 +36,10 @@ export class SemaforkyMachine {
   private currentSet: number = 1;
   private currentLine: number = 0;
   private customSet: boolean = false;
-  private semaforky: AppComponent;
 
-  constructor(semaforky: AppComponent) {
-    this.semaforky = semaforky;
+  constructor(
+    private semaforky: AppComponent
+  ) {
     this.initializeStates();
     this.loadState();
   }
@@ -103,33 +101,33 @@ export class SemaforkyMachine {
   }
 
   protected loadState() {
-    var currentStateName = this.semaforky.getCookieValue("currentState", "");
+    var currentStateName = this.semaforky.settings.getCookieValue("currentState", "");
     if (currentStateName != "") {
       this.currentState = this.states.find(
         (state) => state.name.toString() == currentStateName
       );
     }
     this.currentSet = parseInt(
-      this.semaforky.getCookieValue("currentSet", this.currentSet.toString())
+      this.semaforky.settings.getCookieValue("currentSet", this.currentSet.toString())
     );
     this.currentLine = parseInt(
-      this.semaforky.getCookieValue("currentLine", this.currentLine.toString())
+      this.semaforky.settings.getCookieValue("currentLine", this.currentLine.toString())
     );
     this.customSet =
-      this.semaforky.getCookieValue("customSet", this.customSet.toString()) ===
+      this.semaforky.settings.getCookieValue("customSet", this.customSet.toString()) ===
       "true";
   }
 
   protected storeState() {
     if (this.currentState) {
-      this.semaforky.setCookieValue(
+      this.semaforky.settings.setCookieValue(
         "currentState",
         this.currentState.name.toString()
       );
     }
-    this.semaforky.setCookieValue("currentSet", this.currentSet.toString());
-    this.semaforky.setCookieValue("currentLine", this.currentLine.toString());
-    this.semaforky.setCookieValue("customSet", this.customSet.toString());
+    this.semaforky.settings.setCookieValue("currentSet", this.currentSet.toString());
+    this.semaforky.settings.setCookieValue("currentLine", this.currentLine.toString());
+    this.semaforky.settings.setCookieValue("customSet", this.customSet.toString());
   }
 
   protected addState(state: State) {
@@ -307,9 +305,9 @@ export class SemaforkyMachine {
             );
             // show Lines with a delay
             window.setTimeout(() => {
-                self.semaforky
-                    .restClientController
-                    .updateLines(self.getCurrentLineOrder());
+              self.semaforky
+                .restClientController
+                .updateLines(self.getCurrentLineOrder());
             }, 2000);
             if (self.semaforky.settings.continuous) {
               if (self.currentSet <= self.semaforky.settings.numberOfSets) {
