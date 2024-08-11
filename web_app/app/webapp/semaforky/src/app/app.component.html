@@ -204,11 +204,13 @@
       <button type="button" (click)="onSetSirene(1)" clickable>1</button>
       <button type="button" (click)="onSetSirene(2)" clickable>2</button>
       <button type="button" (click)="onSetSirene(3)" clickable>3</button>
+      <button type="button" (click)="onSetSirene(4)" clickable>4</button>
     </div>
     <div>
       Clock
     </div>
     <div class="actions">
+      <button type="button" (click)="onSetClock(0)" clickable>0</button>
       <button type="button" (click)="onSetClock(1)" clickable>1</button>
       <button type="button" (click)="onSetClock(5)" clickable>5</button>
       <button type="button" (click)="onSetClock(10)" clickable>10</button>
@@ -218,10 +220,20 @@
       <button type="button" (click)="onSetClock(240)" clickable>240</button>
     </div>
     <div>
+      Lines
+    </div>
+    <div class="actions">
+      <button type="button" (click)="onSetLines(LineOrder.AB)" clickable>AB</button>
+      <button type="button" (click)="onSetLines(LineOrder.CD)" clickable>CD</button>
+    </div>
+    <div>
       Clock countdown
     </div>
     <div class="actions">
+      <button type="button" (click)="onSetClockCountdown(10)" clickable>10</button>
       <button type="button" (click)="onSetClockCountdown(30)" clickable>30</button>
+      <button type="button" (click)="onSetClockCountdown(120)" clickable>120</button>
+      <button type="button" (click)="onSetClockCountdown(240)" clickable>240</button>
     </div>
     <div class="actions">
       <button type="button" (click)="onBackToMain()" clickable>Back</button>

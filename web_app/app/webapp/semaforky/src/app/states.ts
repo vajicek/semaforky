@@ -37,9 +37,10 @@ export class SemaforkyMachine {
   private currentLine: number = 0;
   private customSet: boolean = false;
 
-  constructor(
-    private semaforky: AppComponent
-  ) {
+  constructor(private semaforky: AppComponent) {
+  }
+
+  public init() {
     this.initializeStates();
     this.loadState();
   }

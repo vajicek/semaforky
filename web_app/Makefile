@@ -26,7 +26,7 @@ install_deps: install_common
 
 # SERVER WEBAPP
 serve_ng:
-	cd app/webapp/semaforky && ../node_modules/.bin/ng serve
+	cd app/webapp/semaforky && ../node_modules/.bin/ng serve --host 0.0.0.0
 
 # BUILD WEBAPP
 setup_ng:
@@ -34,7 +34,7 @@ setup_ng:
 
 build_webapp:
 	cd app/webapp/semaforky && ../node_modules/.bin/ng build --optimization true --output-hashing none
-	mkdir -p app/data && cp app/webapp/semaforky/dist/semaforky/browser/* app/data
+	mkdir -p app/data && cp -r app/webapp/semaforky/dist/semaforky/browser/* app/data
 
 # CREATE WEBAPP FILESYSTEM PACKAGE
 filesystem.bin: app/data/main.js
@@ -71,4 +71,11 @@ build_devcontainer:
 	docker build -f ./Dockerfile . -t semaforky
 
 devcontainer:
-	docker run -it --rm --name devcontainer -v $(PWD):/tmp/home -w /tmp/home semaforky /bin/bash
+	docker run \
+	-it \
+	--rm \
+	--name devcontainer \
+	-v $(PWD):/tmp/home \
+	-w /tmp/home \
+	-p 4200:4200 \
+	semaforky /bin/bash

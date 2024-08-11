@@ -62,6 +62,8 @@ export class AppComponent {
     this.settings = new Settings(cookieService);
     this.restClientController = new RestClientController(http, this);
 
+    this.scheduler.init();
+    this.machine.init();
     this.settings.loadState();
     this.updateGui();
   }
@@ -229,6 +231,10 @@ export class AppComponent {
     this.clockTime = value;
     this.restClientController.updateClocks(this.clockTime);
     this.restClientController.countdown(this.clockTime, false);
+  }
+
+  public onSetLines(value: LineOrder) {
+    this.restClientController.updateLines(value);
   }
 
   public onSetClockCountdown(countdown: number) {
