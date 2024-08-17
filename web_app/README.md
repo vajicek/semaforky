@@ -53,3 +53,7 @@ Build filesystem for **web app** server and flash it to a device (connected to /
 ```bash
 make filesystem.bin && make flash-fs
 ```
+
+## Semaforky application state diagram
+
+![](../doc/semaforky_state_diagram.svg)
