@@ -5,6 +5,9 @@
       <button type="button" [disabled]="!settingsEnabled" (click)="onSettings()" clickable>Settings</button>
       <button type="button" [disabled]="!manualControlEnabled" (click)="onManualControl()" clickable>Manual Control</button>
     </div>
+    <div>
+      <hr/>
+    </div>
     <div class="table">
       <div>
         <div class="left">Round</div>
@@ -26,6 +29,9 @@
           <span *ngSwitchCase="LineOrder.UNDEFINED"></span>
         </div>
       </div>
+    </div>
+    <div>
+      <hr/>
     </div>
     <div class="countdown">
       {{countdown|number:'3.0-0'}}
@@ -53,6 +59,9 @@
         </span>
       </div>
     </div>
+    <div>
+      <hr/>
+    </div>
     <div class="actions">
       <button type="button" [disabled]="!beginRoundEnabled" (click)="onBeginRound()" clickable>Begin Round</button>
       <button type="button" [disabled]="!endRoundEnabled" (click)="onEndRound()" clickable>End Round</button>
@@ -76,6 +85,9 @@
           <input [(ngModel)]="settings.customSetTime" type="number">
         </div>
       </div>
+    </div>
+    <div>
+      <hr/>
     </div>
     <div>
       <div>
@@ -105,6 +117,9 @@
     </div>
   </div>
   <div *ngIf="page==2" class="settings">
+    <div>
+      <h1>Settings</h1>
+    </div>
     <div class="table">
       <div class="row">
         <div class="left">Line Rotation</div>
@@ -140,7 +155,7 @@
         </div>
       </div>
       <div>
-        <hr>
+        <hr/>
       </div>
       <div class="row">
         <div class="left">Continuous</div>
@@ -161,7 +176,7 @@
         </div>
       </div>
       <div>
-        <hr>
+        <hr/>
       </div>
       <div class="row">
         <div class="left">Delayed start</div>
@@ -176,7 +191,7 @@
         </div>
       </div>
       <div>
-        <hr>
+        <hr/>
       </div>
       <div class="row">
         <div class="left">Brightness</div>
@@ -191,7 +206,7 @@
         </div>
       </div>
       <div>
-        <hr>
+        <hr/>
       </div>
       <div class="row">
         <div class="left">Network</div>
@@ -200,12 +215,18 @@
         </div>
       </div>
     </div>
+    <div>
+      <hr/>
+    </div>
     <div class="actions">
       <button type="button" (click)="onSettingsAccepted()" clickable>Ok</button>
       <button type="button" (click)="onSettingsCanceled()" clickable>Cancel</button>
     </div>
   </div>
   <div *ngIf="page==3" class="manual">
+    <div>
+      <h1>Manual Control</h1>
+    </div>
     <div>
       Semaphores
     </div>
@@ -252,6 +273,9 @@
       <button type="button" (click)="onSetClockCountdown(30)" clickable>30</button>
       <button type="button" (click)="onSetClockCountdown(120)" clickable>120</button>
       <button type="button" (click)="onSetClockCountdown(240)" clickable>240</button>
+    </div>
+    <div>
+      <hr/>
     </div>
     <div class="actions">
       <button type="button" (click)="onBackToMain()" clickable>Back</button>
