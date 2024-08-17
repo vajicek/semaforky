@@ -57,3 +57,19 @@ make filesystem.bin && make flash-fs
 ## Semaforky application state diagram
 
 ![](../doc/semaforky_state_diagram.svg)
+
+## List of features
+
+* Operations divided into rounds (e.g. training + two halves, FITA 900 - 60m/50m/40m) and rounds into sets (e.g. 10 or 12 sets).
+* Scan - gather all devices on given network (specified by Network option). Display number of clients and capabilities (semaphore, siren, line indicator, clock) provided.
+* Configurable number of lines - 1 or 2
+* Configurable lines rotations - SIMPLE (round 1: AB CD, AB CD, ..; round 2: CD AB, CD AB, ..), ALTERNATING (AB CD, CD, AB, AB, ..)
+* Configurable set time, waiting time and warning time.
+* Delayed start - set time of start and it will automatically start the first set while showing countdown to start.
+* Configurable brightness of all devices.
+* Optional sound coming from application. Usable in combination with bluetooth speaker.
+* Store configuration in cookies.
+* Store state in cookies - should survive page refresh.
+* Set cancel (It is like set stop but without incrementing set counter).
+* Set pause and resume.
+* Manual control for testing purposes (audio, semaphore, clock).

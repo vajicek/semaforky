@@ -122,12 +122,6 @@
         </div>
       </div>
       <div class="row">
-        <div class="left">Rounds</div>
-        <div class="right">
-          <input [(ngModel)]="settings.roundSets" type="number">
-        </div>
-      </div>
-      <div class="row">
         <div class="left">Set Time</div>
         <div class="right">
           <input [(ngModel)]="settings.setTime" type="number">
@@ -145,6 +139,9 @@
           <input [(ngModel)]="settings.warningTime" type="number">
         </div>
       </div>
+      <div>
+        <hr>
+      </div>
       <div class="row">
         <div class="left">Continuous</div>
         <div class="right">
@@ -152,10 +149,19 @@
         </div>
       </div>
       <div class="row">
+        <div class="left">Rounds</div>
+        <div class="right">
+          <input [(ngModel)]="settings.roundSets" type="number">
+        </div>
+      </div>
+      <div class="row">
         <div class="left">Number of sets</div>
         <div class="right">
           <input [(ngModel)]="settings.numberOfSets" type="number">
         </div>
+      </div>
+      <div>
+        <hr>
       </div>
       <div class="row">
         <div class="left">Delayed start</div>
@@ -169,6 +175,9 @@
           <input [(ngModel)]="settings.delayedStartTime" type="string">
         </div>
       </div>
+      <div>
+        <hr>
+      </div>
       <div class="row">
         <div class="left">Brightness</div>
         <div class="right">
@@ -180,6 +189,9 @@
         <div class="right">
           <input type="checkbox" [(ngModel)]="settings.soundEnabled">
         </div>
+      </div>
+      <div>
+        <hr>
       </div>
       <div class="row">
         <div class="left">Network</div>
