@@ -19,6 +19,12 @@
 #include <SPI.h>
 #include <Ticker.h>
 
+#define CONTROL_VALUE_CLOCK 1
+#define CONTROL_VALUE_SEMAPHORE 2
+#define CONTROL_VALUE_LINES 3
+#define CONTROL_VALUE_SIRENE 4
+#define CONTROL_VALUE_COUNTDOWN 5
+
 struct StackedDMD : public SPIDMD {
 	unsigned int mapping[3 * 16 * 32];
 
@@ -171,12 +177,8 @@ struct BaseSettings {
 class Base {
  protected:
 	int stations;
-	int controlValue = 1;
+	int controlValue = CONTROL_VALUE_CLOCK;
 	int value = 0;
-
-	// int controlValue = 3;
-	// int value = 1;
-	//int value = 0xff000000 | 0x7B;
 
 	const BaseSettings *settings;
 
@@ -374,19 +376,19 @@ void P10x3::drawLetters() {
 }
 
 void P10x3::updateDisplay() {
-	if (controlValue == 3) {
+	if (controlValue == CONTROL_VALUE_LINES) {
 		if (oldValue != value) {
 			oldValue = value;
 			drawLetters();
 			bufferSwapped = false;
 		}
-	} else if (controlValue == 1) {
+	} else if (controlValue == CONTROL_VALUE_CLOCK) {
 		if (oldValue != value) {
 			oldValue = value;
 			drawDigits();
 			bufferSwapped = false;
 		}
-	} else if (controlValue == 5) {
+	} else if (controlValue == CONTROL_VALUE_COUNTDOWN) {
 		if (oldValue != value) { // start countdown
 			countdown = Countdown{millis(),
 				decodeTimeValue(value),
@@ -470,7 +472,7 @@ static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
 }
 
 class Px : public Base {
- private:
+ protected:
 	PxMATRIX *display;
 	Ticker displayTicker;
 	int digitWidth;
@@ -481,7 +483,7 @@ class Px : public Base {
 	int panelWidth;
 
 protected:
-	void updateDisplay();
+	virtual void updateDisplay();
 	virtual void drawDigits();
 	virtual void drawLetters();
 
@@ -501,14 +503,14 @@ Px::Px(BaseSettings *baseSettings, PxMATRIX *_display, int _digitWidth,
 	  colors(_colors), panelWidth(_panelWidth) {}
 
 void Px::updateDisplay() {
-	if (controlValue == 3) {
+	if (controlValue == CONTROL_VALUE_LINES) {
 		if (oldValue != value) {
 			oldValue = value;
 			display->fillScreen(color565(0, 0, 0));
 			drawLetters();
 			display->showBuffer();
 		}
-	} else if (controlValue == 1 || controlValue == 2) {
+	} else if (controlValue == CONTROL_VALUE_CLOCK || controlValue == CONTROL_VALUE_SEMAPHORE) {
 		if (oldValue != value) {
 			oldValue = value;
 			display->fillScreen(color565(0, 0, 0));
@@ -644,4 +646,27 @@ void P5::Init() {
 	display.setScanPattern(scanPatterns);
 	display.setFont(&FixedWidthDigit);
 	display.setTextWrap(false);
+}
+
+//////////////////////////
+
+class P10Semaphore : public P10 {
+ public:
+	P10Semaphore(BaseSettings *baseSettings);
+ protected:
+	void updateDisplay() override;
+};
+
+P10Semaphore::P10Semaphore(BaseSettings *baseSettings)
+	: P10(baseSettings) {}
+
+void P10Semaphore::updateDisplay() {
+	if (controlValue == CONTROL_VALUE_SEMAPHORE) {
+		if (oldValue != value) {
+			oldValue = value;
+			auto color = decodeColorValue(value);
+			display.fillScreen(colors[color]);
+			display.showBuffer();
+		}
+	}
 }

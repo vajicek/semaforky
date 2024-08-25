@@ -3,13 +3,13 @@
 
 #include "semaforky_webui_common.h"
 
-BaseSettings baseSettings{
+BaseSettings baseSettings {
 	false, // serve spa
 	false, // hotspot
 	"p10-01", // dns
 	"semaforky", // ssid
 	"semaforky", // password
-	"clock,semaphore"}; // capabilities
+	"clock,semaphore" }; // capabilities
 P10 client(&baseSettings);
 
 void setup(void) { client.Init(); }

@@ -3,13 +3,13 @@
 
 #include "semaforky_webui_common.h"
 
-BaseSettings baseSettings{
+BaseSettings baseSettings {
 	false, // serve spa
 	false, // hotspot
 	"siren-01", // dns
 	"semaforky", // ssid
 	"semaforky", // password
-	"siren"}; // capabilities
+	"siren" }; // capabilities
 Siren client(&baseSettings);
 
 void setup(void) { client.Init(); }
