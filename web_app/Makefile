@@ -65,7 +65,7 @@ install_p10: DIR=p10
 install_siren: DIR=siren
 install_p10_semaphore: DIR=p10_semaphore
 
-install_app install_p5 install_p10x3 install_siren install_p10_semaphore:
+install_app install_p5 install_p5_new install_p10x3 install_siren install_p10_semaphore:
 	rm -f $(PWD)/devices/${DIR}/data
 	ln -s $(PWD)/app/data $(PWD)/devices/${DIR}/data
 	$(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) devices/${DIR}
