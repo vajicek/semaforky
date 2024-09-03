@@ -41,7 +41,7 @@ make setup_ng && make build_webapp
 ### Device application
 Install dependencies for **device application**.
 ```bash
-make install_deps
+make install_common && make install_deps
 ```
 
 Build and install **device application**, e.g. for p5 device (connected to /dev/ttyUSB0).

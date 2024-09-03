@@ -25,9 +25,9 @@ RUN curl https://downloads.arduino.cc/arduino-ide/arduino-ide_2.3.2_Linux_64bit.
 RUN curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
 
 RUN curl -L \
-		https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp32-linux64.tar.gz \
-		--output mkspiffs-0.2.3-arduino-esp32-linux64.tar.gz && \
-	tar xvzf mkspiffs-0.2.3-arduino-esp32-linux64.tar.gz && \
-	ln -sf ~/mkspiffs-0.2.3-arduino-esp32-linux64/mkspiffs ~/bin/
+		https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp8266-linux64.tar.gz \
+		--output mkspiffs-0.2.3-arduino-esp8266-linux64.tar.gz && \
+	tar xvzf mkspiffs-0.2.3-arduino-esp8266-linux64.tar.gz && \
+	ln -sf ~/mkspiffs-0.2.3-arduino-esp8266-linux64/mkspiffs ~/bin/
 
 EXPOSE 4200

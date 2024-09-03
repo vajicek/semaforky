@@ -4,13 +4,13 @@
 #include "semaforky_webui_common.h"
 
 BaseSettings baseSettings {
-	true, // serve spa
-	true, // hotspot
-	"p5-01", // dns
+	false, // serve spa
+	false, // hotspot
+	"p5-02", // dns
 	"semaforky", // ssid
 	"semaforky", // password
 	"clock,semaphore,lines" }; // capabilities
-P5 client(&baseSettings, LINE);
+P5 client(&baseSettings, WZAGZIG2);
 
 void setup(void) { client.Init(); }
 

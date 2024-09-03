@@ -46,12 +46,12 @@ filesystem.bin: app/data/main.js
 	BUILD_SPIFFS_SIZE=$$(echo "ibase=16;$${BUILD_SPIFFS_END}-$${BUILD_SPIFFS_START}"|bc -q); \
 	$(MKSPIFFS) -c app/data -p $$BUILD_SPIFFS_PAGESIZE -b $$BUILD_SPIFFS_BLOCKSIZE -s $$BUILD_SPIFFS_SIZE $@
 
-#TODO: FINISH THIS
+# FLASH WEBAPP FILESYSTEM
 flash-fs: filesystem.bin
 	python3 ${ESPTOOL_PY} \
-	  --chip esp8266 \
+	  --chip auto \
 	  --port ${DEVICE} \
-	  --baud 460800 \
+	  --baud 921600 \
 	  --before default_reset \
 	  --after hard_reset \
 	  write_flash 0x200000 filesystem.bin
@@ -59,12 +59,14 @@ flash-fs: filesystem.bin
 # BUILD AND INSTALL APPLICATIONS
 install_app: DIR=app
 install_p5: DIR=p5
+install_p5_new: DIR=p5_new
 install_p10x3: DIR=p10x3
 install_p10: DIR=p10
 install_siren: DIR=siren
 install_p10_semaphore: DIR=p10_semaphore
 
 install_app install_p5 install_p10x3 install_siren install_p10_semaphore:
+	rm -f $(PWD)/devices/${DIR}/data
 	ln -s $(PWD)/app/data $(PWD)/devices/${DIR}/data
 	$(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) devices/${DIR}
 	$(ARDUINO_CLI) upload -p ${DEVICE} --fqbn $(BOARDCONFIG) devices/${DIR}
@@ -74,6 +76,7 @@ build_devcontainer:
 
 devcontainer:
 	docker run \
+	--privileged -v /dev/bus/usb:/dev/bus/usb \
 	-it \
 	--rm \
 	--name devcontainer \
