@@ -1,15 +1,16 @@
 import { HttpClient, HttpHeaders } from "@angular/common/http";
 import { LineOrder, SemaphoreLight } from "./settings";
 import { AppComponent } from "./app.component";
+import { Subscription } from "rxjs";
 
 type Request = { control: string; value: string };
 
 export class RestClientController {
   remainingSeconds: number = 0;
   previousEncodedValue: number = 0;
-  progress: number = 0;
   audio: any = null;
   semaphoreLight: SemaphoreLight = SemaphoreLight.NONE;
+  scanProcess: Map<string, Subscription> = new Map();
 
   constructor(
     private http: HttpClient,
@@ -32,9 +33,8 @@ export class RestClientController {
     return addresses;
   }
 
-  protected updateProgress(increment: number = 0) {
-    this.progress += increment;
-    this.semaforky.scanEnabled = this.isScanning();
+  protected updateProgress() {
+    this.semaforky.scanEnabled = !this.isScanning();
     if (!this.isScanning()) {
       this.semaforky.settings.storeState();
     }
@@ -57,34 +57,41 @@ export class RestClientController {
 
   protected queryCapabilities(address: string) {
     var self = this;
-    this.http
+    var subscription = this.http
       .post("http://" + address + "/capabilities", {
         headers: new HttpHeaders({ timeout: `${5000}` }),
       })
       .subscribe({
         next(response: any) {
           self.updateCapabilitiesMap(address, response.capabilities.toString());
-          self.updateProgress(-1);
+          self.scanProcess.delete(address);
+          self.updateProgress();
         },
         error(error) {
-          self.updateProgress(-1);
-        },
+          self.scanProcess.delete(address);
+          self.updateProgress();
+        }
       });
+    this.scanProcess.set(address, subscription);
   }
 
   public scan() {
     this.semaforky.settings.clientsByCapability.clear();
-    this.updateProgress(254);
     var network = this.semaforky.settings.network;
     var lastIndex = network.lastIndexOf(".");
     var networkPrefix = network.substring(0, lastIndex + 1);
     for (var i = 1; i < 255; i++) {
-      this.queryCapabilities(networkPrefix + i);
+      var address = networkPrefix + i;
+      if (this.scanProcess.has(address)) {
+        this.scanProcess.get(address)?.unsubscribe();
+      }
+      this.queryCapabilities(address);
     }
+    this.updateProgress();
   }
 
   public isScanning(): boolean {
-    return this.progress == 0;
+    return this.scanProcess.size > 0;
   }
 
   public getClients(capability: string): string[] {
