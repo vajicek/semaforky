@@ -78,7 +78,6 @@ devcontainer:
 	docker run \
 	--privileged -v /dev/bus/usb:/dev/bus/usb \
 	-it \
-	--rm \
 	--name devcontainer \
 	-v $(PWD):/tmp/home \
 	-w /tmp/home \
