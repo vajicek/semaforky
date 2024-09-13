@@ -81,16 +81,14 @@ export class SemaforkyMachine {
       if (this.semaforky.settings.lines == 1) {
         return LineOrder.AB;
       } else if (this.semaforky.settings.lines == 2) {
-        if (this.semaforky.settings.linesRotation == LinesRotation.SIMPLE) {
+        if (this.semaforky.settings.linesRotation == LinesRotation.NO) {
+          return LineOrder.AB;
+        } else if (this.semaforky.settings.linesRotation == LinesRotation.BYROUND) {
           return (this.semaforky.machine.getCurrentLine() +
-            this.semaforky.machine.getCurrentRound()) %
-            2 ==
-            1
+            this.semaforky.machine.getCurrentRound()) % 2 == 1
             ? LineOrder.AB
             : LineOrder.CD;
-        } else if (
-          this.semaforky.settings.linesRotation == LinesRotation.ALTERNATING
-        ) {
+        } else if (this.semaforky.settings.linesRotation == LinesRotation.BYSET) {
           return this.semaforky.machine.getCurrentLine() !=
             this.semaforky.machine.getCurrentSet() % 2
             ? LineOrder.AB

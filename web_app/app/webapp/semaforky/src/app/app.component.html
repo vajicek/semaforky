@@ -1,4 +1,34 @@
-<div class="content">
+<dialog #dialogBeginRound class="dialogBeginRound">
+  <div class="actions">
+    <div class="left">Time of start</div>
+    <div class="right">
+      <input [(ngModel)]="settings.delayedStartTime" type="string">
+    </div>
+  </div>
+  <br/>
+  <div class="buttons">
+    <button (click)="onBeginRoundNow()">Now</button>
+    <button (click)="onBeginRoundDelayed()">Delayed</button>
+    <button (click)="onBeginRoundCancel()">Cancel</button>
+  </div>
+</dialog>
+
+<dialog #dialogCustomSet class="dialogCustomSet">
+  <div class="actions">
+    <div class="left">Custom Set Time</div>
+    <div class="right">
+      <input [(ngModel)]="settings.customSetTime" type="number">
+    </div>
+  </div>
+  <br />
+  <div class="buttons">
+    <button (click)="onCustomSetStart()">Start</button>
+    <button (click)="onCustomSetCancel()">Cancel</button>
+  </div>
+</dialog>
+
+
+<div class="content" #contentElement>
   <div *ngIf="page==1" class="main">
     <div class="menu">
       <button type="button" [disabled]="!scanEnabled" (click)="onScan()" clickable>Scan</button>
@@ -63,56 +93,54 @@
       <hr/>
     </div>
     <div class="actions">
-      <button type="button" [disabled]="!beginRoundEnabled" (click)="onBeginRound()" clickable>Begin Round</button>
+      <button type="button" [disabled]="!beginRoundEnabled" (click)="onBeginRound()" clickable>Begin Round...</button>
       <button type="button" [disabled]="!endRoundEnabled" (click)="onEndRound()" clickable>End Round</button>
     </div>
     <div class="actions">
-      <button type="button" [disabled]="!startSetEnabled" (click)="onStartSet()" clickable>Start Set</button>
-      <button type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>Stop Set</button>
+      <button class="padded" type="button" [disabled]="!startSetEnabled" (click)="onStartSet()" clickable>Start Set</button>
+      <button class="padded" type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>Stop Set</button>
     </div>
     <div class="actions">
-      <button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>Custom Set</button>
+      <button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>Custom Set...</button>
       <button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>Cancel Set</button>
     </div>
     <div class="actions">
       <button type="button" [disabled]="!resumeEnabled" (click)="onResumeSet()" clickable>Resume</button>
       <button type="button" [disabled]="!pauseEnabled" (click)="onPauseSet()" clickable>Pause</button>
     </div>
-    <div class="actions">
-      <div>
-        <div class="left">Custom Set Time</div>
-        <div class="right">
-          <input [(ngModel)]="settings.customSetTime" type="number">
-        </div>
-      </div>
-    </div>
     <div>
       <hr/>
     </div>
     <div>
       <div>
-        <div class="left">Clients</div>
-        <div class="right">{{restClientController.getAllClients().size}}</div>
+        <div class="half">
+          <div class="left">Clients</div>
+          <div class="right">{{restClientController.getAllClients().size}}</div>
+        </div>
+        <div class="half">
+          <div class="left">Clocks</div>
+          <div class="right">{{restClientController.getClients('clock').length}}</div>
+        </div>
       </div>
       <div>
-        <div class="left">Clocks</div>
-        <div class="right">{{restClientController.getClients('clock').length}}</div>
+        <div class="half">
+          <div class="left">Semaphores</div>
+          <div class="right">{{restClientController.getClients('semaphore').length}}</div>
+        </div>
+        <div class="half">
+          <div class="left">Sirens</div>
+          <div class="right">{{restClientController.getClients('siren').length}}</div>
+        </div>
       </div>
       <div>
-        <div class="left">Semaphores</div>
-        <div class="right">{{restClientController.getClients('semaphore').length}}</div>
-      </div>
-      <div>
-        <div class="left">Sirens</div>
-        <div class="right">{{restClientController.getClients('siren').length}}</div>
-      </div>
-      <div>
-        <div class="left">Lines</div>
-        <div class="right">{{restClientController.getClients('lines').length}}</div>
-      </div>
-      <div>
-        <div class="left">Countdown</div>
-        <div class="right">{{restClientController.getClients('countdown').length}}</div>
+        <div class="half">
+          <div class="left">Lines</div>
+          <div class="right">{{restClientController.getClients('lines').length}}</div>
+        </div>
+        <div class="half">
+          <div class="left">Countdown</div>
+          <div class="right">{{restClientController.getClients('countdown').length}}</div>
+        </div>
       </div>
     </div>
   </div>
@@ -125,8 +153,9 @@
         <div class="left">Line Rotation</div>
         <div class="right">
           <select [(ngModel)]="settings.linesRotation">
-            <option value="SIMPLE">Simple</option>
-            <option value="ALTERNATING">Alternating</option>
+            <option value="BYROUND">By round</option>
+            <option value="BYSET">By set</option>
+            <option value="NO">No rotation</option>
           </select>
         </div>
       </div>
@@ -177,18 +206,6 @@
       </div>
       <div>
         <hr/>
-      </div>
-      <div class="row">
-        <div class="left">Delayed start</div>
-        <div class="right">
-          <input type="checkbox" [(ngModel)]="settings.delayedStartEnabled">
-        </div>
-      </div>
-      <div class="row">
-        <div class="left">Time of start</div>
-        <div class="right">
-          <input [(ngModel)]="settings.delayedStartTime" type="string">
-        </div>
       </div>
       <div>
         <hr/>

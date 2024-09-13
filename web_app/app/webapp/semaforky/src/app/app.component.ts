@@ -9,6 +9,7 @@ import { Settings, LineOrder, SemaphoreLight } from "./settings";
 import { SemaforkyMachine, State, SemaforkyState } from "./states";
 import { RestClientController } from "./client";
 import { Scheduler } from "./scheduler";
+import { ViewChild, ElementRef } from '@angular/core';
 
 @Component({
   selector: "app-root",
@@ -19,6 +20,7 @@ import { Scheduler } from "./scheduler";
   providers: [CookieService],
 })
 export class AppComponent {
+
   SemaphoreLight: typeof SemaphoreLight = SemaphoreLight;
   LineOrder: typeof LineOrder = LineOrder;
 
@@ -52,6 +54,10 @@ export class AppComponent {
   manualControlEnabled: boolean = false;
 
   page: number = 1;
+
+  @ViewChild('dialogCustomSet', { static: true }) dialogCustomSet!: ElementRef<HTMLDialogElement>;
+  @ViewChild('dialogBeginRound', { static: true }) dialogBeginRound!: ElementRef<HTMLDialogElement>;
+  @ViewChild('contentElement', { static: true }) contentElement!: ElementRef<HTMLDivElement>;
 
   constructor(
     private http: HttpClient,
@@ -158,12 +164,26 @@ export class AppComponent {
     return this.semaphoreLight == semaphoreLight;
   }
 
+  public onBeginRoundNow() {
+    this.contentElement.nativeElement.style.pointerEvents = "";
+    this.dialogBeginRound.nativeElement.close();
+    this.machine.moveTo(SemaforkyState.ROUND_STARTED);
+  }
+
+  public onBeginRoundDelayed() {
+    this.contentElement.nativeElement.style.pointerEvents = "";
+    this.dialogBeginRound.nativeElement.close();
+    this.machine.moveTo(SemaforkyState.START_WAITING);
+  }
+
+  public onBeginRoundCancel() {
+    this.contentElement.nativeElement.style.pointerEvents = "";
+    this.dialogBeginRound.nativeElement.close();
+  }
+
   public onBeginRound() {
-    if (this.settings.delayedStartEnabled) {
-      this.machine.moveTo(SemaforkyState.START_WAITING);
-    } else {
-      this.machine.moveTo(SemaforkyState.ROUND_STARTED);
-    }
+    this.contentElement.nativeElement.style.pointerEvents = "none";
+    this.dialogBeginRound.nativeElement.show();
   }
 
   public onEndRound() {
@@ -193,7 +213,19 @@ export class AppComponent {
   }
 
   public onCustomSet() {
+    this.contentElement.nativeElement.style.pointerEvents = "none";
+    this.dialogCustomSet.nativeElement.show();
+  }
+
+  public onCustomSetStart() {
+    this.contentElement.nativeElement.style.pointerEvents = "";
+    this.dialogCustomSet.nativeElement.close();
     this.machine.moveTo(SemaforkyState.CUSTOM_SET_STARTED);
+  }
+
+  public onCustomSetCancel() {
+    this.contentElement.nativeElement.style.pointerEvents = "";
+    this.dialogCustomSet.nativeElement.close();
   }
 
   public onScan() {

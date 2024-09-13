@@ -23,30 +23,98 @@
   display: table-cell;
 }
 
+.half {
+  display: table-cell;
+}
+
+.half .left {
+  width: 100px;
+  padding-right: 10px;
+}
+
+.half .right {
+  padding-right: 10px;
+}
+
 .countdown {
   min-height: 130px;
   width: 100%;
   font-size: 5em;
+  text-align: center;
 }
 
 .semaphore {
-  min-height: 130px;
+  min-height: 90px;
   width: 100%;
 }
 
 .menu button {
-  width: 33%;
+  width: 33.3%;
   height: 35px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 50% 50%;
+  align-items: center;
 }
 
 .actions button {
-  width: 50%;
   height: 35px;
+  width: 100%;
+  width: -moz-available;
+  width: -webkit-fill-available;
+  width: fill-available;
 }
 
+.actions button.padded {
+  margin: 20px;
+}
 .redLight,
 .greenLight,
 .yellowLight {
   display: inline-block;
-  width: 33%;
+  width: 33.3%;
+}
+
+dialog {
+  transform: translateY(50%);
+  background-color: rgb(126, 126, 126);
+  color: white;
+  border-color: transparent;
+  overflow: hidden;
+  border-radius: 5px;
+  cursor: pointer;
+  box-shadow: 0 0 20px 8px #d0d0d0;
+  height: 40%;
+  width: 80%;
+
+}
+
+.dialogCustomSet .buttons {
+  width: 60%;
+  left: 20%;
+  position: absolute;
+  bottom: 10px;
+}
+
+.dialogCustomSet .buttons button {
+  width: 40%;
+  margin-left: 5%;
+  margin-right: 5%;
+  height: 35px;
+}
+
+.dialogBeginRound .buttons {
+  width: 76%;
+  left: 13%;
+  position: absolute;
+  bottom: 10px;
+}
+
+.dialogBeginRound .buttons button {
+  width: 29%;
+  margin-left: 2%;
+  margin-right: 2%;
+  height: 35px;
 }

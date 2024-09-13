@@ -1,8 +1,9 @@
 import { CookieService } from "ngx-cookie-service";
 
 export enum LinesRotation {
-  SIMPLE = "SIMPLE",
-  ALTERNATING = "ALTERNATING"
+  BYROUND = "BYROUND",
+  BYSET = "BYSET",
+  NO = "NO"
 }
 
 export enum LineOrder {
@@ -28,8 +29,7 @@ export class Settings {
   public lines: number = 1;
   public continuous: boolean = false;
   public numberOfSets: number = 10;
-  public linesRotation: LinesRotation = LinesRotation.SIMPLE;
-  public delayedStartEnabled: boolean = false;
+  public linesRotation: LinesRotation = LinesRotation.BYROUND;
   public delayedStartTime: string = "12:00:00";
   public brightness: number = 30;
   public network: string = "192.168.4.0";
@@ -69,7 +69,6 @@ export class Settings {
     this.lines = parseInt(this.get("lines", this.lines.toString()));
     this.numberOfSets = parseInt(this.get("numberOfSets", this.numberOfSets.toString()));
     this.continuous = this.get("continuous", this.continuous.toString()) === "true";
-    this.delayedStartEnabled = this.get("delayedStartEnabled", this.delayedStartEnabled.toString()) === "true";
     this.delayedStartTime = this.get("delayedStartTime", this.delayedStartTime);
     this.linesRotation = (<any>LinesRotation)[this.get("linesRotation", this.linesRotation.toString())];
     this.brightness = parseInt(this.get("brightness", this.brightness.toString()));
@@ -88,7 +87,6 @@ export class Settings {
     this.set("numberOfSets", this.numberOfSets.toString());
     this.set("continuous", this.continuous.toString());
     this.set("delayedStartTime", this.delayedStartTime);
-    this.set("delayedStartEnabled", this.delayedStartEnabled.toString());
     this.set("linesRotation", (<any>LinesRotation)[this.linesRotation]);
     this.set("brightness", this.brightness.toString());
     this.set("network", this.network);
