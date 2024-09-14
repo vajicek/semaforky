@@ -276,33 +276,37 @@
   </div>
 </div>
 
-<dialog #dialogBeginRound class="dialogBeginRound">
-  <div class="actions">
-    <div class="left">Time of start</div>
-    <div class="right">
-      <input [(ngModel)]="settings.delayedStartTime" type="string">
+<div class="overlay" #dialogBeginRound>
+  <div class="dialogBeginRound dialog">
+    <div class="actions">
+      <div class="left">Time of start</div>
+      <div class="right">
+        <input [(ngModel)]="settings.delayedStartTime" type="string">
+      </div>
+    </div>
+    <br />
+    <div class="buttons">
+      <button (click)="onBeginRoundNow()">Now</button>
+      <button (click)="onBeginRoundDelayed()">Delayed</button>
+      <button (click)="onBeginRoundCancel()">Cancel</button>
     </div>
   </div>
-  <br />
-  <div class="buttons">
-    <button (click)="onBeginRoundNow()">Now</button>
-    <button (click)="onBeginRoundDelayed()">Delayed</button>
-    <button (click)="onBeginRoundCancel()">Cancel</button>
-  </div>
-</dialog>
+</div>
 
-<dialog #dialogCustomSet class="dialogCustomSet">
-  <div class="actions">
-    <div class="left">Custom Set Time</div>
-    <div class="right">
-      <input [(ngModel)]="settings.customSetTime" type="number">
+<div class="overlay" #dialogCustomSet>
+  <div class="dialogCustomSet dialog">
+    <div class="actions">
+      <div class="left">Custom Set Time</div>
+      <div class="right">
+        <input [(ngModel)]="settings.customSetTime" type="number">
+      </div>
+    </div>
+    <br />
+    <div class="buttons">
+      <button (click)="onCustomSetStart()">Start</button>
+      <button (click)="onCustomSetCancel()">Cancel</button>
     </div>
   </div>
-  <br />
-  <div class="buttons">
-    <button (click)="onCustomSetStart()">Start</button>
-    <button (click)="onCustomSetCancel()">Cancel</button>
-  </div>
-</dialog>
+</div>
 
 <router-outlet></router-outlet>

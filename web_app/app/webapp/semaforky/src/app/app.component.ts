@@ -55,9 +55,8 @@ export class AppComponent {
 
   page: number = 1;
 
-  @ViewChild('dialogCustomSet', { static: true }) dialogCustomSet!: ElementRef<HTMLDialogElement>;
-  @ViewChild('dialogBeginRound', { static: true }) dialogBeginRound!: ElementRef<HTMLDialogElement>;
-  @ViewChild('contentElement', { static: true }) contentElement!: ElementRef<HTMLDivElement>;
+  @ViewChild('dialogCustomSet', { static: true }) dialogCustomSet!: ElementRef<HTMLDivElement>;
+  @ViewChild('dialogBeginRound', { static: true }) dialogBeginRound!: ElementRef<HTMLDivElement>;
 
   constructor(
     private http: HttpClient,
@@ -165,26 +164,21 @@ export class AppComponent {
   }
 
   public onBeginRoundNow() {
-    this.contentElement.nativeElement.style.pointerEvents = "";
-    this.dialogBeginRound.nativeElement.close();
+    this.dialogBeginRound.nativeElement.style.display = "none";
     this.machine.moveTo(SemaforkyState.ROUND_STARTED);
   }
 
   public onBeginRoundDelayed() {
-    this.contentElement.nativeElement.style.pointerEvents = "";
-    this.dialogBeginRound.nativeElement.close();
+    this.dialogBeginRound.nativeElement.style.display = "none";
     this.machine.moveTo(SemaforkyState.START_WAITING);
   }
 
   public onBeginRoundCancel() {
-    this.contentElement.nativeElement.style.pointerEvents = "";
-    this.dialogBeginRound.nativeElement.close();
+    this.dialogBeginRound.nativeElement.style.display = "none";
   }
 
   public onBeginRound() {
-    this.contentElement.nativeElement.style.pointerEvents = "none";
-    //this.dialogBeginRound.nativeElement.parentElement.show();
-    this.dialogBeginRound.nativeElement.show();
+    this.dialogBeginRound.nativeElement.style.display = "flex";
   }
 
   public onEndRound() {
@@ -214,19 +208,16 @@ export class AppComponent {
   }
 
   public onCustomSet() {
-    this.contentElement.nativeElement.style.pointerEvents = "none";
-    this.dialogCustomSet.nativeElement.show();
+    this.dialogCustomSet.nativeElement.style.display = "flex";
   }
 
   public onCustomSetStart() {
-    this.contentElement.nativeElement.style.pointerEvents = "";
-    this.dialogCustomSet.nativeElement.close();
+    this.dialogCustomSet.nativeElement.style.display = "none";
     this.machine.moveTo(SemaforkyState.CUSTOM_SET_STARTED);
   }
 
   public onCustomSetCancel() {
-    this.contentElement.nativeElement.style.pointerEvents = "";
-    this.dialogCustomSet.nativeElement.close();
+    this.dialogCustomSet.nativeElement.style.display = "none";
   }
 
   public onScan() {
