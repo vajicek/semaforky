@@ -183,6 +183,7 @@ export class AppComponent {
 
   public onBeginRound() {
     this.contentElement.nativeElement.style.pointerEvents = "none";
+    //this.dialogBeginRound.nativeElement.parentElement.show();
     this.dialogBeginRound.nativeElement.show();
   }
 
