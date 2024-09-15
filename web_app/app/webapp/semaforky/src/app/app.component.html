@@ -82,32 +82,22 @@
       <hr/>
     </div>
     <div>
-      <div>
+      <div class="clients">
         <div class="half">
           <div class="left">Clients</div>
           <div class="right">{{restClientController.getAllClients().size}}</div>
-        </div>
-        <div class="half">
           <div class="left">Clocks</div>
           <div class="right">{{restClientController.getClients('clock').length}}</div>
         </div>
-      </div>
-      <div>
         <div class="half">
           <div class="left">Semaphores</div>
           <div class="right">{{restClientController.getClients('semaphore').length}}</div>
-        </div>
-        <div class="half">
           <div class="left">Sirens</div>
           <div class="right">{{restClientController.getClients('siren').length}}</div>
         </div>
-      </div>
-      <div>
         <div class="half">
           <div class="left">Lines</div>
           <div class="right">{{restClientController.getClients('lines').length}}</div>
-        </div>
-        <div class="half">
           <div class="left">Countdown</div>
           <div class="right">{{restClientController.getClients('countdown').length}}</div>
         </div>

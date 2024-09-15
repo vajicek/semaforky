@@ -29,30 +29,29 @@
   font-size: 0.8em;
 }
 
-.half {
-  display: table-cell;
-  width: 300px;
+.clients {
+  display: table;
+  width: 100%;
 }
 
 .half .left {
-  width: 80%;
-  padding-right: 1em;
+  display: table-cell;
+  width: 41%;
 }
 
 .half .right {
-  width: 60px;
-  padding-right: 1em;
+  display: table-cell;
+  width: 2em;
 }
 
 .countdown {
-  min-height: 130px;
   width: 100%;
   font-size: 5em;
   text-align: center;
 }
 
 .semaphore {
-  min-height: 208px;
+  aspect-ratio: 2.87;
   width: 100%;
 }
 
