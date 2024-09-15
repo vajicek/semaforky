@@ -1,4 +1,4 @@
-<div class="content" #contentElement>
+<div #contentElement>
   <div *ngIf="page==1" class="main">
     <div class="menu">
       <button type="button" [disabled]="!scanEnabled" (click)="onScan()" clickable>Scan</button>
@@ -9,25 +9,17 @@
       <hr/>
     </div>
     <div class="table">
-      <div>
-        <div class="left">Round</div>
-        <div class="right">{{round}}</div>
-      </div>
-      <div>
-        <div class="left">Set</div>
-        <div class="right">{{set}}</div>
-      </div>
-      <div>
-        <div class="left">Round time</div>
-        <div class="right">{{roundTime| date:'HH:mm:ss': 'UTC'}}</div>
-      </div>
-      <div>
-        <div class="left">Line</div>
-        <div class="right" [ngSwitch]="line">
-          <span *ngSwitchCase="LineOrder.AB">AB</span>
-          <span *ngSwitchCase="LineOrder.CD">CD</span>
-          <span *ngSwitchCase="LineOrder.UNDEFINED"></span>
-        </div>
+      <div class="left">Round</div>
+      <div class="right">{{round}}</div>
+      <div class="left">Set</div>
+      <div class="right">{{set}}</div>
+      <div class="left">Round time</div>
+      <div class="right">{{roundTime| date:'HH:mm:ss': 'UTC'}}</div>
+      <div class="left">Line</div>
+      <div class="right" [ngSwitch]="line">
+        <span *ngSwitchCase="LineOrder.AB">AB</span>
+        <span *ngSwitchCase="LineOrder.CD">CD</span>
+        <span *ngSwitchCase="LineOrder.UNDEFINED"></span>
       </div>
     </div>
     <div>
@@ -83,19 +75,19 @@
     </div>
     <div>
       <div class="clients">
-        <div class="half">
+        <div class="clients-row">
           <div class="left">Clients</div>
           <div class="right">{{restClientController.getAllClients().size}}</div>
           <div class="left">Clocks</div>
           <div class="right">{{restClientController.getClients('clock').length}}</div>
         </div>
-        <div class="half">
+        <div class="clients-row">
           <div class="left">Semaphores</div>
           <div class="right">{{restClientController.getClients('semaphore').length}}</div>
           <div class="left">Sirens</div>
           <div class="right">{{restClientController.getClients('siren').length}}</div>
         </div>
-        <div class="half">
+        <div class="clients-row">
           <div class="left">Lines</div>
           <div class="right">{{restClientController.getClients('lines').length}}</div>
           <div class="left">Countdown</div>
@@ -109,7 +101,6 @@
       <h1>Settings</h1>
     </div>
     <div class="table">
-      <div class="row">
         <div class="left">Line Rotation</div>
         <div class="right">
           <select [(ngModel)]="settings.linesRotation">
@@ -118,85 +109,62 @@
             <option value="NO">No rotation</option>
           </select>
         </div>
-      </div>
-      <div class="row">
         <div class="left">Lines</div>
         <div class="right">
           <input [(ngModel)]="settings.lines" type="number">
         </div>
-      </div>
-      <div class="row">
         <div class="left">Set Time</div>
         <div class="right">
           <input [(ngModel)]="settings.setTime" type="number">
         </div>
-      </div>
-      <div class="row">
         <div class="left">Preparation Time</div>
         <div class="right">
           <input [(ngModel)]="settings.preparationTime" type="number">
         </div>
-      </div>
-      <div class="row">
         <div class="left">Warning Time</div>
         <div class="right">
           <input [(ngModel)]="settings.warningTime" type="number">
         </div>
-      </div>
-      <div>
-        <hr/>
-      </div>
-      <div class="row">
+        <div class="left colspan-2">
+          <hr/>
+        </div>
         <div class="left">Continuous</div>
         <div class="right">
           <input type="checkbox" [(ngModel)]="settings.continuous">
         </div>
-      </div>
-      <div class="row">
         <div class="left">Rounds</div>
         <div class="right">
           <input [(ngModel)]="settings.roundSets" type="number">
         </div>
-      </div>
-      <div class="row">
         <div class="left">Number of sets</div>
         <div class="right">
           <input [(ngModel)]="settings.numberOfSets" type="number">
         </div>
-      </div>
-      <div>
-        <hr/>
-      </div>
-      <div class="row">
+        <div class="left colspan-2">
+          <hr/>
+        </div>
         <div class="left">Time of start</div>
         <div class="right">
           <input [(ngModel)]="settings.delayedStartTime" type="string">
         </div>
-      </div>
-      <div>
-        <hr/>
-      </div>
-      <div class="row">
+        <div class="left colspan-2">
+          <hr/>
+        </div>
         <div class="left">Brightness</div>
         <div class="right">
           <input [(ngModel)]="settings.brightness" type="number">
         </div>
-      </div>
-      <div class="row">
         <div class="left">Sound</div>
         <div class="right">
           <input type="checkbox" [(ngModel)]="settings.soundEnabled">
         </div>
-      </div>
-      <div>
-        <hr/>
-      </div>
-      <div class="row">
+        <div class="left colspan-2">
+          <hr/>
+        </div>
         <div class="left">Network</div>
         <div class="right">
           <input [(ngModel)]="settings.network" type="string">
         </div>
-      </div>
     </div>
     <div>
       <hr/>

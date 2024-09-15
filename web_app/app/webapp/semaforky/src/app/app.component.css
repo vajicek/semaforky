@@ -1,27 +1,29 @@
-.content {
-  width: 100%;
-  max-width: 100%;
-  margin-bottom: 3em;
-  height: -webkit-fill-available;
+/* MENU */
+
+.menu button {
+  width: 33.3%;
+  height: 2em;
+  font-size: 0.8em;
 }
+
+/* STAT/SETTINGS TABLE */
 
 .table {
-  min-width: 300px;
-  height: 100%;
-  overflow: auto;
-}
-
-.row {
-  display: table-row;
+  display: grid;
+  grid-template-columns: max-content auto;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
 .left {
-  display: table-cell;
-  width: 185px;
 }
 
 .right {
-  display: table-cell;
+  padding-left: 2em;
+}
+
+.colspan-2 {
+  grid-column: span 2;
 }
 
 .right select,
@@ -29,20 +31,7 @@
   font-size: 0.8em;
 }
 
-.clients {
-  display: table;
-  width: 100%;
-}
-
-.half .left {
-  display: table-cell;
-  width: 41%;
-}
-
-.half .right {
-  display: table-cell;
-  width: 2em;
-}
+/* COUNTDOWN + SEMAPHORE */
 
 .countdown {
   width: 100%;
@@ -55,11 +44,14 @@
   width: 100%;
 }
 
-.menu button {
+.redLight,
+.greenLight,
+.yellowLight {
+  display: inline-block;
   width: 33.3%;
-  height: 2em;
-  font-size: 0.8em;
 }
+
+/* ACTIONS */
 
 .actions {
   display: grid;
@@ -80,15 +72,32 @@
   margin: 1em;
 }
 
-.redLight,
-.greenLight,
-.yellowLight {
-  display: inline-block;
-  width: 33.3%;
+/* CLIENTS TABLE */
+
+.clients {
+  display: table;
+  width: 100%;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 
+.clients-row {
+  display: table-row;
+}
+
+.clients-row .left {
+  display: table-cell;
+}
+
+.clients-row .right {
+  display: table-cell;
+  width: 2em;
+}
+
+/* DIALOGS */
+
 .overlay {
-  position: fixed;
+  position: absolute;
   top: 0;
   left: 0;
   width: 100%;
@@ -104,7 +113,8 @@
   padding: 20px;
   border-radius: 5px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  max-width: 100%;
+  margin-left: 1em;
+  margin-right: 1em;
   text-align: center;
 }
 
