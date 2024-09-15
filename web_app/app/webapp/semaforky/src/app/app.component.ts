@@ -10,6 +10,7 @@ import { SemaforkyMachine, State, SemaforkyState } from "./states";
 import { RestClientController } from "./client";
 import { Scheduler } from "./scheduler";
 import { ViewChild, ElementRef } from '@angular/core';
+import { gitHash, gitDate } from './version';
 
 @Component({
   selector: "app-root",
@@ -23,6 +24,9 @@ export class AppComponent {
 
   SemaphoreLight: typeof SemaphoreLight = SemaphoreLight;
   LineOrder: typeof LineOrder = LineOrder;
+
+  gitHash = gitHash;
+  gitDate = gitDate;
 
   title = "semaforky";
   set: number = 1;
