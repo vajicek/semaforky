@@ -35,8 +35,8 @@ setup_ng:
 	cd app/webapp && npm install @angular/cli
 
 build_webapp:
-	sed -i -e "s/GIT_HASH_PLACEHOLDER/$(shell git log -1 --format='%H'|cut -c1-6)/" app/webapp/semaforky/src/app/version.ts
-	sed -i -e "s/GIT_DATE_PLACEHOLDER/$(shell git log -1 --format='%cd' --date=iso)/" app/webapp/semaforky/src/app/version.ts
+	sed -i -e "s/gitHash = \"\(.*\)\"/gitHash = \"$(shell git log -1 --format='%H'|cut -c1-6)\"/" app/webapp/semaforky/src/app/version.ts
+	sed -i -e "s/gitDate = \"\(.*\)\"/gitDate = \"$(shell git log -1 --format='%cd' --date=iso)\"/" app/webapp/semaforky/src/app/version.ts
 	cd app/webapp/semaforky && ../node_modules/.bin/ng build --optimization true --output-hashing none
 	mkdir -p app/data && cp -r app/webapp/semaforky/dist/semaforky/browser/* app/data
 
