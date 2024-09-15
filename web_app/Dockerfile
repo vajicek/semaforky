@@ -3,6 +3,7 @@ FROM ubuntu:20.04
 RUN apt-get update
 
 RUN apt-get install -y \
+	git \
 	make \
 	curl \
 	unzip \
@@ -13,7 +14,7 @@ RUN python3 -m pip install pyserial
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 
-RUN apt install -y nodejs
+RUN apt-get install -y nodejs
 
 WORKDIR /root
 
@@ -31,3 +32,12 @@ RUN curl -L \
 	ln -sf ~/mkspiffs-0.2.3-arduino-esp8266-linux64/mkspiffs ~/bin/
 
 EXPOSE 4200
+
+# user compatibility with host and mounted volumes
+ARG UID
+ARG GID
+
+RUN groupadd -g $GID mygroup
+RUN useradd --uid $UID -g mygroup myuser
+
+USER myuser

@@ -5,6 +5,8 @@ BC          ?= bc
 DEVICE      := /dev/ttyUSB0
 ESPTOOL_PY  := ${HOME}/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/tools/esptool/esptool.py
 PATH        := ${PATH}:/root/bin
+UID := $(shell id -u)
+GID := $(shell id -g)
 
 # DEPENDENCISE AND PREREQUISITES
 install_common:
@@ -33,8 +35,8 @@ setup_ng:
 	cd app/webapp && npm install @angular/cli
 
 build_webapp:
-	sed -e "s/GIT_HASH_PLACEHOLDER/$(git log -1 --format='%H'|cut -c1-6)/" app/webapp/semaforky/src/app/version.ts
-	sed -e "s/GIT_DATE_PLACEHOLDER/$(git log -1 --format='%cd' --date=iso)/" app/webapp/semaforky/src/app/version.ts
+	sed -i -e "s/GIT_HASH_PLACEHOLDER/$(shell git log -1 --format='%H'|cut -c1-6)/" app/webapp/semaforky/src/app/version.ts
+	sed -i -e "s/GIT_DATE_PLACEHOLDER/$(shell git log -1 --format='%cd' --date=iso)/" app/webapp/semaforky/src/app/version.ts
 	cd app/webapp/semaforky && ../node_modules/.bin/ng build --optimization true --output-hashing none
 	mkdir -p app/data && cp -r app/webapp/semaforky/dist/semaforky/browser/* app/data
 
@@ -74,16 +76,23 @@ install_app install_p5 install_p5_new install_p10x3 install_siren install_p10_se
 	$(ARDUINO_CLI) upload -p ${DEVICE} --fqbn $(BOARDCONFIG) devices/${DIR}
 
 build_devcontainer:
-	docker build -f ./Dockerfile . -t semaforky
+	docker build \
+	--build-arg UID=$(UID) \
+	--build-arg GID=$(GID) \
+	--no-cache \
+	-f ./Dockerfile \
+	. \
+	-t semaforky
 
 devcontainer:
 	docker run \
 	--privileged -v /dev/bus/usb:/dev/bus/usb \
 	-it \
 	--name devcontainer \
-	-v $(PWD):/tmp/home \
-	-w /tmp/home \
+	-v $(PWD)/..:/tmp/home \
+	-w /tmp/home/web_app \
 	-p 4200:4200 \
+	-u 0 \
 	semaforky /bin/bash
 
 deploy_testing:
