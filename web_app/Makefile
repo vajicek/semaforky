@@ -88,7 +88,7 @@ devcontainer:
 	docker run \
 	--privileged -v /dev/bus/usb:/dev/bus/usb \
 	-it \
-	--name devcontainer \
+	--name semaforky-devcontainer \
 	-v $(PWD)/..:/tmp/home \
 	-w /tmp/home/web_app \
 	-p 4200:4200 \

@@ -7,6 +7,10 @@ Any Web Browser          |  Hardware running REST/WEB server
 :-:|:-:
 ![](../doc/browser_spa_app.png)  |  ![](../doc/client_hardware.jpg)
 
+## Live demo
+
+See [Live demo]{http://vajicek.github.io/semaforky}.
+
 ## Prerequisites
 
 * Arduino 1.8.19
