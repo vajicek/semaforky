@@ -9,7 +9,7 @@ Any Web Browser          |  Hardware running REST/WEB server
 
 ## Live demo
 
-See [Live demo]{http://vajicek.github.io/semaforky}.
+See [Live demo](http://vajicek.github.io/semaforky).
 
 ## Prerequisites
 
