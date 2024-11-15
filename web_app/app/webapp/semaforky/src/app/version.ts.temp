@@ -1,0 +1,2 @@
+export const gitHash = "123abc";
+export const gitDate = "2001-01-01 00:00:00 +0200";
