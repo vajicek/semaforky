@@ -1,4 +1,5 @@
 import { CookieService } from "ngx-cookie-service";
+import { Injectable } from '@angular/core';
 
 export enum LinesRotation {
   BYROUND = "BYROUND",
@@ -19,6 +20,9 @@ export enum SemaphoreLight {
   YELLOW = 3
 }
 
+@Injectable({
+  providedIn: 'root'
+})
 export class Settings {
   public language: number = 0;
   public roundSets: number = 10;

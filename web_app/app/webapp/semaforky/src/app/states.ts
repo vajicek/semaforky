@@ -1,6 +1,9 @@
+import { Injectable } from '@angular/core';
 
-import { AppComponent } from "./app.component";
-import { LineOrder, SemaphoreLight, LinesRotation } from './settings';
+import { Settings, LineOrder, SemaphoreLight, LinesRotation } from './settings';
+import { RestClientController } from './client';
+import { Scheduler } from './scheduler';
+import { MessageEvent, MainComponentEventBus } from './main/main.component';
 
 export enum SemaforkyState {
   STARTED,
@@ -29,27 +32,51 @@ export abstract class State {
   abstract run(previous: State): void;
 }
 
+@Injectable({
+  providedIn: 'root'
+})
+export class SemaforkyMachineEventBus {
+  public currentState: MessageEvent<State> = new MessageEvent();
+  public moveTo: MessageEvent<SemaforkyState> = new MessageEvent();
+}
+
+@Injectable({
+  providedIn: 'root'
+})
 export class SemaforkyMachine {
   private states: Array<State> = [];
   private currentState: State | undefined = undefined;
   private currentRound: number = 1;
   private currentSet: number = 1;
   private currentLine: number = 0;
+  private countdown: number = 0;
   private customSet: boolean = false;
 
-  constructor(private semaforky: AppComponent) {
+  constructor(
+    private settings: Settings,
+    private restClientController: RestClientController,
+    private scheduler: Scheduler,
+    private mainComponentEventBus: MainComponentEventBus,
+    private semaforkyMachineEventBus: SemaforkyMachineEventBus
+  ) {
+    semaforkyMachineEventBus.moveTo.event$.subscribe(event => {
+      this.moveTo(event);
+    })
   }
 
   public init() {
     this.initializeStates();
     this.loadState();
+    this.mainComponentEventBus.countdown.event$.subscribe(countdown => {
+      this.countdown = countdown;
+    });
   }
 
   public moveTo(stateName: SemaforkyState) {
     const state = this.states.find(({ name }) => name === stateName);
     if (state) {
       let previousState = this.currentState;
-      this.setCurrent(state);
+      this.setCurrentState(state);
       if (previousState) {
         state.run(previousState);
       }
@@ -78,19 +105,19 @@ export class SemaforkyMachine {
       this.currentState?.name != SemaforkyState.STARTED &&
       this.currentState?.name != SemaforkyState.ROUND_STOPPED
     ) {
-      if (this.semaforky.settings.lines == 1) {
+      if (this.settings.lines == 1) {
         return LineOrder.AB;
-      } else if (this.semaforky.settings.lines == 2) {
-        if (this.semaforky.settings.linesRotation == LinesRotation.NO) {
+      } else if (this.settings.lines == 2) {
+        if (this.settings.linesRotation == LinesRotation.NO) {
           return LineOrder.AB;
-        } else if (this.semaforky.settings.linesRotation == LinesRotation.BYROUND) {
-          return (this.semaforky.machine.getCurrentLine() +
-            this.semaforky.machine.getCurrentRound()) % 2 == 1
+        } else if (this.settings.linesRotation == LinesRotation.BYROUND) {
+          return (this.getCurrentLine() +
+            this.getCurrentRound()) % 2 == 1
             ? LineOrder.AB
             : LineOrder.CD;
-        } else if (this.semaforky.settings.linesRotation == LinesRotation.BYSET) {
-          return this.semaforky.machine.getCurrentLine() !=
-            this.semaforky.machine.getCurrentSet() % 2
+        } else if (this.settings.linesRotation == LinesRotation.BYSET) {
+          return this.getCurrentLine() !=
+            this.getCurrentSet() % 2
             ? LineOrder.AB
             : LineOrder.CD;
         }
@@ -100,33 +127,33 @@ export class SemaforkyMachine {
   }
 
   protected loadState() {
-    var currentStateName = this.semaforky.settings.getCookieValue("currentState", "");
+    var currentStateName = this.settings.getCookieValue("currentState", "");
     if (currentStateName != "") {
-      this.currentState = this.states.find(
+      this.setCurrentState(this.states.find(
         (state) => state.name.toString() == currentStateName
-      );
+      )!);
     }
     this.currentSet = parseInt(
-      this.semaforky.settings.getCookieValue("currentSet", this.currentSet.toString())
+      this.settings.getCookieValue("currentSet", this.currentSet.toString())
     );
     this.currentLine = parseInt(
-      this.semaforky.settings.getCookieValue("currentLine", this.currentLine.toString())
+      this.settings.getCookieValue("currentLine", this.currentLine.toString())
     );
     this.customSet =
-      this.semaforky.settings.getCookieValue("customSet", this.customSet.toString()) ===
+      this.settings.getCookieValue("customSet", this.customSet.toString()) ===
       "true";
   }
 
   protected storeState() {
     if (this.currentState) {
-      this.semaforky.settings.setCookieValue(
+      this.settings.setCookieValue(
         "currentState",
         this.currentState.name.toString()
       );
     }
-    this.semaforky.settings.setCookieValue("currentSet", this.currentSet.toString());
-    this.semaforky.settings.setCookieValue("currentLine", this.currentLine.toString());
-    this.semaforky.settings.setCookieValue("customSet", this.customSet.toString());
+    this.settings.setCookieValue("currentSet", this.currentSet.toString());
+    this.settings.setCookieValue("currentLine", this.currentLine.toString());
+    this.settings.setCookieValue("customSet", this.customSet.toString());
   }
 
   protected addState(state: State) {
@@ -134,13 +161,18 @@ export class SemaforkyMachine {
     return state;
   }
 
-  protected setCurrent(state: State) {
+  protected setCurrentState(state: State) {
+    this.semaforkyMachineEventBus.currentState.emit(state);
     this.currentState = state;
+  }
+
+  protected updateGui() {
+    this.mainComponentEventBus.updateGui.emit();
   }
 
   protected initializeStates() {
     let self = this;
-    this.setCurrent(
+    this.setCurrentState(
       this.addState(
         new (class extends State {
           run(previous: State) {
@@ -158,14 +190,14 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.semaforky.restClientController.updateSemaphores(
+          self.restClientController.updateSemaphores(
             SemaphoreLight.NONE
           );
-          self.semaforky.restClientController.updateLines(
+          self.restClientController.updateLines(
             self.getCurrentLineOrder()
           );
-          self.semaforky.scheduler.waitForRoundStart();
-          self.semaforky.updateGui();
+          self.scheduler.waitForRoundStart();
+          self.updateGui();
         }
       })(SemaforkyState.START_WAITING, [
         SemaforkyState.ROUND_STARTED,
@@ -175,8 +207,8 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.semaforky.scheduler.startRound();
-          self.semaforky.updateGui();
+          self.scheduler.startRound();
+          self.updateGui();
           self.currentSet = 1;
           self.currentLine = 0;
           self.moveTo(SemaforkyState.SET_STARTED);
@@ -190,24 +222,24 @@ export class SemaforkyMachine {
       new (class extends State {
         run(previous: State) {
           self.customSet = true;
-          self.semaforky.updateGui();
-          self.semaforky.restClientController.playSiren(2);
-          self.semaforky.restClientController.updateSemaphores(
+          self.updateGui();
+          self.restClientController.playSiren(2);
+          self.restClientController.updateSemaphores(
             SemaphoreLight.RED
           );
-          self.semaforky.scheduler.startCustomSet();
+          self.scheduler.startCustomSet();
         }
       })(SemaforkyState.CUSTOM_SET_STARTED, [SemaforkyState.READY])
     );
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.semaforky.updateGui();
-          self.semaforky.restClientController.playSiren(2);
-          self.semaforky.restClientController.updateSemaphores(
+          self.updateGui();
+          self.restClientController.playSiren(2);
+          self.restClientController.updateSemaphores(
             SemaphoreLight.RED
           );
-          self.semaforky.scheduler.startSet();
+          self.scheduler.startSet();
         }
       })(SemaforkyState.SET_STARTED, [SemaforkyState.READY])
     );
@@ -215,13 +247,13 @@ export class SemaforkyMachine {
       new (class extends State {
         run(previous: State) {
           if (previous.name == SemaforkyState.SET_PAUSED) {
-            self.semaforky.scheduler.resume();
-            self.semaforky.updateGui();
+            self.scheduler.resume();
+            self.updateGui();
             return;
           }
-          self.semaforky.updateGui();
-          self.semaforky.restClientController.countdown(
-            self.semaforky.settings.preparationTime,
+          self.updateGui();
+          self.restClientController.countdown(
+            self.settings.preparationTime,
             true
           );
         }
@@ -235,17 +267,17 @@ export class SemaforkyMachine {
       new (class extends State {
         run(previous: State) {
           if (previous.name == SemaforkyState.SET_PAUSED) {
-            self.semaforky.scheduler.resume();
-            self.semaforky.updateGui();
+            self.scheduler.resume();
+            self.updateGui();
             return;
           }
-          self.semaforky.updateGui();
-          self.semaforky.restClientController.updateSemaphores(
+          self.updateGui();
+          self.restClientController.updateSemaphores(
             SemaphoreLight.GREEN
           );
-          self.semaforky.restClientController.playSiren(1);
-          self.semaforky.restClientController.countdown(
-            self.semaforky.settings.setTime,
+          self.restClientController.playSiren(1);
+          self.restClientController.countdown(
+            self.settings.setTime,
             true
           );
         }
@@ -261,14 +293,14 @@ export class SemaforkyMachine {
       new (class extends State {
         run(previous: State) {
           if (previous.name == SemaforkyState.SET_PAUSED) {
-            self.semaforky.scheduler.resume();
-            self.semaforky.updateGui();
+            self.scheduler.resume();
+            self.updateGui();
             return;
           }
-          self.semaforky.restClientController.updateSemaphores(
+          self.restClientController.updateSemaphores(
             SemaphoreLight.YELLOW
           );
-          self.semaforky.updateGui();
+          self.updateGui();
         }
       })(SemaforkyState.WARNING, [
         SemaforkyState.SET_CANCELED,
@@ -280,36 +312,35 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.semaforky.scheduler.stopSet();
+          self.scheduler.stopSet();
           if (!self.customSet) {
             this.updateSetAndLine();
           } else {
             self.customSet = false;
           }
-          self.semaforky.updateGui();
+          self.updateGui();
           this.updateState();
         }
 
         updateState() {
           if (self.currentLine == 0) {
             // remain stopped (or handle special cases) if set is over
-            self.semaforky.restClientController.playSiren(3);
-            self.semaforky.restClientController.updateSemaphores(
+            self.restClientController.playSiren(3);
+            self.restClientController.updateSemaphores(
               SemaphoreLight.RED
             );
-            self.semaforky.restClientController.updateClocks(0);
-            self.semaforky.restClientController.countdown(
-              self.semaforky.countdown,
+            self.restClientController.updateClocks(0);
+            self.restClientController.countdown(
+              self.countdown,
               false
             );
             // show Lines with a delay
             window.setTimeout(() => {
-              self.semaforky
-                .restClientController
+              self.restClientController
                 .updateLines(self.getCurrentLineOrder());
             }, 2000);
-            if (self.semaforky.settings.continuous) {
-              if (self.currentSet <= self.semaforky.settings.numberOfSets) {
+            if (self.settings.continuous) {
+              if (self.currentSet <= self.settings.numberOfSets) {
                 self.moveTo(SemaforkyState.SET_STARTED);
               } else {
                 self.moveTo(SemaforkyState.ROUND_STOPPED);
@@ -322,7 +353,7 @@ export class SemaforkyMachine {
         }
 
         updateSetAndLine() {
-          if (self.currentLine + 1 < self.semaforky.settings.lines) {
+          if (self.currentLine + 1 < self.settings.lines) {
             // if number of line is higher than current line, increase line
             self.currentLine++;
           } else {
@@ -341,9 +372,9 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.semaforky.pausedState = previous;
-          self.semaforky.scheduler.pause();
-          self.semaforky.updateGui();
+          self.mainComponentEventBus.pausedState.emit(previous);
+          self.scheduler.pause();
+          self.updateGui();
         }
       })(SemaforkyState.SET_PAUSED, [
         SemaforkyState.READY,
@@ -356,17 +387,17 @@ export class SemaforkyMachine {
       new (class extends State {
         run(previous: State) {
           self.customSet = false;
-          self.semaforky.scheduler.cancelSet();
-          self.semaforky.updateGui();
-          self.semaforky.restClientController.updateSemaphores(
+          self.scheduler.cancelSet();
+          self.updateGui();
+          self.restClientController.updateSemaphores(
             SemaphoreLight.RED
           );
-          self.semaforky.restClientController.playSiren(2);
-          self.semaforky.restClientController.updateLines(
+          self.restClientController.playSiren(2);
+          self.restClientController.updateLines(
             self.getCurrentLineOrder()
           );
-          self.semaforky.restClientController.countdown(
-            self.semaforky.countdown,
+          self.restClientController.countdown(
+            self.countdown,
             false
           );
         }
@@ -379,19 +410,19 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.semaforky.restClientController.updateSemaphores(
+          self.restClientController.updateSemaphores(
             SemaphoreLight.RED
           );
-          self.semaforky.restClientController.updateClocks(0);
-          self.semaforky.restClientController.countdown(0, false);
-          self.semaforky.updateSetClocks(0);
-          self.semaforky.updateGui();
+          self.restClientController.updateClocks(0);
+          self.restClientController.countdown(0, false);
+          self.mainComponentEventBus.updateSetClocks.emit(0);
+          self.updateGui();
           self.currentRound++;
           // TODO: LINES
           if (previous.name != SemaforkyState.START_WAITING) {
-            self.semaforky.restClientController.playSiren(4);
+            self.restClientController.playSiren(4);
           }
-          self.semaforky.scheduler.endRound();
+          self.scheduler.endRound();
         }
       })(SemaforkyState.ROUND_STOPPED, [
         SemaforkyState.SETTINGS,
@@ -402,14 +433,14 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.semaforky.updateGui();
+          self.updateGui();
         }
       })(SemaforkyState.SETTINGS, [SemaforkyState.STARTED])
     );
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.semaforky.updateGui();
+          self.updateGui();
         }
       })(SemaforkyState.MANUAL_CONTROL, [SemaforkyState.STARTED])
     );

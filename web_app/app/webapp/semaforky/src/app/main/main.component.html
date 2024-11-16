@@ -1,0 +1,163 @@
+<div #contentElement>
+	<div class="menu">
+		<button type="button" [disabled]="!scanEnabled" (click)="onScan()" clickable>Scan</button>
+		<button type="button" [disabled]="!settingsEnabled" (click)="onSettings()" clickable>Settings</button>
+		<button type="button" [disabled]="!manualControlEnabled" (click)="onManualControl()" clickable>Manual
+			Control</button>
+	</div>
+	<div>
+		<hr />
+	</div>
+	<div class="table">
+		<div class="left">Round</div>
+		<div class="right">{{round}}</div>
+		<div class="left">Set</div>
+		<div class="right">{{set}}</div>
+		<div class="left">Round time</div>
+		<div class="right">{{roundTime| date:'HH:mm:ss': 'UTC'}}</div>
+		<div class="left">Line</div>
+		<div class="right" [ngSwitch]="line">
+			<span *ngSwitchCase="LineOrder.AB">AB</span>
+			<span *ngSwitchCase="LineOrder.CD">CD</span>
+			<span *ngSwitchCase="LineOrder.UNDEFINED"></span>
+		</div>
+	</div>
+	<div>
+		<hr />
+	</div>
+	<div class="countdown">
+		{{countdown|number:'3.0-0'}}
+	</div>
+	<div class="semaphore">
+		<div class="redLight">
+			<span [hidden]="!isVisible(SemaphoreLight.RED)">
+				<svg viewBox="0 0 1 1" version="1.1" class="redLightGlyph" xmlns="http://www.w3.org/2000/svg"
+					xmlns:svg="http://www.w3.org/2000/svg">
+					<circle fill="#FF0000" cx="0.5" cy="0.5" r="0.5" />
+				</svg>
+			</span>
+		</div>
+		<div class="greenLight">
+			<span [hidden]="!isVisible(SemaphoreLight.GREEN)">
+				<svg viewBox="0 0 1 1" version="1.1" class="greenLightGlyph" xmlns="http://www.w3.org/2000/svg"
+					xmlns:svg="http://www.w3.org/2000/svg">
+					<circle fill="#00FF00" cx="0.5" cy="0.5" r="0.5" />
+				</svg>
+			</span>
+		</div>
+		<div class="yellowLight">
+			<span [hidden]="!isVisible(SemaphoreLight.YELLOW)">
+				<svg viewBox="0 0 1 1" version="1.1" class="yellowLightGlyph" xmlns="http://www.w3.org/2000/svg"
+					xmlns:svg="http://www.w3.org/2000/svg">
+					<circle fill="#FFFF00" cx="0.5" cy="0.5" r="0.5" />
+				</svg>
+			</span>
+		</div>
+	</div>
+	<div>
+		<hr />
+	</div>
+	<div class="actions">
+		<button type="button" [disabled]="!beginRoundEnabled" (click)="onBeginRound()" clickable>Begin
+			Round...</button>
+		<button type="button" [disabled]="!endRoundEnabled" (click)="onEndRound()" clickable>End Round</button>
+	</div>
+	<div class="actions">
+		<button class="padded" type="button" [disabled]="!startSetEnabled" (click)="onStartSet()" clickable>Start
+			Set</button>
+		<button class="padded" type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>Stop
+			Set</button>
+	</div>
+	<div class="actions">
+		<button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>Custom
+			Set...</button>
+		<button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>Cancel Set</button>
+	</div>
+	<div class="actions">
+		<button type="button" [disabled]="!resumeEnabled" (click)="onResumeSet()" clickable>Resume</button>
+		<button type="button" [disabled]="!pauseEnabled" (click)="onPauseSet()" clickable>Pause</button>
+	</div>
+	<div>
+		<hr />
+	</div>
+	<div>
+		<div class="clients">
+			<div class="clients-row">
+				<div class="left">Clients</div>
+				<div class="right">{{restClientController.getAllClients().size}}</div>
+				<div class="left">Clocks</div>
+				<div class="right">{{restClientController.getClients('clock').length}}</div>
+			</div>
+			<div class="clients-row">
+				<div class="left">Semaphores</div>
+				<div class="right">{{restClientController.getClients('semaphore').length}}</div>
+				<div class="left">Sirens</div>
+				<div class="right">{{restClientController.getClients('siren').length}}</div>
+			</div>
+			<div class="clients-row">
+				<div class="left">Lines</div>
+				<div class="right">{{restClientController.getClients('lines').length}}</div>
+				<div class="left">Countdown</div>
+				<div class="right">{{restClientController.getClients('countdown').length}}</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="overlay" #dialogBeginRound>
+	<div class="dialogBeginRound dialog">
+
+		<div class="buttons">
+			<button (click)="onBeginRoundNow()">Now</button>
+		</div>
+
+		<hr />
+		<div class="actions">
+			<div class="left">Time of start</div>
+			<div class="right">
+				<input [(ngModel)]="settings.delayedStartTime" type="string">
+			</div>
+		</div>
+		<br />
+		<div class="buttons">
+			<button (click)="onBeginRoundDelayed()">Delayed</button>
+		</div>
+
+		<hr />
+		<div class="actions">
+			<div class="left">Rounds</div>
+			<div class="right">
+				<input [(ngModel)]="settings.roundSets" type="number">
+			</div>
+			<div class="left">Number of sets</div>
+			<div class="right">
+				<input [(ngModel)]="settings.numberOfSets" type="number">
+			</div>
+		</div>
+		<br />
+		<div class="buttons">
+			<button (click)="onBeginRoundContinuous()">Continuous</button>
+		</div>
+
+		<hr />
+		<div class="buttons">
+			<button (click)="onBeginRoundCancel()">Cancel</button>
+		</div>
+	</div>
+</div>
+
+<div class="overlay" #dialogCustomSet>
+	<div class="dialogCustomSet dialog">
+		<div class="actions">
+			<div class="left">Custom Set Time</div>
+			<div class="right">
+				<input [(ngModel)]="settings.customSetTime" type="number">
+			</div>
+		</div>
+		<br />
+		<div class="buttons">
+			<button (click)="onCustomSetStart()">Start</button>
+			<button (click)="onCustomSetCancel()">Cancel</button>
+		</div>
+	</div>
+</div>

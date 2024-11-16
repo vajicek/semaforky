@@ -1,6 +1,13 @@
+import { Injectable } from '@angular/core';
+
 import { Settings } from "./settings";
-import { SemaforkyState } from "./states";
-import { AppComponent } from "./app.component";
+import {
+  State,
+  SemaforkyMachineEventBus,
+  SemaforkyState
+} from "./states";
+import { RestClientController } from './client';
+import { MainComponentEventBus } from './main/main.component';
 
 abstract class Event {
   constructor(public time: Date) {
@@ -73,8 +80,11 @@ class SetClockEvent extends Event {
   constructor(
     _time: Date,
     private setStart: Date,
-    private semaforky: AppComponent,
-    private setTiming: SetTiming
+    private restClientController: RestClientController,
+    private scheduler: Scheduler,
+    private settings: Settings,
+    private setTiming: SetTiming,
+    private mainComponentEventBus: MainComponentEventBus
   ) {
     super(_time);
   }
@@ -96,23 +106,25 @@ class SetClockEvent extends Event {
     let remainingSeconds = this.getRemainingSeconds(seconds);
 
     if (remainingSeconds != this.previousValue) {
-      this.semaforky.restClientController.updateClocks(
+      this.restClientController.updateClocks(
         Math.round(remainingSeconds)
       );
       this.previousValue = remainingSeconds;
     }
 
-    this.semaforky.updateSetClocks(remainingSeconds);
+    this.mainComponentEventBus.updateSetClocks.emit(remainingSeconds);
 
     // plan the event again
-    this.semaforky.scheduler.addEvent(
+    this.scheduler.addEvent(
       new SetClockEvent(
         new Date(now.getTime() + 100),
         this.setStart,
-        this.semaforky,
-        this.setTiming
-      )
-    );
+        this.restClientController,
+        this.scheduler,
+        this.settings,
+        this.setTiming,
+        this.mainComponentEventBus
+      ));
   }
 
   public override timeShift(diff: number) {
@@ -122,15 +134,15 @@ class SetClockEvent extends Event {
 
   private getRemainingSeconds(seconds: number): number {
     let remainingSeconds: number = 0;
-    if (!this.semaforky.machine.getCurrentState()) {
+    if (this.scheduler.currentState == null) {
       return -1;
     }
 
-    let currentStateName = this.semaforky.machine.getCurrentState()?.name;
+    let currentStateName = this.scheduler.currentState?.name;
 
     if (currentStateName == SemaforkyState.START_WAITING) {
       let sec: number =
-        (this.semaforky.settings.getDelayedStartTime().getTime() -
+        (this.settings.getDelayedStartTime().getTime() -
           new Date().getTime()) /
         1000;
       remainingSeconds = Math.max(Math.min(sec, 999), 0);
@@ -148,7 +160,7 @@ class SetClockEvent extends Event {
         0
       );
     } else if (currentStateName == SemaforkyState.MANUAL_CONTROL) {
-      remainingSeconds = Math.max(this.semaforky.settings.setTime - seconds, 0);
+      remainingSeconds = Math.max(this.settings.setTime - seconds, 0);
     }
 
     return remainingSeconds;
@@ -159,7 +171,7 @@ class SemaphoreEvent extends Event {
   constructor(
     _time: Date,
     private nextState: SemaforkyState,
-    private semaforky: AppComponent
+    private semaforkyMachineEventBus: SemaforkyMachineEventBus
   ) {
     super(_time);
   }
@@ -173,7 +185,7 @@ class SemaphoreEvent extends Event {
   }
 
   public run(this: SemaphoreEvent): void {
-    this.semaforky.machine.moveTo(this.nextState);
+    this.semaforkyMachineEventBus.moveTo.emit(this.nextState);
   }
 }
 
@@ -181,7 +193,8 @@ class RoundClockEvent extends Event {
   constructor(
     _time: Date,
     private roundStart: Date,
-    private semaforky: AppComponent
+    private scheduler: Scheduler,
+    private mainComponentEventBus: MainComponentEventBus
   ) {
     super(_time);
   }
@@ -196,22 +209,34 @@ class RoundClockEvent extends Event {
 
   public run(this: RoundClockEvent): void {
     let now: Date = new Date();
-    this.semaforky.updateRoundClocks(this.roundStart);
-    this.semaforky.scheduler.addEvent(
+    this.mainComponentEventBus.updateRoundClocks.emit(this.roundStart);
+    this.scheduler.addEvent(
       new RoundClockEvent(
         new Date(now.getTime() + 200),
         this.roundStart,
-        this.semaforky
-      )
-    );
+        this.scheduler,
+        this.mainComponentEventBus
+      ));
   }
 }
 
+@Injectable({
+  providedIn: 'root'
+})
 export class Scheduler {
   private events: PriorityQueue<Event> = new PriorityQueue<Event>(comparator);
   private paused: Date | null = null;
+  currentState: State | null = null;
 
-  constructor(private semaforky: AppComponent) {
+  constructor(
+    private settings: Settings,
+    private restClientController: RestClientController,
+    private mainComponentEventBus: MainComponentEventBus,
+    private semaforkyMachineEventBus: SemaforkyMachineEventBus
+  ) {
+    semaforkyMachineEventBus.currentState.event$.subscribe((state: State) => {
+      this.currentState = state;
+    });
   }
 
   public init() {
@@ -223,12 +248,11 @@ export class Scheduler {
   }
 
   private storeState() {
-    let settings = this.semaforky.settings;
     var eventList = [];
     for (var ev of this.events.toArray()) {
       eventList.push(ev.serialize());
     }
-    settings.setCookieValue("events", JSON.stringify(eventList));
+    this.settings.setCookieValue("events", JSON.stringify(eventList));
   }
 
   private jsonObjectToEvent(event: any): Event | null {
@@ -237,22 +261,26 @@ export class Scheduler {
         return new RoundClockEvent(
           new Date(event["time"]),
           new Date(event["roundStart"]),
-          this.semaforky
+          this,
+          this.mainComponentEventBus
         );
       }
       case "SetClockEvent": {
         return new SetClockEvent(
           new Date(event["time"]),
           new Date(event["setStart"]),
-          this.semaforky,
-          new SetTiming(event["preparationTimeTime"], event["setTime"])
+          this.restClientController,
+          this,
+          this.settings,
+          new SetTiming(event["preparationTimeTime"], event["setTime"]),
+          this.mainComponentEventBus
         );
       }
       case "SemaphoreEvent": {
         return new SemaphoreEvent(
           new Date(event["time"]),
           event["nextState"],
-          this.semaforky
+          this.semaforkyMachineEventBus
         );
       }
       default: {
@@ -263,8 +291,7 @@ export class Scheduler {
   }
 
   private loadState() {
-    let settings = this.semaforky.settings;
-    var jsonArray = JSON.parse(settings.getCookieValue("events", "[]"));
+    var jsonArray = JSON.parse(this.settings.getCookieValue("events", "[]"));
     for (var i = 0; i < jsonArray.length; i++) {
       var jsonObject = jsonArray[i];
       var event = this.jsonObjectToEvent(jsonObject);
@@ -297,25 +324,27 @@ export class Scheduler {
   }
 
   public startSet() {
-    this.startSetInternal(this.semaforky.settings.setTime);
+    this.startSetInternal(this.settings.setTime);
   }
 
   private startSetInternal(setTime: number) {
     let now = new Date();
-    let settings = this.semaforky.settings;
+    let settings = this.settings;
 
     this.cancelSetEvents();
 
     this.addEvent(
-      new SemaphoreEvent(now, SemaforkyState.READY, this.semaforky)
-    );
+      new SemaphoreEvent(
+        now,
+        SemaforkyState.READY,
+        this.semaforkyMachineEventBus
+      ));
     this.addEvent(
       new SemaphoreEvent(
         new Date(now.getTime() + settings.preparationTime * 1000 - 500),
         SemaforkyState.FIRE,
-        this.semaforky
-      )
-    );
+        this.semaforkyMachineEventBus
+      ));
     this.addEvent(
       new SemaphoreEvent(
         new Date(
@@ -323,60 +352,64 @@ export class Scheduler {
           (setTime + settings.preparationTime - settings.warningTime) * 1000
         ),
         SemaforkyState.WARNING,
-        this.semaforky
-      )
-    );
+        this.semaforkyMachineEventBus
+      ));
     this.addEvent(
       new SemaphoreEvent(
         new Date(
           now.getTime() + (settings.preparationTime + setTime) * 1000 + 500
         ),
         SemaforkyState.SET_STOPPED,
-        this.semaforky
-      )
-    );
+        this.semaforkyMachineEventBus
+      ));
 
     this.addEvent(
       new SetClockEvent(
         now,
         now,
-        this.semaforky,
-        new SetTiming(settings.preparationTime, setTime)
-      )
-    );
+        this.restClientController,
+        this,
+        this.settings,
+        new SetTiming(settings.preparationTime, setTime),
+        this.mainComponentEventBus
+      ));
   }
 
   public startCustomSet() {
-    this.startSetInternal(this.semaforky.settings.customSetTime);
+    this.startSetInternal(this.settings.customSetTime);
   }
 
   public startRound() {
-    this.addEvent(new RoundClockEvent(new Date(), new Date(), this.semaforky));
+    this.addEvent(new RoundClockEvent(
+      new Date(),
+      new Date(),
+      this,
+      this.mainComponentEventBus
+    ));
   }
 
   public waitForRoundStart() {
-    let settings: Settings = this.semaforky.settings;
-
     this.cancelSetEvents();
 
     // start round even
     this.addEvent(
       new SemaphoreEvent(
-        settings.getDelayedStartTime(),
+        this.settings.getDelayedStartTime(),
         SemaforkyState.ROUND_STARTED,
-        this.semaforky
-      )
-    );
+        this.semaforkyMachineEventBus
+      ));
 
     // high frequency clock event
     this.addEvent(
       new SetClockEvent(
         new Date(),
         new Date(),
-        this.semaforky,
-        new SetTiming(settings.preparationTime, settings.setTime)
-      )
-    );
+        this.restClientController,
+        this,
+        this.settings,
+        new SetTiming(this.settings.preparationTime, this.settings.setTime),
+        this.mainComponentEventBus
+      ));
   }
 
   public stopSet() {
