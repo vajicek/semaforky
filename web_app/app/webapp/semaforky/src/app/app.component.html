@@ -128,31 +128,14 @@
         <div class="left colspan-2">
           <hr/>
         </div>
-        <div class="left">Continuous</div>
-        <div class="right">
-          <input type="checkbox" [(ngModel)]="settings.continuous">
-        </div>
-        <div class="left">Rounds</div>
-        <div class="right">
-          <input [(ngModel)]="settings.roundSets" type="number">
-        </div>
-        <div class="left">Number of sets</div>
-        <div class="right">
-          <input [(ngModel)]="settings.numberOfSets" type="number">
-        </div>
-        <div class="left colspan-2">
-          <hr/>
-        </div>
-        <div class="left">Time of start</div>
-        <div class="right">
-          <input [(ngModel)]="settings.delayedStartTime" type="string">
-        </div>
-        <div class="left colspan-2">
-          <hr/>
-        </div>
         <div class="left">Brightness</div>
         <div class="right">
-          <input [(ngModel)]="settings.brightness" type="number">
+          <input [(ngModel)]="settings.brightness"
+            (input)="onBrightnessChange()"
+            type="range"
+            name="volume"
+            min="0"
+             max="255" />
         </div>
         <div class="left">Sound</div>
         <div class="right">
@@ -245,6 +228,12 @@
 
 <div class="overlay" #dialogBeginRound>
   <div class="dialogBeginRound dialog">
+
+    <div class="buttons">
+      <button (click)="onBeginRoundNow()">Now</button>
+    </div>
+
+    <hr />
     <div class="actions">
       <div class="left">Time of start</div>
       <div class="right">
@@ -253,8 +242,27 @@
     </div>
     <br />
     <div class="buttons">
-      <button (click)="onBeginRoundNow()">Now</button>
       <button (click)="onBeginRoundDelayed()">Delayed</button>
+    </div>
+
+    <hr />
+    <div class="actions">
+      <div class="left">Rounds</div>
+      <div class="right">
+        <input [(ngModel)]="settings.roundSets" type="number">
+      </div>
+      <div class="left">Number of sets</div>
+      <div class="right">
+        <input [(ngModel)]="settings.numberOfSets" type="number">
+      </div>
+    </div>
+    <br />
+    <div class="buttons">
+      <button (click)="onBeginRoundContinuous()">Continuous</button>
+    </div>
+
+    <hr />
+    <div class="buttons">
       <button (click)="onBeginRoundCancel()">Cancel</button>
     </div>
   </div>

@@ -168,13 +168,21 @@ export class AppComponent {
   }
 
   public onBeginRoundNow() {
+    this.settings.continuous = false;
     this.dialogBeginRound.nativeElement.style.display = "none";
     this.machine.moveTo(SemaforkyState.ROUND_STARTED);
   }
 
   public onBeginRoundDelayed() {
+    this.settings.continuous = false;
     this.dialogBeginRound.nativeElement.style.display = "none";
     this.machine.moveTo(SemaforkyState.START_WAITING);
+  }
+
+  public onBeginRoundContinuous() {
+    this.settings.continuous = true;
+    this.dialogBeginRound.nativeElement.style.display = "none";
+    this.machine.moveTo(SemaforkyState.ROUND_STARTED);
   }
 
   public onBeginRoundCancel() {
@@ -195,6 +203,10 @@ export class AppComponent {
 
   public onStopSet() {
     this.machine.moveTo(SemaforkyState.SET_STOPPED);
+  }
+
+  public onBrightnessChange() {
+    this.restClientController.updateBrightness();
   }
 
   public onCancelSet() {

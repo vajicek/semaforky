@@ -110,6 +110,10 @@ export class RestClientController {
     );
   }
 
+  public updateBrightness() {
+    this.updateClocks(this.remainingSeconds);
+  }
+
   public updateClocks(remainingSeconds: number) {
     this.remainingSeconds = remainingSeconds;
     let encodedValue = this.getEncodedValue();
