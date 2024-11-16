@@ -1,10 +1,15 @@
+import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { LineOrder, SemaphoreLight } from "./settings";
-import { AppComponent } from "./app.component";
 import { Subscription } from "rxjs";
+
+import { Settings, LineOrder, SemaphoreLight } from "./settings";
+import { MainComponentEventBus } from './main/main.component';
 
 type Request = { control: string; value: string };
 
+@Injectable({
+  providedIn: 'root'
+})
 export class RestClientController {
   remainingSeconds: number = 0;
   previousEncodedValue: number = 0;
@@ -14,14 +19,15 @@ export class RestClientController {
 
   constructor(
     private http: HttpClient,
-    private semaforky: AppComponent
+    private settings: Settings,
+    private eventBus: MainComponentEventBus
   ) {
     this.audio = this.initAudio();
   }
 
   public getAllClients(): Set<string> {
     var addresses: Set<string> = new Set<string>();
-    this.semaforky.settings.clientsByCapability.forEach(
+    this.settings.clientsByCapability.forEach(
       (addressesWithCapability, capability) => {
         addressesWithCapability.forEach((addressWithCapability) => {
           if (!addresses.has(addressWithCapability)) {
@@ -34,21 +40,22 @@ export class RestClientController {
   }
 
   protected updateProgress() {
-    this.semaforky.scanEnabled = !this.isScanning();
-    if (!this.isScanning()) {
-      this.semaforky.settings.storeState();
+    var isScanning = this.isScanning();
+    this.eventBus.scanEnabled.emit(!isScanning);
+    if (!isScanning) {
+      this.settings.storeState();
     }
   }
 
   protected updateCapabilitiesMap(clientAddress: string, capabilities: string) {
     var capabilitiesArray: string[] = capabilities.split(",");
     capabilitiesArray.forEach((capability) => {
-      if (this.semaforky.settings.clientsByCapability.has(capability)) {
-        this.semaforky.settings.clientsByCapability
+      if (this.settings.clientsByCapability.has(capability)) {
+        this.settings.clientsByCapability
           .get(capability)
           ?.push(clientAddress);
       } else {
-        this.semaforky.settings.clientsByCapability.set(capability, [
+        this.settings.clientsByCapability.set(capability, [
           clientAddress,
         ]);
       }
@@ -76,8 +83,8 @@ export class RestClientController {
   }
 
   public scan() {
-    this.semaforky.settings.clientsByCapability.clear();
-    var network = this.semaforky.settings.network;
+    this.settings.clientsByCapability.clear();
+    var network = this.settings.network;
     var lastIndex = network.lastIndexOf(".");
     var networkPrefix = network.substring(0, lastIndex + 1);
     for (var i = 1; i < 255; i++) {
@@ -95,7 +102,7 @@ export class RestClientController {
   }
 
   public getClients(capability: string): string[] {
-    var clients = this.semaforky.settings.clientsByCapability.get(capability);
+    var clients = this.settings.clientsByCapability.get(capability);
     if (clients == undefined) {
       return [];
     }
@@ -105,7 +112,7 @@ export class RestClientController {
   protected getEncodedValue() {
     return (
       this.remainingSeconds |
-      (this.semaforky.settings.brightness << 24) |
+      (this.settings.brightness << 24) |
       (Number(this.semaphoreLight) << 16)
     );
   }
@@ -144,7 +151,7 @@ export class RestClientController {
   }
 
   public playAudio(count: number) {
-    if (this.semaforky.settings.soundEnabled) {
+    if (this.settings.soundEnabled) {
       var self = this;
       var handler = function () {
         count--;
@@ -168,7 +175,7 @@ export class RestClientController {
     let encodedValue =
       count |
       (start ? 1 << 16 : 0) |
-      (this.semaforky.settings.brightness << 24);
+      (this.settings.brightness << 24);
     this.control("countdown", 5, encodedValue);
   }
 

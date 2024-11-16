@@ -1,0 +1,14 @@
+.actions {
+	display: grid;
+	grid-template-columns: 50% 50%;
+	align-items: center;
+}
+
+.actions button {
+	height: 2em;
+	font-size: 1em;
+	width: 100%;
+	width: -moz-available;
+	width: -webkit-fill-available;
+	width: fill-available;
+}

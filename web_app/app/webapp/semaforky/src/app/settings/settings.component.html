@@ -1,0 +1,57 @@
+<div #contentElement>
+	<div>
+		<h1>Settings</h1>
+	</div>
+	<div class="table">
+		<div class="left">Line Rotation</div>
+		<div class="right">
+			<select [(ngModel)]="settings.linesRotation">
+				<option value="BYROUND">By round</option>
+				<option value="BYSET">By set</option>
+				<option value="NO">No rotation</option>
+			</select>
+		</div>
+		<div class="left">Lines</div>
+		<div class="right">
+			<input [(ngModel)]="settings.lines" type="number">
+		</div>
+		<div class="left">Set Time</div>
+		<div class="right">
+			<input [(ngModel)]="settings.setTime" type="number">
+		</div>
+		<div class="left">Preparation Time</div>
+		<div class="right">
+			<input [(ngModel)]="settings.preparationTime" type="number">
+		</div>
+		<div class="left">Warning Time</div>
+		<div class="right">
+			<input [(ngModel)]="settings.warningTime" type="number">
+		</div>
+		<div class="left colspan-2">
+			<hr />
+		</div>
+		<div class="left">Brightness</div>
+		<div class="right">
+			<input [(ngModel)]="settings.brightness" (input)="onBrightnessChange()" type="range" name="volume"
+				min="0" max="255" />
+		</div>
+		<div class="left">Sound</div>
+		<div class="right">
+			<input type="checkbox" [(ngModel)]="settings.soundEnabled">
+		</div>
+		<div class="left colspan-2">
+			<hr />
+		</div>
+		<div class="left">Network</div>
+		<div class="right">
+			<input [(ngModel)]="settings.network" type="string">
+		</div>
+	</div>
+	<div>
+		<hr />
+	</div>
+	<div class="actions">
+		<button type="button" (click)="onSettingsAccepted()" clickable>Ok</button>
+		<button type="button" (click)="onSettingsCanceled()" clickable>Cancel</button>
+	</div>
+</div>
