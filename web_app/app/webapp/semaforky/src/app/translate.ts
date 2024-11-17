@@ -4,7 +4,7 @@ import { Provider, EnvironmentProviders } from '@angular/core';
 import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
 
 export function HttpLoaderFactory(http: HttpClient): TranslateHttpLoader {
-	return new TranslateHttpLoader(http, '/assets/i18n/', '.json');
+	return new TranslateHttpLoader(http, 'assets/i18n/', '.json');
 }
 export function provideTranslateModule(): (Provider | EnvironmentProviders)[] {
 	return TranslateModule.forRoot({
