@@ -8,6 +8,7 @@ PATH        := ${PATH}:/root/bin
 UID := $(shell id -u)
 GID := $(shell id -g)
 VERSION_FILE := app/webapp/semaforky/src/app/version.ts
+NG           := node_modules/.bin/ng
 
 # DEPENDENCISE AND PREREQUISITES
 install_common:
@@ -29,17 +30,17 @@ install_deps: install_common
 
 # SERVER WEBAPP
 serve_ng:
-	cd app/webapp/semaforky && ../node_modules/.bin/ng serve --host 0.0.0.0
+	cd app/webapp/semaforky && $(NG) serve --host 0.0.0.0
 
 # BUILD WEBAPP
 setup_ng:
-	cd app/webapp && npm install @angular/cli
+	cd app/webapp/semaforky && npm install @angular/cli @ngx-translate/core @ngx-translate/http-loader
 
 build_webapp:
 	git config --global --add safe.directory /tmp/home || true
 	sed -e "s/gitHash = \"\(.*\)\"/gitHash = \"$(shell git log -1 --format='%H'|cut -c1-6)\"/" $(VERSION_FILE).temp > $(VERSION_FILE)
 	sed -i -e "s/gitDate = \"\(.*\)\"/gitDate = \"$(shell git log -1 --format='%cd' --date=iso)\"/" $(VERSION_FILE)
-	cd app/webapp/semaforky && ../node_modules/.bin/ng build --optimization true --output-hashing none
+	cd app/webapp/semaforky && $(NG) build --optimization true --output-hashing none --localize=cs
 	mkdir -p app/data && cp -r app/webapp/semaforky/dist/semaforky/browser/* app/data
 
 # CREATE WEBAPP FILESYSTEM PACKAGE

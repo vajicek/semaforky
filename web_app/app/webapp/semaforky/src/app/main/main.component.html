@@ -1,21 +1,26 @@
 <div #contentElement>
 	<div class="menu">
-		<button type="button" [disabled]="!scanEnabled" (click)="onScan()" clickable>Scan</button>
-		<button type="button" [disabled]="!settingsEnabled" (click)="onSettings()" clickable>Settings</button>
-		<button type="button" [disabled]="!manualControlEnabled" (click)="onManualControl()" clickable>Manual
-			Control</button>
+		<button type="button" [disabled]="!scanEnabled" (click)="onScan()" clickable>
+			{{ 'Scan' | translate }}
+		</button>
+		<button type="button" [disabled]="!settingsEnabled" (click)="onSettings()" clickable>
+			{{ 'Settings' | translate }}
+		</button>
+		<button type="button" [disabled]="!manualControlEnabled" (click)="onManualControl()" clickable>
+			{{ 'Manual Control' | translate }}
+		</button>
 	</div>
 	<div>
 		<hr />
 	</div>
 	<div class="table">
-		<div class="left">Round</div>
+		<div class="left">{{ 'Round' | translate }}</div>
 		<div class="right">{{round}}</div>
-		<div class="left">Set</div>
+		<div class="left">{{ 'Set' | translate }}</div>
 		<div class="right">{{set}}</div>
-		<div class="left">Round time</div>
+		<div class="left">{{ 'Round time' | translate }}</div>
 		<div class="right">{{roundTime| date:'HH:mm:ss': 'UTC'}}</div>
-		<div class="left">Line</div>
+		<div class="left">{{ 'Line' | translate }}</div>
 		<div class="right" [ngSwitch]="line">
 			<span *ngSwitchCase="LineOrder.AB">AB</span>
 			<span *ngSwitchCase="LineOrder.CD">CD</span>
@@ -58,24 +63,35 @@
 		<hr />
 	</div>
 	<div class="actions">
-		<button type="button" [disabled]="!beginRoundEnabled" (click)="onBeginRound()" clickable>Begin
-			Round...</button>
-		<button type="button" [disabled]="!endRoundEnabled" (click)="onEndRound()" clickable>End Round</button>
+		<button type="button" [disabled]="!beginRoundEnabled" (click)="onBeginRound()" clickable>
+			{{ 'Begin Round...' | translate }}</button>
+		<button type="button" [disabled]="!endRoundEnabled" (click)="onEndRound()" clickable>
+			{{ 'End Round' | translate }}
+		</button>
 	</div>
 	<div class="actions">
-		<button class="padded" type="button" [disabled]="!startSetEnabled" (click)="onStartSet()" clickable>Start
-			Set</button>
-		<button class="padded" type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>Stop
-			Set</button>
+		<button class="padded" type="button" [disabled]="!startSetEnabled" (click)="onStartSet()" clickable>
+			{{ 'Start Set' | translate }}
+		</button>
+		<button class="padded" type="button" [disabled]="!stopSetEnabled" (click)="onStopSet()" clickable>
+			{{ 'Stop Set' | translate }}
+		</button>
 	</div>
 	<div class="actions">
-		<button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>Custom
-			Set...</button>
-		<button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>Cancel Set</button>
+		<button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>
+			{{ 'Custom Set...' | translate }}
+		</button>
+		<button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>
+			{{ 'Cancel Set' | translate }}
+		</button>
 	</div>
 	<div class="actions">
-		<button type="button" [disabled]="!resumeEnabled" (click)="onResumeSet()" clickable>Resume</button>
-		<button type="button" [disabled]="!pauseEnabled" (click)="onPauseSet()" clickable>Pause</button>
+		<button type="button" [disabled]="!resumeEnabled" (click)="onResumeSet()" clickable>
+			{{ 'Resume' | translate }}
+		</button>
+		<button type="button" [disabled]="!pauseEnabled" (click)="onPauseSet()" clickable>
+			{{ 'Pause' | translate }}
+		</button>
 	</div>
 	<div>
 		<hr />
@@ -83,21 +99,21 @@
 	<div>
 		<div class="clients">
 			<div class="clients-row">
-				<div class="left">Clients</div>
+				<div class="left">{{ 'Clients' | translate }}</div>
 				<div class="right">{{restClientController.getAllClients().size}}</div>
-				<div class="left">Clocks</div>
+				<div class="left">{{ 'Clocks' | translate }}</div>
 				<div class="right">{{restClientController.getClients('clock').length}}</div>
 			</div>
 			<div class="clients-row">
-				<div class="left">Semaphores</div>
+				<div class="left">{{ 'Semaphores' | translate }}</div>
 				<div class="right">{{restClientController.getClients('semaphore').length}}</div>
-				<div class="left">Sirens</div>
+				<div class="left">{{ 'Sirens' | translate }}</div>
 				<div class="right">{{restClientController.getClients('siren').length}}</div>
 			</div>
 			<div class="clients-row">
-				<div class="left">Lines</div>
+				<div class="left">{{ 'Lines' | translate }}</div>
 				<div class="right">{{restClientController.getClients('lines').length}}</div>
-				<div class="left">Countdown</div>
+				<div class="left">{{ 'Countdown' | translate }}</div>
 				<div class="right">{{restClientController.getClients('countdown').length}}</div>
 			</div>
 		</div>
@@ -108,40 +124,40 @@
 	<div class="dialogBeginRound dialog">
 
 		<div class="buttons">
-			<button (click)="onBeginRoundNow()">Now</button>
+			<button (click)="onBeginRoundNow()">{{ 'Now' | translate }}</button>
 		</div>
 
 		<hr />
 		<div class="actions">
-			<div class="left">Time of start</div>
+			<div class="left">{{ 'Time of start' | translate }}</div>
 			<div class="right">
 				<input [(ngModel)]="settings.delayedStartTime" type="string">
 			</div>
 		</div>
 		<br />
 		<div class="buttons">
-			<button (click)="onBeginRoundDelayed()">Delayed</button>
+			<button (click)="onBeginRoundDelayed()">{{ 'Delayed' | translate }}</button>
 		</div>
 
 		<hr />
 		<div class="actions">
-			<div class="left">Rounds</div>
+			<div class="left">{{ 'Rounds' | translate }}</div>
 			<div class="right">
 				<input [(ngModel)]="settings.roundSets" type="number">
 			</div>
-			<div class="left">Number of sets</div>
+			<div class="left">{{ 'Number of sets' | translate }}</div>
 			<div class="right">
 				<input [(ngModel)]="settings.numberOfSets" type="number">
 			</div>
 		</div>
 		<br />
 		<div class="buttons">
-			<button (click)="onBeginRoundContinuous()">Continuous</button>
+			<button (click)="onBeginRoundContinuous()">{{ 'Continuous' | translate }}</button>
 		</div>
 
 		<hr />
 		<div class="buttons">
-			<button (click)="onBeginRoundCancel()">Cancel</button>
+			<button (click)="onBeginRoundCancel()">{{ 'Cancel' | translate }}</button>
 		</div>
 	</div>
 </div>
@@ -149,15 +165,15 @@
 <div class="overlay" #dialogCustomSet>
 	<div class="dialogCustomSet dialog">
 		<div class="actions">
-			<div class="left">Custom Set Time</div>
+			<div class="left">{{ 'Custom Set Time' | translate }}</div>
 			<div class="right">
 				<input [(ngModel)]="settings.customSetTime" type="number">
 			</div>
 		</div>
 		<br />
 		<div class="buttons">
-			<button (click)="onCustomSetStart()">Start</button>
-			<button (click)="onCustomSetCancel()">Cancel</button>
+			<button (click)="onCustomSetStart()">{{ 'Start' | translate }}</button>
+			<button (click)="onCustomSetCancel()">{{ 'Cancel' | translate }}</button>
 		</div>
 	</div>
 </div>
