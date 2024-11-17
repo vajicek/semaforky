@@ -265,14 +265,6 @@ void Base::restServerRouting() {
 			this->capabilities(request, json);
 		}));
 	server.on("/capabilities", HTTP_OPTIONS, optionsCallback);
-
-	// How to handle routing of angular app
-	auto redirectCallback = [](AsyncWebServerRequest *request) {
-		request->redirect("/");
-	};
-	server.on("/main", HTTP_ANY, redirectCallback);
-	server.on("/settings", HTTP_ANY, redirectCallback);
-	server.on("/manualcontrol", HTTP_ANY, redirectCallback);
 }
 
 void Base::Init() {
