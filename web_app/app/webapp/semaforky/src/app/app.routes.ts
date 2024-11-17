@@ -8,5 +8,6 @@ export const routes: Routes = [
 	{ path: '', redirectTo: '/main', pathMatch: 'full' },
 	{ path: 'main', component: MainComponent },
 	{ path: 'manualcontrol', component: ManualControlComponent },
-	{ path: 'settings', component: SettingsComponent }
+	{ path: 'settings', component: SettingsComponent },
+	{ path: '**', redirectTo: '' }
 ];
