@@ -41,7 +41,8 @@ export class Settings {
   public soundEnabled: boolean = false;
   public clientsByCapability: Map<string, string[]> = new Map<string, string[]>();
 
-  constructor(protected cookieService: CookieService,
+  constructor(
+    protected cookieService: CookieService,
     private translate: TranslateService) {
   }
 
@@ -50,10 +51,12 @@ export class Settings {
   }
 
   public setCookieValue(key: string, value: string) {
+    // TODO: use localstore
     this.cookieService.set(key, value);
   }
 
   public getCookieValue(key: string, defaultValue: string): string {
+    // TODO: use localstore
     var value = this.cookieService.get(key);
     return value ? value : defaultValue;
   }
