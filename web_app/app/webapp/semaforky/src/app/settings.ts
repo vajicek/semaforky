@@ -1,5 +1,6 @@
 import { CookieService } from "ngx-cookie-service";
 import { Injectable } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 
 export enum LinesRotation {
   BYROUND = "BYROUND",
@@ -24,7 +25,7 @@ export enum SemaphoreLight {
   providedIn: 'root'
 })
 export class Settings {
-  public language: number = 0;
+  public language: string = "en";
   public roundSets: number = 10;
   public setTime: number = 120;
   public customSetTime: number = 120;
@@ -40,7 +41,9 @@ export class Settings {
   public soundEnabled: boolean = false;
   public clientsByCapability: Map<string, string[]> = new Map<string, string[]>();
 
-  constructor(protected cookieService: CookieService) {
+  constructor(
+    protected cookieService: CookieService,
+    private translate: TranslateService) {
   }
 
   public getDelayedStartTime(): Date {
@@ -48,10 +51,12 @@ export class Settings {
   }
 
   public setCookieValue(key: string, value: string) {
+    // TODO: use localstore
     this.cookieService.set(key, value);
   }
 
   public getCookieValue(key: string, defaultValue: string): string {
+    // TODO: use localstore
     var value = this.cookieService.get(key);
     return value ? value : defaultValue;
   }
@@ -79,6 +84,9 @@ export class Settings {
     this.network = this.get("network", this.network)
     this.soundEnabled = this.get("soundEnabled", this.soundEnabled.toString()) === "true";
     this.clientsByCapability = new Map<string, string[]>(JSON.parse(this.get("clientsByCapability", "[]")));
+    this.language = this.get("language", this.language)
+
+    this.translate.use(this.language);
   }
 
   public storeState() {
@@ -96,5 +104,6 @@ export class Settings {
     this.set("network", this.network);
     this.set("soundEnabled", this.soundEnabled.toString());
     this.set("clientsByCapability", JSON.stringify(Array.from(this.clientsByCapability.entries())));
+    this.set("language", this.language);
   }
 };

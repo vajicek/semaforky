@@ -1,18 +1,18 @@
 <div #contentElement>
 	<div>
-		<h1>Manual Control</h1>
+		<h1>{{ 'Manual Control' | translate }}</h1>
 	</div>
 	<div>
-		Semaphores
+		{{ 'Semaphores' | translate }}
 	</div>
 	<div class="actions">
-		<button type="button" (click)="onSetSemaphore(SemaphoreLight.RED)" clickable>Red</button>
-		<button type="button" (click)="onSetSemaphore(SemaphoreLight.GREEN)" clickable>Green</button>
-		<button type="button" (click)="onSetSemaphore(SemaphoreLight.YELLOW)" clickable>Yellow</button>
-		<button type="button" (click)="onSetSemaphore(SemaphoreLight.NONE)" clickable>Off</button>
+		<button type="button" (click)="onSetSemaphore(SemaphoreLight.RED)" clickable>{{ 'Red' | translate }}</button>
+		<button type="button" (click)="onSetSemaphore(SemaphoreLight.GREEN)" clickable>{{ 'Green' | translate }}</button>
+		<button type="button" (click)="onSetSemaphore(SemaphoreLight.YELLOW)" clickable>{{ 'Yellow' | translate }}</button>
+		<button type="button" (click)="onSetSemaphore(SemaphoreLight.NONE)" clickable>{{ 'Off' | translate }}</button>
 	</div>
 	<div>
-		Sirene
+		{{ 'Sirene' | translate }}
 	</div>
 	<div class="actions">
 		<button type="button" (click)="onSetSirene(1)" clickable>1</button>
@@ -21,7 +21,7 @@
 		<button type="button" (click)="onSetSirene(4)" clickable>4</button>
 	</div>
 	<div>
-		Clock
+		{{ 'Clock' | translate }}
 	</div>
 	<div class="actions">
 		<button type="button" (click)="onSetClock(0)" clickable>0</button>
@@ -34,14 +34,14 @@
 		<button type="button" (click)="onSetClock(240)" clickable>240</button>
 	</div>
 	<div>
-		Lines
+		{{ 'Lines' | translate }}
 	</div>
 	<div class="actions">
 		<button type="button" (click)="onSetLines(LineOrder.AB)" clickable>AB</button>
 		<button type="button" (click)="onSetLines(LineOrder.CD)" clickable>CD</button>
 	</div>
 	<div>
-		Clock countdown
+		{{ 'Clock countdown' | translate }}
 	</div>
 	<div class="actions">
 		<button type="button" (click)="onSetClockCountdown(10)" clickable>10</button>
@@ -53,6 +53,6 @@
 		<hr />
 	</div>
 	<div class="actions">
-		<button type="button" (click)="onBackToMain()" clickable>Back</button>
+		<button type="button" (click)="onBackToMain()" clickable>{{ 'Back' | translate }}</button>
 	</div>
 </div>

@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { RestClientController } from "../client";
 import { LineOrder, SemaphoreLight } from "../settings";
@@ -9,7 +10,8 @@ import { LineOrder, SemaphoreLight } from "../settings";
   selector: 'app-manualcontrol',
   standalone: true,
   imports: [
-    CommonModule
+    CommonModule,
+    TranslateModule
   ],
   templateUrl: './manualcontrol.component.html',
   styleUrl: './manualcontrol.component.css'

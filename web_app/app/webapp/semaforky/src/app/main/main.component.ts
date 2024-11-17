@@ -14,6 +14,7 @@ import {
 } from '@angular/router';
 import { HttpClientModule } from "@angular/common/http";
 import { Subject } from 'rxjs';
+import { TranslateModule } from '@ngx-translate/core';
 
 import { Settings, LineOrder, SemaphoreLight } from "../settings";
 import { SemaforkyMachine, State, SemaforkyState } from "../states";
@@ -49,7 +50,8 @@ export class MainComponentEventBus {
     RouterLink,
     RouterLinkActive,
     HttpClientModule,
-    FormsModule
+    FormsModule,
+    TranslateModule
   ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.css'
