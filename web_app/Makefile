@@ -40,7 +40,7 @@ build_webapp:
 	git config --global --add safe.directory /tmp/home || true
 	sed -e "s/gitHash = \"\(.*\)\"/gitHash = \"$(shell git log -1 --format='%H'|cut -c1-6)\"/" $(VERSION_FILE).temp > $(VERSION_FILE)
 	sed -i -e "s/gitDate = \"\(.*\)\"/gitDate = \"$(shell git log -1 --format='%cd' --date=iso)\"/" $(VERSION_FILE)
-	cd app/webapp/semaforky && $(NG) build --optimization true --output-hashing none --localize=cs
+	cd app/webapp/semaforky && $(NG) build --optimization true --output-hashing none
 	mkdir -p app/data && cp -r app/webapp/semaforky/dist/semaforky/browser/* app/data
 
 # CREATE WEBAPP FILESYSTEM PACKAGE
