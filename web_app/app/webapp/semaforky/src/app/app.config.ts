@@ -1,5 +1,5 @@
 import { ApplicationConfig } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { withHashLocation, provideRouter } from '@angular/router';
 import { CookieService } from 'ngx-cookie-service';
 import { provideHttpClient, withInterceptorsFromDi } from "@angular/common/http";
 import { routes } from './app.routes';
@@ -10,7 +10,7 @@ import { Settings } from './settings';
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes),
+    provideRouter(routes, withHashLocation()),
     provideHttpClient(withInterceptorsFromDi()),
     CookieService,
     provideTranslateModule(),
