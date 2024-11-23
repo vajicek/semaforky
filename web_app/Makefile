@@ -45,12 +45,17 @@ build_webapp:
 
 # CREATE WEBAPP FILESYSTEM PACKAGE
 filesystem.bin: app/data/main.js
-	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) --show-properties app); \
+	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) --show-properties devices/p5); \
 	BUILD_SPIFFS_BLOCKSIZE=$$(echo "$$PROPS"|grep "^build.spiffs_blocksize"|cut -d= -f2); \
 	BUILD_SPIFFS_END=$$(echo "$$PROPS"|grep "^build.spiffs_end"|cut -d= -f2| sed 's/x//'); \
 	BUILD_SPIFFS_PAGESIZE=$$(echo "$$PROPS"|grep "^build.spiffs_pagesize"|cut -d= -f2); \
 	BUILD_SPIFFS_START=$$(echo "$$PROPS"|grep "^build.spiffs_start"|cut -d= -f2| sed 's/x//'); \
 	BUILD_SPIFFS_SIZE=$$(echo "ibase=16;$${BUILD_SPIFFS_END}-$${BUILD_SPIFFS_START}"|bc -q); \
+	echo BUILD_SPIFFS_BLOCKSIZE=$${BUILD_SPIFFS_BLOCKSIZE}; \
+	echo BUILD_SPIFFS_END=$${BUILD_SPIFFS_END}; \
+	echo BUILD_SPIFFS_PAGESIZE=$${BUILD_SPIFFS_PAGESIZE}; \
+	echo BUILD_SPIFFS_START=$${BUILD_SPIFFS_START}; \
+	echo BUILD_SPIFFS_SIZE=$${BUILD_SPIFFS_SIZE}; \
 	$(MKSPIFFS) -c app/data -p $$BUILD_SPIFFS_PAGESIZE -b $$BUILD_SPIFFS_BLOCKSIZE -s $$BUILD_SPIFFS_SIZE $@
 
 # FLASH WEBAPP FILESYSTEM
