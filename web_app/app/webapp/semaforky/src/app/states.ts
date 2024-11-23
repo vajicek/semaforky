@@ -36,8 +36,10 @@ export abstract class State {
   providedIn: 'root'
 })
 export class SemaforkyMachineEventBus {
-  public currentState: MessageEvent<State> = new MessageEvent();
+  // inbound
   public moveTo: MessageEvent<SemaforkyState> = new MessageEvent();
+  // outbound
+  public currentState: MessageEvent<State> = new MessageEvent();
 }
 
 @Injectable({
@@ -57,9 +59,9 @@ export class SemaforkyMachine {
     private restClientController: RestClientController,
     private scheduler: Scheduler,
     private mainComponentEventBus: MainComponentEventBus,
-    private semaforkyMachineEventBus: SemaforkyMachineEventBus
+    private eventBus: SemaforkyMachineEventBus
   ) {
-    semaforkyMachineEventBus.moveTo.event$.subscribe(event => {
+    eventBus.moveTo.event$.subscribe(event => {
       this.moveTo(event);
     })
   }
@@ -162,7 +164,7 @@ export class SemaforkyMachine {
   }
 
   protected setCurrentState(state: State) {
-    this.semaforkyMachineEventBus.currentState.emit(state);
+    this.eventBus.currentState.emit(state);
     this.currentState = state;
   }
 

@@ -33,12 +33,14 @@ export class MessageEvent<T> {
   providedIn: 'root'
 })
 export class MainComponentEventBus {
+  // inbound
   public updateGui: MessageEvent<void> = new MessageEvent();
   public updateSetClocks: MessageEvent<number> = new MessageEvent();
   public updateRoundClocks: MessageEvent<Date> = new MessageEvent();
   public scanEnabled: MessageEvent<boolean> = new MessageEvent();
-  public countdown: MessageEvent<number> = new MessageEvent();
   public pausedState: MessageEvent<State> = new MessageEvent();
+  // outbound
+  public countdown: MessageEvent<number> = new MessageEvent();
 }
 
 @Component({
