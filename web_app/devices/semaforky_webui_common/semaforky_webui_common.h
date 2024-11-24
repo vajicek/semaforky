@@ -156,9 +156,9 @@ int dBmToPercentage(int dBm) {
 	const int RSSI_MAX =-50;
 	const int RSSI_MIN =-100;
 	int quality;
-	if(dBm <= RSSI_MIN) {
+	if (dBm <= RSSI_MIN) {
 		quality = 0;
-	} else if(dBm >= RSSI_MAX) {
+	} else if (dBm >= RSSI_MAX) {
 		quality = 100;
 	} else {
 		quality = 2 * (dBm + 100);
