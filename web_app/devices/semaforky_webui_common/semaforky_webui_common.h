@@ -200,7 +200,6 @@ void setupHotspot(const char *ssid, const char *password) {
 
 	Serial.println("Search for free channel...");
 	const int free_channel = selectChannel();
-	//random(1, 13)
 	Serial.print("Selected channel: ");
 	Serial.println(free_channel);
 
