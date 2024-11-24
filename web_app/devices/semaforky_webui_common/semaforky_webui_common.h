@@ -187,7 +187,7 @@ int selectChannel() {
 		delay(10);
 	}
 
-	int channel_index =	std::distance(
+	int channel_index = std::distance(
 		std::begin(sum_of_signals),
 		std::min_element(std::begin(sum_of_signals), std::end(sum_of_signals)));
 	return channel_index + 1;
