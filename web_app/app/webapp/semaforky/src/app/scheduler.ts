@@ -357,7 +357,7 @@ export class Scheduler {
     this.addEvent(
       new SemaphoreEvent(
         new Date(
-          now.getTime() + (settings.preparationTime + setTime) * 1000 + 500
+          now.getTime() + (settings.preparationTime + setTime) * 1000 - 500
         ),
         SemaforkyState.SET_STOPPED,
         this.semaforkyMachineEventBus

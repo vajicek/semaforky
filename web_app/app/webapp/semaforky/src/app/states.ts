@@ -331,6 +331,8 @@ export class SemaforkyMachine {
             self.restClientController.updateSemaphores(
               SemaphoreLight.RED
             );
+            // reset set clock to zero (the last setClockEvent could be canceled)
+            self.mainComponentEventBus.updateSetClocks.emit(0);
             self.restClientController.updateClocks(0);
             self.restClientController.countdown(
               self.countdown,
