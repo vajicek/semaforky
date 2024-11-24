@@ -152,14 +152,62 @@ void connectToHotspot(const char *ssid, const char *password) {
 	}
 }
 
+int dBmToPercentage(int dBm) {
+	const int RSSI_MAX =-50;
+	const int RSSI_MIN =-100;
+	int quality;
+	if(dBm <= RSSI_MIN) {
+		quality = 0;
+	} else if(dBm >= RSSI_MAX) {
+		quality = 100;
+	} else {
+		quality = 2 * (dBm + 100);
+	}
+	return quality;
+}
+
+int selectChannel() {
+	int sum_of_signals[12];
+	std::fill(std::begin(sum_of_signals), std::end(sum_of_signals), 0);
+
+	int n = WiFi.scanNetworks();
+	for (int i = 0; i < n; ++i) {
+		sum_of_signals[WiFi.channel(i) - 1] += dBmToPercentage(WiFi.RSSI(i));
+
+		Serial.print(i + 1);
+		Serial.print(") ");
+		Serial.print(WiFi.SSID(i));
+		Serial.print(" ch:");
+		Serial.print(WiFi.channel(i));
+		Serial.print(" ");
+		Serial.print(dBmToPercentage(WiFi.RSSI(i)));
+		Serial.print("% )");
+		Serial.print(" MAC:");
+		Serial.println(WiFi.BSSIDstr(i));
+		delay(10);
+	}
+
+	int channel_index =	std::distance(
+		std::begin(sum_of_signals),
+		std::min_element(std::begin(sum_of_signals), std::end(sum_of_signals)));
+	return channel_index + 1;
+}
+
 void setupHotspot(const char *ssid, const char *password) {
 	Serial.println();
 
 	WiFi.disconnect();
+
+	Serial.println("Search for free channel...");
+	const int free_channel = selectChannel();
+	//random(1, 13)
+	Serial.print("Selected channel: ");
+	Serial.println(free_channel);
+
 	WiFi.mode(WIFI_AP);
 
 	Serial.print("Setting soft-AP ... ");
-	Serial.println(WiFi.softAP(ssid, password, random(1, 13)) ? "Ready" : "Failed!");
+	Serial.println(WiFi.softAP(ssid, password, free_channel) ? "Ready" : "Failed!");
 
 	Serial.print("Soft-AP IP address = ");
 	Serial.println(WiFi.softAPIP());
