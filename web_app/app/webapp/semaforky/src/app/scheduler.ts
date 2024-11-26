@@ -107,7 +107,7 @@ class SetClockEvent extends Event {
 
     if (remainingSeconds != this.previousValue) {
       this.restClientController.updateClocks(
-        Math.round(remainingSeconds)
+        remainingSeconds
       );
       this.previousValue = remainingSeconds;
     }
@@ -163,7 +163,7 @@ class SetClockEvent extends Event {
       remainingSeconds = Math.max(this.settings.setTime - seconds, 0);
     }
 
-    return remainingSeconds;
+    return Math.ceil(remainingSeconds);
   }
 }
 
@@ -341,7 +341,7 @@ export class Scheduler {
       ));
     this.addEvent(
       new SemaphoreEvent(
-        new Date(now.getTime() + settings.preparationTime * 1000 - 500),
+        new Date(now.getTime() + settings.preparationTime * 1000),
         SemaforkyState.FIRE,
         this.semaforkyMachineEventBus
       ));
@@ -357,7 +357,7 @@ export class Scheduler {
     this.addEvent(
       new SemaphoreEvent(
         new Date(
-          now.getTime() + (settings.preparationTime + setTime) * 1000 - 500
+          now.getTime() + (settings.preparationTime + setTime) * 1000
         ),
         SemaforkyState.SET_STOPPED,
         this.semaforkyMachineEventBus
