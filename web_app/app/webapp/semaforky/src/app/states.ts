@@ -343,6 +343,7 @@ export class SemaforkyMachine {
               self.restClientController
                 .updateLines(self.getCurrentLineOrder());
             }, 2000);
+            // automatic mode
             if (self.settings.continuous) {
               if (self.currentSet <= self.settings.numberOfSets) {
                 self.moveTo(SemaforkyState.SET_STARTED);
@@ -414,19 +415,30 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
+          self.scheduler.endRound();
+          self.currentRound++;
+          self.updateGui();
+          this.updateState(previous);
+        }
+
+        updateState(previous: State) {
+          if (previous.name != SemaforkyState.START_WAITING) {
+            self.restClientController.playSiren(4);
+          }
+
           self.restClientController.updateSemaphores(
             SemaphoreLight.RED
           );
           self.restClientController.updateClocks(0);
           self.restClientController.countdown(0, false);
+
           self.mainComponentEventBus.updateSetClocks.emit(0);
-          self.updateGui();
-          self.currentRound++;
-          // TODO: LINES
-          if (previous.name != SemaforkyState.START_WAITING) {
-            self.restClientController.playSiren(4);
-          }
-          self.scheduler.endRound();
+
+          // show Lines with a delay
+          window.setTimeout(() => {
+            self.restClientController
+              .updateLines(self.getCurrentLineOrder());
+          }, 2000);
         }
       })(SemaforkyState.ROUND_STOPPED, [
         SemaforkyState.SETTINGS,
