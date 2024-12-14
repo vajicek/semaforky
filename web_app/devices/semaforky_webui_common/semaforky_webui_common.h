@@ -586,7 +586,7 @@ void Px::drawDigits() {
 }
 
 void Px::drawLetters() {
-	display->setBrightness(255);
+	display->setBrightness(255); // TODO: use brightness encoded in value
 
 	auto x_offset = (panelWidth - (2 * digitWidth)) / 2;
 
@@ -678,7 +678,7 @@ void P5::drawDigits() {
 	Px::drawDigits();
 }
 
-void P5::drawLetters(){
+void P5::drawLetters() {
 	display.setFont(&FixedWidthAbcd);
 	Px::drawLetters();
 }

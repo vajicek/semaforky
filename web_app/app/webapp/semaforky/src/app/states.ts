@@ -104,8 +104,7 @@ export class SemaforkyMachine {
 
   public getCurrentLineOrder(): LineOrder {
     if (
-      this.currentState?.name != SemaforkyState.STARTED &&
-      this.currentState?.name != SemaforkyState.ROUND_STOPPED
+      this.currentState?.name != SemaforkyState.STARTED
     ) {
       if (this.settings.lines == 1) {
         return LineOrder.AB;
@@ -315,11 +314,7 @@ export class SemaforkyMachine {
       new (class extends State {
         run(previous: State) {
           self.scheduler.stopSet();
-          if (!self.customSet) {
-            this.updateSetAndLine();
-          } else {
-            self.customSet = false;
-          }
+          this.updateSetAndLine();
           self.updateGui();
           this.updateState();
         }
@@ -358,13 +353,17 @@ export class SemaforkyMachine {
         }
 
         updateSetAndLine() {
-          if (self.currentLine + 1 < self.settings.lines) {
-            // if number of line is higher than current line, increase line
-            self.currentLine++;
+          if (self.customSet) {
+            self.customSet = false;
           } else {
-            // otherwise, increase set
-            self.currentSet++;
-            self.currentLine = 0;
+            if (self.currentLine + 1 < self.settings.lines) {
+              // if number of line is higher than current line, increase line
+              self.currentLine++;
+            } else {
+              // otherwise, increase set
+              self.currentSet++;
+              self.currentLine = 0;
+            }
           }
         }
       })(SemaforkyState.SET_STOPPED, [
@@ -373,7 +372,6 @@ export class SemaforkyMachine {
         SemaforkyState.CUSTOM_SET_STARTED,
       ])
     );
-
     this.addState(
       new (class extends State {
         run(previous: State) {
@@ -387,7 +385,6 @@ export class SemaforkyMachine {
         SemaforkyState.WARNING,
       ])
     );
-
     this.addState(
       new (class extends State {
         run(previous: State) {
@@ -416,7 +413,7 @@ export class SemaforkyMachine {
       new (class extends State {
         run(previous: State) {
           self.scheduler.endRound();
-          self.currentRound++;
+          this.updateRoundSetAndLine();
           self.updateGui();
           this.updateState(previous);
         }
@@ -439,6 +436,12 @@ export class SemaforkyMachine {
             self.restClientController
               .updateLines(self.getCurrentLineOrder());
           }, 2000);
+        }
+
+        updateRoundSetAndLine() {
+          self.currentRound++;
+          self.currentSet = 1;
+          self.currentLine = 0;
         }
       })(SemaforkyState.ROUND_STOPPED, [
         SemaforkyState.SETTINGS,
