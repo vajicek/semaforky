@@ -2,6 +2,10 @@ FROM ubuntu:20.04
 
 RUN apt-get update
 
+RUN apt install -y ca-certificates
+RUN update-ca-certificates
+COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
 RUN apt-get install -y \
 	git \
 	make \

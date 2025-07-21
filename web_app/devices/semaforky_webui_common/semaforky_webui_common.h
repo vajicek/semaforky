@@ -10,6 +10,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
 
+#include <ArduinoJson.h>
 #include <AsyncJson.h>
 #include <ESPAsyncTCP.h>
 #include <ESPAsyncWebServer.h>
@@ -86,6 +87,17 @@ int decodeBrightnessValue(int value) { return (value & 0xff000000) >> 24; }
 
 ///////////////////////////////////////////////////////////////////
 
+bool networkExist(String target_ssid) {
+	int n = WiFi.scanNetworks();
+	for (int i = 0; i < n; ++i) {
+		String ssid = WiFi.SSID(i);
+		if (ssid == target_ssid) {
+			return true;
+		}
+	}
+	return false;
+}
+
 void connectToHotspot(const char *ssid, const char *password) {
 	int connection_indicating_led = D4;
 	int connection_waiting_counter = 0;
@@ -95,6 +107,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 	Serial.println(ssid);
 	WiFi.mode(WIFI_STA);
 	WiFi.begin(ssid, password);
+	WiFi.setAutoReconnect(true);
 
 	// led indication
 	pinMode(connection_indicating_led, OUTPUT);
@@ -214,7 +227,7 @@ void setupHotspot(const char *ssid, const char *password) {
 
 struct BaseSettings {
 	bool hostSpa;
-	bool hotspot;
+	bool force_hotspot;
 	const char *dns;
 	const char *ssid;
 	const char *password;
@@ -327,7 +340,7 @@ void Base::Init() {
 	}
 
 	// Initialize Wifi
-	if (settings->hotspot) {
+	if (settings->force_hotspot || !networkExist(settings->ssid)) {
 		setupHotspot(settings->ssid, settings->password);
 	} else {
 		connectToHotspot(settings->ssid, settings->password);
@@ -346,7 +359,7 @@ void Base::Init() {
 }
 
 void Base::Execute() {
-	if (settings->hotspot){
+	if (settings->force_hotspot){
 		if (WiFi.softAPgetStationNum() != stations) {
 			auto info_stations = WiFi.softAPgetStationNum();
 			Serial.print("Total Connections: ");

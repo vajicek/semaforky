@@ -5,7 +5,7 @@
 
 BaseSettings baseSettings {
 	true, // serve spa
-	true, // hotspot
+	false, // force_hotspot
 	"p5-01", // dns
 	"semaforky", // ssid
 	"semaforky", // password

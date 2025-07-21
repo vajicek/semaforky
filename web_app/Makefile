@@ -66,7 +66,7 @@ flash-fs: filesystem.bin
 	  --baud 921600 \
 	  --before default_reset \
 	  --after hard_reset \
-	  write_flash 0x200000 filesystem.bin
+	  write_flash 0x300000 filesystem.bin
 
 # BUILD AND INSTALL APPLICATIONS
 install_app: DIR=app
@@ -77,14 +77,16 @@ install_p10: DIR=p10
 install_siren: DIR=siren
 install_p10_semaphore: DIR=p10_semaphore
 
-install_app install_p5 install_p5_new install_p10x3 install_siren install_p10_semaphore:
+install_app install_p5 install_p5_new install_p10x3 install_siren install_p10_semaphore: flash-fs
 	rm -fr $(PWD)/devices/${DIR}/data
 	ln -s $(PWD)/app/data $(PWD)/devices/${DIR}/data
 	$(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) devices/${DIR}
 	$(ARDUINO_CLI) upload -p ${DEVICE} --fqbn $(BOARDCONFIG) devices/${DIR}
 
 build_devcontainer:
+	cp /etc/ssl/certs/ca-certificates.crt .
 	docker build \
+	--build-arg HTTP_PROXY= --build-arg HTTPS_PROXY= --build-arg NO_PROXY= \
 	--build-arg UID=$(UID) \
 	--build-arg GID=$(GID) \
 	--no-cache \

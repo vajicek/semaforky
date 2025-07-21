@@ -4,8 +4,8 @@
 #include "semaforky_webui_common.h"
 
 BaseSettings baseSettings {
-	false, // serve spa
-	false, // hotspot
+	true, // serve spa
+	false, // force_hotspot
 	"p10-02", // dns
 	"semaforky", // ssid
 	"semaforky", // password
