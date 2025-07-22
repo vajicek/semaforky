@@ -45,7 +45,7 @@ make setup_ng && make build_webapp
 ### Device application
 Install dependencies for **device application**.
 ```bash
-make install_common && make install_deps
+make install_deps
 ```
 
 Build and install **device application**, e.g. for p5 device (connected to /dev/ttyUSB0).
@@ -53,9 +53,9 @@ Build and install **device application**, e.g. for p5 device (connected to /dev/
 make install_p5
 ```
 
-Build filesystem for **web app** server and flash it to a device (connected to /dev/ttyUSB0).
+Rebuild filesystem for **web app** server and flash it to a device (connected to /dev/ttyUSB0).
 ```bash
-make filesystem.bin && make flash-fs
+rm -f filesystem.bin && make flash-fs
 ```
 
 ## Semaforky application state diagram
@@ -64,6 +64,7 @@ make filesystem.bin && make flash-fs
 
 ## List of features
 
+* The device will connect to the ESSID 'semaforky' if it exists, or create it if not. This provides flexibility to choose which device acts as the hotspot, or to use a separate router.
 * Operations divided into rounds (e.g. training + two halves, FITA 900 - 60m/50m/40m) and rounds into sets (e.g. 10 or 12 sets).
 * Scan - gather all devices on given network (specified by Network option). Display number of clients and capabilities (semaphore, siren, line indicator, clock) provided.
 * Configurable number of lines - 1 or 2
