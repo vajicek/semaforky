@@ -108,6 +108,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 	WiFi.mode(WIFI_STA);
 	WiFi.begin(ssid, password);
 	WiFi.setAutoReconnect(true);
+	WiFi.persistent(true);
 
 	// led indication
 	pinMode(connection_indicating_led, OUTPUT);
@@ -239,6 +240,7 @@ class Base {
 	int stations;
 	int controlValue = CONTROL_VALUE_CLOCK;
 	int value = 0;
+	bool hotspot = false;
 
 	const BaseSettings *settings;
 
@@ -342,6 +344,7 @@ void Base::Init() {
 	// Initialize Wifi
 	if (settings->force_hotspot || !networkExist(settings->ssid)) {
 		setupHotspot(settings->ssid, settings->password);
+		hotspot = true;
 	} else {
 		connectToHotspot(settings->ssid, settings->password);
 	}
@@ -359,7 +362,7 @@ void Base::Init() {
 }
 
 void Base::Execute() {
-	if (settings->force_hotspot){
+	if (this->hotspot){
 		if (WiFi.softAPgetStationNum() != stations) {
 			auto info_stations = WiFi.softAPgetStationNum();
 			Serial.print("Total Connections: ");
