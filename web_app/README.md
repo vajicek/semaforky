@@ -7,6 +7,10 @@ Any Web Browser          |  Hardware running REST/WEB server
 :-:|:-:
 ![](../doc/browser_spa_app.png)  |  ![](../doc/client_hardware.jpg)
 
+## Documentation
+
+[User Guide](UserGuide_cz.md) (in czech)
+
 ## Live demo
 
 See [Live demo](http://vajicek.github.io/semaforky).
