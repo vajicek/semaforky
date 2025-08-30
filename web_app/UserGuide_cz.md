@@ -1,7 +1,7 @@
 # Semaforky - Uživatelská příručka
 
 ## Napájení
-Zařízení je možné napájet přes USB konektor. V závislosti na verzi může být použita USB-A zástrčka, USB-C zásuvka nebo microUSB. Jako zdroj napájení je možné využít powerbanku nebo síťový napájecí adaptér.
+Zařízení je možné napájet přes USB konektor. V závislosti na verzi může být použita USB-A zástrčka, USB-C zásuvka nebo microUSB zásuvka. Jako zdroj napájení je možné využít powerbanku nebo síťový napájecí adaptér.
 
 V závislosti na konfiguraci může být powerbanka součástí zařízení, a externí USB konektor pak slouží pouze k jejímu nabíjení.
 

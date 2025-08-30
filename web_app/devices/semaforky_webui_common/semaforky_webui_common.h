@@ -494,8 +494,8 @@ P10x3::P10x3(BaseSettings *baseSettings) : Base(baseSettings) {}
 
 ///////////////////////////////////////
 
-#define SIREN_TONE_LENGTH 500
-#define SIREN_PAUSE_LENGTH 500
+#define SIREN_TONE_LENGTH 300
+#define SIREN_PAUSE_LENGTH 300
 
 // Wemos D1 mini
 #define SIREN_AUDIO_PIN 5
