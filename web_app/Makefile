@@ -115,4 +115,6 @@ deploy_testing:
 
 userguide:
 	npm i md-to-pdf
-	node_modules/.bin/md-to-pdf UserGuide_cz.md
+	node_modules/.bin/md-to-pdf \
+	--pdf-options '{ "margin": "20mm 25mm 20mm 25mm", "printBackground": true }' \
+	UserGuide_cz.md

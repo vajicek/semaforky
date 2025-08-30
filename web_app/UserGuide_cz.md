@@ -1,5 +1,4 @@
-# Uživatelská příručka
-
+# Semaforky - Uživatelská příručka
 
 ## Napájení
 Zařízení je možné napájet přes USB konektor. V závislosti na verzi může být použita USB-A zástrčka, USB-C zásuvka nebo microUSB. Jako zdroj napájení je možné využít powerbanku nebo síťový napájecí adaptér.
@@ -7,11 +6,9 @@ Zařízení je možné napájet přes USB konektor. V závislosti na verzi můž
 V závislosti na konfiguraci může být powerbanka součástí zařízení, a externí USB konektor pak slouží pouze k jejímu nabíjení.
 
 ## Uvedení do provozu
-
 Po připojení napájení se zařízení zapíná kolébkovým vypínačem. Pokud je zařízení zapnuté a napájené, kontrolka vypínače svítí.
 
-## Wifi
-
+## Nastavení Wi-Fi
 Zařízení vyžaduje k provozu Wi-Fi síť: SSID=semaforky, heslo=semaforky.
 1) Pokud síť při spuštění zařízení neexistuje, zařízení se přepne do režimu hotspotu a vytvoří síť se stejným SSID a heslem.
 2) Pokud síť existuje (např. ji poskytuje smartphone nebo Wi-Fi router), zařízení se pokusí k ní připojit pomocí WPA2 a zadaného hesla.
@@ -23,7 +20,6 @@ V případě 1) je webové rozhraní dostupné na adrese (ve webovém prohlíže
 Doporučení pro ovládání ze smartphonu: nastavte si telefon tak, aby neusínal, nevypínal displej a neodpojoval se od Wi-Fi při delší nečinnosti.
 
 ## Ovládání
-
 1) Jděte do **Webového Rozhraní** (např. [192.168.4.1]()), otevře se vám **Hlavní Obrazovka**
 2) Pokud se nenacházíte na síti **192.168.4.1**, jděte na **Obrazovku Nastavení** (tlačítko "Nastavení"/"Settings") a změňte **Síť** ("Síť"/"Network") z 192.168.4.0 na jinou síť (nastavení hotspotu z Wifi možnosti 2), viz výše). A vraťte se do Hlavní Obrazovky (tlačítko "OK").
 3) Klikněte na tlačítko "Skenuj"/"Scan". Rozhraní vyhledá všechna dostupná zařízení na síti. Jedno nebo více, pokud jich chcete provozovat najednou víc i více typů (semaforky, siréna, hodiny). Počkejte dokud tlačítko "Skenuj"/"Scan" opět nezmění stav na aktivní.
