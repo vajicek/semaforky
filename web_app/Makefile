@@ -112,3 +112,7 @@ devcontainer:
 
 deploy_testing:
 	cp -r app/webapp/semaforky/dist/semaforky/browser/* ../docs
+
+userguide:
+	npm i md-to-pdf
+	node_modules/.bin/md-to-pdf UserGuide_cz.md
