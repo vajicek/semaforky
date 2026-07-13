@@ -146,6 +146,7 @@ export class RestClientController {
   private initAudio() {
     var audio = new Audio();
     audio.src = "buzzer.wav";
+    audio.preload = "auto";
     audio.load();
     return audio;
   }
