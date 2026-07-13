@@ -1,7 +1,7 @@
 /// Copyright (C) 2023, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-#include "semaforky_webui_common.h"
+#include "semaforky_webui_common_esp8266.h"
 
 BaseSettings baseSettings {
 	true, // serve spa
