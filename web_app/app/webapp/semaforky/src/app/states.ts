@@ -226,6 +226,17 @@ export class SemaforkyMachine {
     }
   }
 
+  private waitForBouncedArrow() {
+    this.pendingBouncedArrow = false;
+    this.waitingForBouncedArrow = true;
+    this.restClientController.updateSemaphores(SemaphoreLight.RED);
+    this.mainComponentEventBus.updateSetClocks.emit(0);
+    this.restClientController.updateClocks(0);
+    this.restClientController.countdown(this.countdown, false);
+    this.updateGui();
+    this.mainComponentEventBus.bouncedArrowPrompt.emit();
+  }
+
   private updateStateAfterLineEnd() {
     if (this.currentLine == 0) {
       this.restClientController.playSiren(3);
@@ -403,18 +414,15 @@ export class SemaforkyMachine {
         handleLineEnd() {
           if (self.bouncedArrowActive) {
             self.bouncedArrowActive = false;
-            self.advanceLineOrSet();
-            self.updateGui();
-            self.updateStateAfterLineEnd();
+            if (self.pendingBouncedArrow) {
+              self.waitForBouncedArrow();
+            } else {
+              self.advanceLineOrSet();
+              self.updateGui();
+              self.updateStateAfterLineEnd();
+            }
           } else if (self.pendingBouncedArrow) {
-            self.pendingBouncedArrow = false;
-            self.waitingForBouncedArrow = true;
-            self.restClientController.updateSemaphores(SemaphoreLight.RED);
-            self.mainComponentEventBus.updateSetClocks.emit(0);
-            self.restClientController.updateClocks(0);
-            self.restClientController.countdown(self.countdown, false);
-            self.updateGui();
-            self.mainComponentEventBus.bouncedArrowPrompt.emit();
+            self.waitForBouncedArrow();
           } else {
             self.advanceLineOrSet();
             self.updateGui();

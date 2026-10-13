@@ -11,12 +11,13 @@
 
 ## New flow
 
-1. During `READY`, `FIRE`, or `WARNING`, the operator taps **Bounced Arrow...**. This toggles a pending mark without starting a set.
+1. During `FIRE` or `WARNING`, the operator taps **Bounced Arrow...**. This toggles a pending mark without starting a set. The button is disabled during `READY`.
 2. When the line ends, `SET_STOPPED` checks the mark.
 3. If marked, the system stays stopped, sets the semaphore to red, and opens the Bounced Arrow dialog.
 4. **Start** runs a full bounced-arrow set using the configured bounced-arrow time.
 5. When it ends, the normal line/set progression resumes.
 6. **Skip** advances to the next line or set without running the extra period.
+7. If another bounced arrow is marked during an active bounced-arrow period, the current period finishes, the line does not advance, and the dialog opens again for another period. This can repeat until the operator skips or completes the queued period.
 
 ## Planned code changes
 
@@ -38,7 +39,7 @@
 - Add `pendingBouncedArrow`.
 - Persist the new flags in cookies.
 - Add methods to toggle the pending mark, query it, continue after skipping, and advance the line/set counters.
-- Update `SET_STOPPED` to distinguish normal line completion, a pending bounced arrow, and completion of the inserted bounced-arrow set.
+- Update `SET_STOPPED` to distinguish normal line completion, a pending bounced arrow, completion of the inserted bounced-arrow set, and a newly queued bounced arrow during that set.
 - Clear pending state when a set or round is canceled/stopped.
 
 ### `web_app/app/webapp/semaforky/src/app/main/main.component.ts`
@@ -46,7 +47,7 @@
 - Add a `bouncedArrowPrompt` event to the component event bus.
 - Open the dialog when the state machine reaches a marked line boundary.
 - Rename custom-set UI fields and handlers.
-- Enable the mark button during `READY`, `FIRE`, and `WARNING`.
+- Enable the mark button only during `FIRE` and `WARNING`.
 - Show whether a bounced arrow is currently marked.
 - Add Start and Skip handlers.
 
@@ -75,6 +76,8 @@ Replace the Custom Set labels with:
 - With one line, a bounced arrow is inserted before the next set.
 - A canceled set clears any pending bounced-arrow mark.
 - Continuous mode continues normally after a bounced arrow completes or is skipped.
+- A bounced arrow marked during another bounced-arrow period queues another period before the line advances.
+- Multiple consecutive bounced-arrow periods are supported.
 - Persist pending/active state so page refresh does not lose it.
 
 ## Verification
@@ -83,4 +86,5 @@ Replace the Custom Set labels with:
 - Run `npx tsc --noEmit` and `npx ng build`.
 - Manually test two-line flow: mark during line one, start the bounced arrow, continue to line two, and test the Skip path.
 - Test the last-line boundary and one-line configuration.
+- Test a bounced arrow during a bounced-arrow period, including repeated Start and Skip flows.
 - Rebuild deployment artifacts with `make build_webapp && make deploy_testing` if the live demo should be updated.
