@@ -39,6 +39,7 @@ export class MainComponentEventBus {
   public updateRoundClocks: MessageEvent<Date> = new MessageEvent();
   public scanEnabled: MessageEvent<boolean> = new MessageEvent();
   public pausedState: MessageEvent<State> = new MessageEvent();
+  public bouncedArrowPrompt: MessageEvent<void> = new MessageEvent();
   // outbound
   public countdown: MessageEvent<number> = new MessageEvent();
 }
@@ -79,7 +80,8 @@ export class MainComponent {
   startSetEnabled: boolean = false;
   stopSetEnabled: boolean = false;
   cancelSetEnabled: boolean = false;
-  customSetEnabled: boolean = false;
+  bouncedArrowEnabled: boolean = false;
+  bouncedArrowPending: boolean = false;
   pauseEnabled: boolean = false;
   resumeEnabled: boolean = false;
 
@@ -87,7 +89,7 @@ export class MainComponent {
   settingsEnabled: boolean = false;
   manualControlEnabled: boolean = false;
 
-  @ViewChild('dialogCustomSet', { static: true }) dialogCustomSet!: ElementRef<HTMLDivElement>;
+  @ViewChild('dialogBouncedArrow', { static: true }) dialogBouncedArrow!: ElementRef<HTMLDivElement>;
   @ViewChild('dialogBeginRound', { static: true }) dialogBeginRound!: ElementRef<HTMLDivElement>;
 
   constructor(
@@ -128,6 +130,14 @@ export class MainComponent {
       .subscribe(pausedState => {
         this.pausedState = pausedState;
       });
+    eventBus.bouncedArrowPrompt
+      .event$
+      .subscribe(() => {
+        this.dialogBouncedArrow.nativeElement.style.display = "flex";
+      });
+    if (this.machine.isWaitingForBouncedArrow()) {
+      this.dialogBouncedArrow.nativeElement.style.display = "flex";
+    }
   }
 
   public updateGui() {
@@ -161,10 +171,11 @@ export class MainComponent {
       SemaforkyState.FIRE,
       SemaforkyState.WARNING,
     ].includes(stateName);
-    this.customSetEnabled = [
-      SemaforkyState.SET_STOPPED,
-      SemaforkyState.SET_CANCELED,
+    this.bouncedArrowEnabled = [
+      SemaforkyState.FIRE,
+      SemaforkyState.WARNING,
     ].includes(stateName);
+    this.bouncedArrowPending = this.machine.isBouncedArrowPending();
     this.cancelSetEnabled = [
       SemaforkyState.READY,
       SemaforkyState.FIRE,
@@ -273,17 +284,18 @@ export class MainComponent {
     }
   }
 
-  public onCustomSet() {
-    this.dialogCustomSet.nativeElement.style.display = "flex";
+  public onBouncedArrow() {
+    this.machine.toggleBouncedArrow();
   }
 
-  public onCustomSetStart() {
-    this.dialogCustomSet.nativeElement.style.display = "none";
-    this.machine.moveTo(SemaforkyState.CUSTOM_SET_STARTED);
+  public onBouncedArrowStart() {
+    this.dialogBouncedArrow.nativeElement.style.display = "none";
+    this.machine.startBouncedArrow();
   }
 
-  public onCustomSetCancel() {
-    this.dialogCustomSet.nativeElement.style.display = "none";
+  public onBouncedArrowSkip() {
+    this.dialogBouncedArrow.nativeElement.style.display = "none";
+    this.machine.skipBouncedArrow();
   }
 
   public onScan() {

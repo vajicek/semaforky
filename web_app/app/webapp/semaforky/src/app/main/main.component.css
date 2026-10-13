@@ -67,6 +67,10 @@
 	margin: 1em;
 }
 
+.actions button.marked {
+	background: #ffcc00;
+}
+
 /* CLIENTS TABLE */
 
 .clients {
@@ -127,7 +131,7 @@
 	font-size: 0.8em;
 }
 
-.dialogCustomSet .buttons button {
+.dialogBouncedArrow .buttons button {
 	width: 40%;
 }
 

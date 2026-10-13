@@ -28,7 +28,7 @@ export class Settings {
   public language: string = "en";
   public roundSets: number = 10;
   public setTime: number = 120;
-  public customSetTime: number = 120;
+  public bouncedArrowTime: number = 120;
   public preparationTime: number = 10;
   public warningTime: number = 30;
   public lines: number = 1;
@@ -72,7 +72,10 @@ export class Settings {
   public loadState() {
     this.roundSets = parseInt(this.get("roundSets", this.roundSets.toString()));
     this.setTime = parseInt(this.get("setTime", this.setTime.toString()));
-    this.customSetTime = parseInt(this.get("customSetTime", this.customSetTime.toString()));
+    this.bouncedArrowTime = parseInt(this.get(
+      "bouncedArrowTime",
+      this.get("customSetTime", this.bouncedArrowTime.toString())
+    ));
     this.preparationTime = parseInt(this.get("preparationTime", this.preparationTime.toString()));
     this.warningTime = parseInt(this.get("warningTime", this.warningTime.toString()));
     this.lines = parseInt(this.get("lines", this.lines.toString()));
@@ -92,7 +95,7 @@ export class Settings {
   public storeState() {
     this.set("roundSets", this.roundSets.toString());
     this.set("setTime", this.setTime.toString());
-    this.set("customSetTime", this.customSetTime.toString());
+    this.set("bouncedArrowTime", this.bouncedArrowTime.toString());
     this.set("preparationTime", this.preparationTime.toString());
     this.set("warningTime", this.warningTime.toString());
     this.set("lines", this.lines.toString());

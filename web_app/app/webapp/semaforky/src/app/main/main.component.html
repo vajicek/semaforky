@@ -78,8 +78,8 @@
 		</button>
 	</div>
 	<div class="actions">
-		<button type="button" [disabled]="!customSetEnabled" (click)="onCustomSet()" clickable>
-			{{ 'Custom Set...' | translate }}
+		<button type="button" [disabled]="!bouncedArrowEnabled" [class.marked]="bouncedArrowPending" (click)="onBouncedArrow()" clickable>
+			{{ 'Bounced Arrow...' | translate }}
 		</button>
 		<button type="button" [disabled]="!cancelSetEnabled" (click)="onCancelSet()" clickable>
 			{{ 'Cancel Set' | translate }}
@@ -162,18 +162,19 @@
 	</div>
 </div>
 
-<div class="overlay" #dialogCustomSet>
-	<div class="dialogCustomSet dialog">
+
+<div class="overlay" #dialogBouncedArrow>
+	<div class="dialogBouncedArrow dialog">
 		<div class="actions">
-			<div class="left">{{ 'Custom Set Time' | translate }}</div>
+			<div class="left">{{ 'Bounced Arrow Time' | translate }}</div>
 			<div class="right">
-				<input [(ngModel)]="settings.customSetTime" type="number">
+				<input [(ngModel)]="settings.bouncedArrowTime" type="number">
 			</div>
 		</div>
 		<br />
 		<div class="buttons">
-			<button (click)="onCustomSetStart()">{{ 'Start' | translate }}</button>
-			<button (click)="onCustomSetCancel()">{{ 'Cancel' | translate }}</button>
+			<button (click)="onBouncedArrowStart()">{{ 'Start' | translate }}</button>
+			<button (click)="onBouncedArrowSkip()">{{ 'Skip' | translate }}</button>
 		</div>
 	</div>
 </div>

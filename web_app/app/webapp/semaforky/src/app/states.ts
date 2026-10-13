@@ -9,7 +9,7 @@ export enum SemaforkyState {
   STARTED,
   START_WAITING,
   ROUND_STARTED,
-  CUSTOM_SET_STARTED,
+  BOUNCED_ARROW_STARTED,
   SET_STARTED,
   READY,
   FIRE,
@@ -52,7 +52,9 @@ export class SemaforkyMachine {
   private currentSet: number = 1;
   private currentLine: number = 0;
   private countdown: number = 0;
-  private customSet: boolean = false;
+  private bouncedArrowActive: boolean = false;
+  private pendingBouncedArrow: boolean = false;
+  private waitingForBouncedArrow: boolean = false;
 
   constructor(
     private settings: Settings,
@@ -102,6 +104,42 @@ export class SemaforkyMachine {
     return this.currentState;
   }
 
+  public isBouncedArrowPending(): boolean {
+    return this.pendingBouncedArrow;
+  }
+
+  public isWaitingForBouncedArrow(): boolean {
+    return this.waitingForBouncedArrow;
+  }
+
+  public toggleBouncedArrow() {
+    if (![SemaforkyState.READY, SemaforkyState.FIRE, SemaforkyState.WARNING]
+      .includes(this.currentState?.name as SemaforkyState)) {
+      return;
+    }
+    this.pendingBouncedArrow = !this.pendingBouncedArrow;
+    this.updateGui();
+    this.storeState();
+  }
+
+  public startBouncedArrow() {
+    if (!this.waitingForBouncedArrow) {
+      return;
+    }
+    this.moveTo(SemaforkyState.BOUNCED_ARROW_STARTED);
+  }
+
+  public skipBouncedArrow() {
+    if (!this.waitingForBouncedArrow) {
+      return;
+    }
+    this.waitingForBouncedArrow = false;
+    this.advanceLineOrSet();
+    this.updateGui();
+    this.updateStateAfterLineEnd();
+    this.storeState();
+  }
+
   public getCurrentLineOrder(): LineOrder {
     if (
       this.currentState?.name != SemaforkyState.STARTED
@@ -140,8 +178,14 @@ export class SemaforkyMachine {
     this.currentLine = parseInt(
       this.settings.getCookieValue("currentLine", this.currentLine.toString())
     );
-    this.customSet =
-      this.settings.getCookieValue("customSet", this.customSet.toString()) ===
+    this.bouncedArrowActive =
+      this.settings.getCookieValue("bouncedArrowActive", this.bouncedArrowActive.toString()) ===
+      "true";
+    this.pendingBouncedArrow =
+      this.settings.getCookieValue("pendingBouncedArrow", this.pendingBouncedArrow.toString()) ===
+      "true";
+    this.waitingForBouncedArrow =
+      this.settings.getCookieValue("waitingForBouncedArrow", this.waitingForBouncedArrow.toString()) ===
       "true";
   }
 
@@ -154,7 +198,9 @@ export class SemaforkyMachine {
     }
     this.settings.setCookieValue("currentSet", this.currentSet.toString());
     this.settings.setCookieValue("currentLine", this.currentLine.toString());
-    this.settings.setCookieValue("customSet", this.customSet.toString());
+    this.settings.setCookieValue("bouncedArrowActive", this.bouncedArrowActive.toString());
+    this.settings.setCookieValue("pendingBouncedArrow", this.pendingBouncedArrow.toString());
+    this.settings.setCookieValue("waitingForBouncedArrow", this.waitingForBouncedArrow.toString());
   }
 
   protected addState(state: State) {
@@ -169,6 +215,38 @@ export class SemaforkyMachine {
 
   protected updateGui() {
     this.mainComponentEventBus.updateGui.emit();
+  }
+
+  private advanceLineOrSet() {
+    if (this.currentLine + 1 < this.settings.lines) {
+      this.currentLine++;
+    } else {
+      this.currentSet++;
+      this.currentLine = 0;
+    }
+  }
+
+  private updateStateAfterLineEnd() {
+    if (this.currentLine == 0) {
+      this.restClientController.playSiren(3);
+      this.restClientController.updateSemaphores(SemaphoreLight.RED);
+      this.mainComponentEventBus.updateSetClocks.emit(0);
+      this.restClientController.updateClocks(0);
+      this.restClientController.countdown(this.countdown, false);
+      window.setTimeout(() => {
+        this.restClientController.updateLines(this.getCurrentLineOrder());
+      }, 2000);
+
+      if (this.settings.continuous) {
+        if (this.currentSet <= this.settings.numberOfSets) {
+          this.moveTo(SemaforkyState.SET_STARTED);
+        } else {
+          this.moveTo(SemaforkyState.ROUND_STOPPED);
+        }
+      }
+    } else {
+      this.moveTo(SemaforkyState.SET_STARTED);
+    }
   }
 
   protected initializeStates() {
@@ -208,6 +286,9 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
+          self.bouncedArrowActive = false;
+          self.pendingBouncedArrow = false;
+          self.waitingForBouncedArrow = false;
           self.scheduler.startRound();
           self.updateGui();
           self.currentSet = 1;
@@ -222,15 +303,17 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.customSet = true;
+          self.bouncedArrowActive = true;
+          self.pendingBouncedArrow = false;
+          self.waitingForBouncedArrow = false;
           self.updateGui();
           self.restClientController.playSiren(2);
           self.restClientController.updateSemaphores(
             SemaphoreLight.RED
           );
-          self.scheduler.startCustomSet();
+          self.scheduler.startBouncedArrow();
         }
-      })(SemaforkyState.CUSTOM_SET_STARTED, [SemaforkyState.READY])
+      })(SemaforkyState.BOUNCED_ARROW_STARTED, [SemaforkyState.READY])
     );
     this.addState(
       new (class extends State {
@@ -314,62 +397,35 @@ export class SemaforkyMachine {
       new (class extends State {
         run(previous: State) {
           self.scheduler.stopSet();
-          this.updateSetAndLine();
-          self.updateGui();
-          this.updateState();
+          this.handleLineEnd();
         }
 
-        updateState() {
-          if (self.currentLine == 0) {
-            // remain stopped (or handle special cases) if set is over
-            self.restClientController.playSiren(3);
-            self.restClientController.updateSemaphores(
-              SemaphoreLight.RED
-            );
-            // reset set clock to zero (the last setClockEvent could be canceled)
+        handleLineEnd() {
+          if (self.bouncedArrowActive) {
+            self.bouncedArrowActive = false;
+            self.advanceLineOrSet();
+            self.updateGui();
+            self.updateStateAfterLineEnd();
+          } else if (self.pendingBouncedArrow) {
+            self.pendingBouncedArrow = false;
+            self.waitingForBouncedArrow = true;
+            self.restClientController.updateSemaphores(SemaphoreLight.RED);
             self.mainComponentEventBus.updateSetClocks.emit(0);
             self.restClientController.updateClocks(0);
-            self.restClientController.countdown(
-              self.countdown,
-              false
-            );
-            // show Lines with a delay
-            window.setTimeout(() => {
-              self.restClientController
-                .updateLines(self.getCurrentLineOrder());
-            }, 2000);
-            // automatic mode
-            if (self.settings.continuous) {
-              if (self.currentSet <= self.settings.numberOfSets) {
-                self.moveTo(SemaforkyState.SET_STARTED);
-              } else {
-                self.moveTo(SemaforkyState.ROUND_STOPPED);
-              }
-            }
+            self.restClientController.countdown(self.countdown, false);
+            self.updateGui();
+            self.mainComponentEventBus.bouncedArrowPrompt.emit();
           } else {
-            // otherwise continue
-            self.moveTo(SemaforkyState.SET_STARTED);
+            self.advanceLineOrSet();
+            self.updateGui();
+            self.updateStateAfterLineEnd();
           }
         }
 
-        updateSetAndLine() {
-          if (self.customSet) {
-            self.customSet = false;
-          } else {
-            if (self.currentLine + 1 < self.settings.lines) {
-              // if number of line is higher than current line, increase line
-              self.currentLine++;
-            } else {
-              // otherwise, increase set
-              self.currentSet++;
-              self.currentLine = 0;
-            }
-          }
-        }
       })(SemaforkyState.SET_STOPPED, [
         SemaforkyState.ROUND_STOPPED,
         SemaforkyState.SET_STARTED,
-        SemaforkyState.CUSTOM_SET_STARTED,
+        SemaforkyState.BOUNCED_ARROW_STARTED,
       ])
     );
     this.addState(
@@ -388,7 +444,9 @@ export class SemaforkyMachine {
     this.addState(
       new (class extends State {
         run(previous: State) {
-          self.customSet = false;
+          self.bouncedArrowActive = false;
+          self.pendingBouncedArrow = false;
+          self.waitingForBouncedArrow = false;
           self.scheduler.cancelSet();
           self.updateGui();
           self.restClientController.updateSemaphores(
@@ -406,12 +464,13 @@ export class SemaforkyMachine {
       })(SemaforkyState.SET_CANCELED, [
         SemaforkyState.ROUND_STOPPED,
         SemaforkyState.SET_STARTED,
-        SemaforkyState.CUSTOM_SET_STARTED,
       ])
     );
     this.addState(
       new (class extends State {
         run(previous: State) {
+          self.pendingBouncedArrow = false;
+          self.waitingForBouncedArrow = false;
           self.scheduler.endRound();
           this.updateRoundSetAndLine();
           self.updateGui();

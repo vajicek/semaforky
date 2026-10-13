@@ -375,8 +375,8 @@ export class Scheduler {
       ));
   }
 
-  public startCustomSet() {
-    this.startSetInternal(this.settings.customSetTime);
+  public startBouncedArrow() {
+    this.startSetInternal(this.settings.bouncedArrowTime);
   }
 
   public startRound() {

@@ -17,6 +17,7 @@ import { gitHash, gitDate } from './version';
   ]
 })
 export class AppComponent {
+  title = "semaforky";
   gitHash = gitHash;
   gitDate = gitDate;
 
