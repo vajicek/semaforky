@@ -1,7 +1,7 @@
 import { Component } from "@angular/core";
 import { CommonModule } from "@angular/common";
 import { RouterOutlet } from '@angular/router';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { gitHash, gitDate } from './version';
 
@@ -13,7 +13,7 @@ import { gitHash, gitDate } from './version';
   imports: [
     CommonModule,
     RouterOutlet,
-    TranslateModule
+    TranslatePipe
   ]
 })
 export class AppComponent {
@@ -22,6 +22,7 @@ export class AppComponent {
   gitDate = gitDate;
 
   constructor(private translate: TranslateService) {
-    this.translate.setDefaultLang('en');
+    this.translate.setFallbackLang('en');
+    this.translate.use('en');
   }
 }

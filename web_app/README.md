@@ -17,49 +17,87 @@ See [Live demo](http://vajicek.github.io/semaforky).
 
 ## Prerequisites
 
-* Arduino 1.8.19
-* ESP 8266 board support for Arduino >=1.6.x, set "http://arduino.esp8266.com/stable/package_esp8266com_index.json" in File > Preferences > Additional Board Manger URLs
-* [Support for SPIFFS](https://www.instructables.com/Using-ESP8266-SPIFFS/), [plugin v0.5](https://github.com/esp8266/arduino-esp8266fs-plugin/releases/download/0.5.0/ESP8266FS-0.5.0.zip)
-* Arduino Libraries (Tools > Manage Libraries...)
-    * [ESPAsyncTCP](https://github.com/me-no-dev/ESPAsyncTCP)
-    * [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer)
-    * [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
-    * DMD2
-    * Adafruit GFX Library
-    * Fork of [PxMatrix](https://github.com/vajicek/PxMatrix.git) (new scan pattern added)
+* Docker
+* A host user with permission to access the device used for flashing
+* A serial device such as `/dev/ttyUSB0` for firmware upload
 
-## Use devcontainer
+The Docker development container provides Node.js 22, Angular 22, Arduino CLI,
+the pinned ESP8266 toolchain, and `mkspiffs`. Generated frontend and filesystem
+files are build artifacts and are not required in source control.
 
-Build dev container.
+The Arduino dependencies installed by `make install_deps` are:
+
+* ESP8266 board core 3.1.2
+* [ESPAsyncTCP](https://github.com/me-no-dev/ESPAsyncTCP)
+* [ESPAsyncWebServer](https://github.com/me-no-dev/ESPAsyncWebServer)
+* [ArduinoJson](https://github.com/bblanchon/ArduinoJson)
+* [DMD2](https://github.com/freetronics/DMD2)
+* [Adafruit GFX Library](https://github.com/adafruit/Adafruit-GFX-Library)
+* [Adafruit BusIO](https://github.com/adafruit/Adafruit_BusIO)
+* Fork of [PxMatrix](https://github.com/vajicek/PxMatrix) with the additional scan pattern
+
+## Use Docker development container
+
+Run these commands from this directory (`web_app`). Build the Docker image:
 ```bash
 make build_devcontainer
 ```
 
-Run dev container.
+Use `make rebuild_devcontainer` when the image must be rebuilt without cache.
+
+Run the Docker development container:
 ```bash
 make devcontainer
 ```
 
-### Web application
-Build **web app**.
+The container is removed when the shell exits. Arduino CLI data and libraries
+are kept in Docker named volumes. To expose a serial device to the container:
 ```bash
-make setup_ng && make build_webapp
+make devcontainer DOCKER_DEVICE=/dev/ttyUSB0
 ```
 
+### Web application
+
+Install the locked frontend dependencies and build the **web app**:
+```bash
+make build
+```
+
+Run the Angular development server on port 4200:
+```bash
+make setup_ng && make serve_ng
+```
+
+The project uses Angular 22 and Node.js 22. Browser-based Karma tests are not
+included in the Docker image; run `make test` only in an environment with a
+compatible browser.
+
 ### Device application
-Install dependencies for **device application**.
+
+Install the pinned dependencies for the **device application**:
 ```bash
 make install_deps
 ```
 
-Build and install **device application**, e.g. for p5 device (connected to /dev/ttyUSB0).
+Build and install the **device application**, for example for a p5 device:
 ```bash
 make install_p5
 ```
 
-Rebuild filesystem for **web app** server and flash it to a device (connected to /dev/ttyUSB0).
+Build the filesystem image for the web app server:
 ```bash
-rm -f filesystem.bin && make flash-fs
+make build-fs
+```
+
+Flash the filesystem to the configured device. Set `DEVICE` when it is not
+`/dev/ttyUSB0`:
+```bash
+make flash-fs DEVICE=/dev/ttyUSB0
+```
+
+Remove generated output:
+```bash
+make clean
 ```
 
 ## Semaforky application state diagram

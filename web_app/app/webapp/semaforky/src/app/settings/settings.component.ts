@@ -2,7 +2,7 @@ import { Component } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
 import { Router } from '@angular/router';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Settings } from "../settings";
 import { RestClientController } from "../client";
@@ -13,7 +13,7 @@ import { RestClientController } from "../client";
   imports: [
     CommonModule,
     FormsModule,
-    TranslateModule
+    TranslatePipe
   ],
   templateUrl: './settings.component.html',
   styleUrl: './settings.component.css'

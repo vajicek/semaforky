@@ -6,15 +6,9 @@ import {
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
-import {
-  Router,
-  RouterOutlet,
-  RouterLink,
-  RouterLinkActive
-} from '@angular/router';
-import { HttpClientModule } from "@angular/common/http";
+import { Router } from '@angular/router';
 import { Subject } from 'rxjs';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 
 import { Settings, LineOrder, SemaphoreLight } from "../settings";
 import { SemaforkyMachine, State, SemaforkyState } from "../states";
@@ -49,12 +43,8 @@ export class MainComponentEventBus {
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet,
-    RouterLink,
-    RouterLinkActive,
-    HttpClientModule,
     FormsModule,
-    TranslateModule
+    TranslatePipe
   ],
   templateUrl: './main.component.html',
   styleUrl: './main.component.css'

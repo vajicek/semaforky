@@ -1,47 +1,60 @@
-FROM ubuntu:20.04
+FROM ubuntu:24.04
 
-RUN apt-get update
+ARG ARDUINO_CLI_VERSION=1.3.1
+ARG DEBIAN_FRONTEND=noninteractive
 
-RUN apt install -y ca-certificates
-RUN update-ca-certificates
-COPY ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
-
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
 	git \
 	make \
 	curl \
-	unzip \
 	bc \
-	python3-pip
+	python3 \
+	python3-pip \
+	ca-certificates \
+	xz-utils \
+	&& rm -rf /var/lib/apt/lists/*
 
-RUN python3 -m pip install pyserial
+RUN python3 -m pip install --break-system-packages --no-cache-dir pyserial==3.5
 
-RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
 
-RUN apt-get install -y nodejs
+RUN apt-get update && apt-get install -y --no-install-recommends nodejs \
+	&& rm -rf /var/lib/apt/lists/*
 
-WORKDIR /root
-
-RUN curl https://downloads.arduino.cc/arduino-ide/arduino-ide_2.3.2_Linux_64bit.zip \
-		--output arduino-ide_2.3.2_Linux_64bit.zip && \
-	unzip arduino-ide_2.3.2_Linux_64bit.zip && \
-	ln -s arduino-ide_2.3.2_Linux_64bit Arduino
-
-RUN curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+RUN curl -fsSL \
+		"https://github.com/arduino/arduino-cli/releases/download/v${ARDUINO_CLI_VERSION}/arduino-cli_${ARDUINO_CLI_VERSION}_Linux_64bit.tar.gz" \
+		| tar -xz -C /usr/local/bin arduino-cli
 
 RUN curl -L \
 		https://github.com/igrr/mkspiffs/releases/download/0.2.3/mkspiffs-0.2.3-arduino-esp8266-linux64.tar.gz \
 		--output mkspiffs-0.2.3-arduino-esp8266-linux64.tar.gz && \
 	tar xvzf mkspiffs-0.2.3-arduino-esp8266-linux64.tar.gz && \
-	ln -sf ~/mkspiffs-0.2.3-arduino-esp8266-linux64/mkspiffs ~/bin/
+	install -m 0755 mkspiffs-0.2.3-arduino-esp8266-linux64/mkspiffs /usr/local/bin/mkspiffs && \
+	rm -rf mkspiffs-0.2.3-arduino-esp8266-linux64 mkspiffs-0.2.3-arduino-esp8266-linux64.tar.gz
 
 EXPOSE 4200
 
-# user compatibility with host and mounted volumes
-ARG UID
-ARG GID
+# Match the mounted repository ownership on the host.
+ARG UID=1000
+ARG GID=1000
 
-RUN groupadd -g $GID mygroup
-RUN useradd --uid $UID -g mygroup myuser
+RUN set -eux; \
+	group_name="$(getent group "$GID" | cut -d: -f1 || true)"; \
+	if [ -n "$group_name" ]; then \
+		groupmod --new-name mygroup "$group_name"; \
+	else \
+		groupadd --gid "$GID" mygroup; \
+	fi; \
+	user_name="$(getent passwd "$UID" | cut -d: -f1 || true)"; \
+	if [ -n "$user_name" ]; then \
+		usermod --login myuser --home /home/myuser --move-home "$user_name"; \
+	else \
+		useradd --uid "$UID" --gid mygroup --create-home --shell /bin/bash myuser; \
+	fi; \
+	usermod --gid mygroup myuser; \
+	mkdir -p /home/myuser/Arduino/libraries /home/myuser/.arduino15; \
+	chown -R myuser:mygroup /home/myuser
 
 USER myuser
+ENV HOME=/home/myuser
+WORKDIR /tmp/home/web_app

@@ -1,1 +1,8 @@
 web_app/app/webapp/semaforky/src/app/version.ts
+web_app/app/webapp/semaforky/node_modules/
+web_app/app/webapp/semaforky/.angular/
+web_app/app/webapp/semaforky/dist/
+web_app/app/webapp/semaforky/out-tsc/
+web_app/app/data/
+web_app/filesystem.bin
+web_app/ca-certificates.crt
