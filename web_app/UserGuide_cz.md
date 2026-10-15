@@ -49,7 +49,7 @@ Doporučení pro ovládání ze smartphonu: nastavte si telefon tak, aby neusín
 	* "Konec sady" - Ukončení sady před uplynutím nastaveného času.
 	* "Začátek sady" - Začátek druhé, třetí a každé další sady v daném kole.
 	* "Konec kola" - Pro ukončení kola, resp. ukončení poslední sady v ukončovaném kole před koncem nastaveného času na sadu.
-	* "Variabilní sada" - Otevře **Dialog pro Variabilní Sadu**, který umožňuje nastavení délky sady pro případy dostřelů.
+	* "Odražený šíp..." - během střelby označí odražený šíp. Po dokončení aktuální linie se otevře dialog, ve kterém lze nastavit čas odraženého šípu. Volba "Start" spustí vloženou sadu, volba "Přeskočit" pokračuje bez ní. Odražené šípy lze řešit i během dostřelů odražených šípů.
 	* "Zrušit sadu" - Ukončení sady, pokud dojde v výjimečné situaci před začátkem střelby. Nedojde k rotaci řad jako v případě normálního (předčasného) ukončení sady.
 	* "Pauza"/"Pokračovat" - Zastavení a pokračování v odpočtu, pro účely řešení výjimečných situací.
 8) **Informační Panel** ukazuje počty a typy ovládaných zařízení. Některá zařízení naplňují více funkcí (jeden klient může fungovat jako semafor a hodiny zároveň):
