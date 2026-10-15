@@ -14,7 +14,7 @@ NG           := node_modules/.bin/ng
 
 # DEPENDENCISE AND PREREQUISITES
 .PHONY: install_common install_deps serve_ng setup_ng build_webapp build test clean build-fs flash-fs \
-	install_app install_p5 install_p5_new install_p10x3 install_p10 install_siren install_p10_semaphore \
+	install_p5 install_p5_new install_p10x3 install_p10 install_siren install_p10_semaphore \
 	build_devcontainer rebuild_devcontainer devcontainer deploy_testing userguide
 
 install_common:
