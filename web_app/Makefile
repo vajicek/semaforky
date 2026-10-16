@@ -134,4 +134,5 @@ userguide:
 	npm i md-to-pdf
 	node_modules/.bin/md-to-pdf \
 	--pdf-options '{ "margin": "20mm 25mm 20mm 25mm", "printBackground": true }' \
+	--launch-options '{ "args": ["--no-sandbox"] }' \
 	UserGuide_cz.md
