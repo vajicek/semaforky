@@ -1,8 +1,11 @@
 BOARDCONFIG := esp8266:esp8266:d1:eesz=4M1M
+ESP32_BOARD_CONFIG ?= esp32:esp32:esp32
+ESP32_CORE_VERSION ?= 3.3.0
 ARDUINO_CLI ?= arduino-cli
 MKSPIFFS    ?= mkspiffs
 BC          ?= bc
 DEVICE      := /dev/ttyUSB0
+ESP32_DEVICE ?= $(DEVICE)
 ESPTOOL_PY  := ${HOME}/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/tools/esptool/esptool.py
 UID         ?= $(shell id -u)
 GID         ?= $(shell id -g)
@@ -14,6 +17,7 @@ NG           := node_modules/.bin/ng
 
 # DEPENDENCISE AND PREREQUISITES
 .PHONY: install_common install_deps serve_ng setup_ng build_webapp build test clean build-fs flash-fs \
+	install_deps_esp32 build_p10x3_ng install_p10x3_ng \
 	install_p5 install_p5_new install_p10x3 install_p10 install_siren install_p10_semaphore \
 	build_devcontainer rebuild_devcontainer devcontainer deploy_testing userguide
 
@@ -31,6 +35,17 @@ install_deps: install_common
 	$(ARDUINO_CLI) lib install --git-url https://github.com/me-no-dev/ESPAsyncWebServer.git#ad3741d159f9cfd50c567e81b67f3bef1dc6d89f
 	$(ARDUINO_CLI) lib install --git-url https://github.com/vajicek/PxMatrix.git#4f67a75bea468715e183312b1c43b4d6530cedcb
 	$(ARDUINO_CLI) lib install --git-url https://github.com/freetronics/DMD2.git#b78bd7b9b5287238f90e810e93a97d5d291bca86
+	$(ARDUINO_CLI) lib install --git-url https://github.com/adafruit/Adafruit-GFX-Library.git#ac6d7c3869a693d406f77b9bfcd486b0673169f0
+	$(ARDUINO_CLI) lib install --git-url https://github.com/adafruit/Adafruit_BusIO.git#3b8364267c3ee6e16bad91bc2101aefbd5b5915f
+
+install_deps_esp32: install_common
+	$(ARDUINO_CLI) config add board_manager.additional_urls https://espressif.github.io/arduino-esp32/package_esp32_index.json
+	$(ARDUINO_CLI) core install esp32:esp32@$(ESP32_CORE_VERSION)
+	$(ARDUINO_CLI) config set library.enable_unsafe_install true
+	$(ARDUINO_CLI) lib install --git-url https://github.com/bblanchon/ArduinoJson.git#1cd478f48e7c4cd142a0bd26ee17d63d70d04e3f
+	$(ARDUINO_CLI) lib install --git-url https://github.com/ESP32Async/AsyncTCP.git
+	$(ARDUINO_CLI) lib install --git-url https://github.com/ESP32Async/ESPAsyncWebServer.git
+	$(ARDUINO_CLI) lib install FthnLabsDisplay@1.0.0
 	$(ARDUINO_CLI) lib install --git-url https://github.com/adafruit/Adafruit-GFX-Library.git#ac6d7c3869a693d406f77b9bfcd486b0673169f0
 	$(ARDUINO_CLI) lib install --git-url https://github.com/adafruit/Adafruit_BusIO.git#3b8364267c3ee6e16bad91bc2101aefbd5b5915f
 
@@ -95,6 +110,15 @@ install_p10x3: DIR=p10x3
 install_p10: DIR=p10
 install_siren: DIR=siren
 install_p10_semaphore: DIR=p10_semaphore
+
+build_p10x3_ng:
+	$(ARDUINO_CLI) compile --fqbn $(ESP32_BOARD_CONFIG) devices/p10x3_ng
+
+install_p10x3_ng:
+	rm -fr $(PWD)/devices/p10x3_ng/data
+	ln -s $(PWD)/app/data $(PWD)/devices/p10x3_ng/data
+	$(ARDUINO_CLI) compile --fqbn $(ESP32_BOARD_CONFIG) devices/p10x3_ng
+	$(ARDUINO_CLI) upload -p $(ESP32_DEVICE) --fqbn $(ESP32_BOARD_CONFIG) devices/p10x3_ng
 
 install_p5 install_p5_new install_p10x3 install_siren install_p10_semaphore:
 	rm -fr $(PWD)/devices/${DIR}/data
