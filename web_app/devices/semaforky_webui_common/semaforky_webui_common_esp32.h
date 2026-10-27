@@ -1,19 +1,27 @@
 /// Copyright (C) 2026, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
-#include "semaforky_webui_common.h"
+#define CLOCK_EOPIN 22
+#define CLOCK_CLKPIN 18
+#define CLOCK_LATPIN 2
+#define CLOCK_APIN 19
+#define CLOCK_BPIN 21
+#define CLOCK_RDATAPIN 23
 
-#include "digits32_font.h"
-#include "abcd32_font.h"
+#define CONNECTION_INDICATING_LED 17
 
 #define SIREN_TONE_LENGTH 300
 #define SIREN_PAUSE_LENGTH 300
 #define SIREN_AUDIO_PIN 5
 
-// Wemos ESP32 pins not used by the P10 display or siren.
 #define SEMAPHORE_RED_PIN 25
 #define SEMAPHORE_GREEN_PIN 26
 #define SEMAPHORE_ORANGE_PIN 27
+
+#include "semaforky_webui_common.h"
+
+#include "digits32_font.h"
+#include "abcd32_font.h"
 
 class Semaphore {
 private:
@@ -252,12 +260,12 @@ void P10x3::Execute() {
 }
 
 DisplayConfig getP10x3DisplayConfig() {
-	uint8_t oePin = 22;
-	uint8_t clkPin = 18;
-	uint8_t latPin = 2;
-	uint8_t aPin = 19;
-	uint8_t bPin = 21;
-	uint8_t rDataPin = 23;
+	uint8_t oePin = CLOCK_EOPIN;
+	uint8_t clkPin = CLOCK_CLKPIN;
+	uint8_t latPin = CLOCK_LATPIN;
+	uint8_t aPin = CLOCK_APIN;
+	uint8_t bPin = CLOCK_BPIN;
+	uint8_t rDataPin = CLOCK_RDATAPIN;
 
 	uint8_t panelWidth = 32;
 	uint8_t panelHeight = 48;

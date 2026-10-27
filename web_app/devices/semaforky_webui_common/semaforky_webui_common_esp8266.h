@@ -1,6 +1,8 @@
 /// Copyright (C) 2023, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+#define CONNECTION_INDICATING_LED D4
+
 #include "semaforky_webui_common.h"
 
 struct StackedDMD : public SPIDMD {

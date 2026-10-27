@@ -76,7 +76,6 @@ bool networkExist(String target_ssid) {
 }
 
 void connectToHotspot(const char *ssid, const char *password) {
-	int connection_indicating_led = D4;
 	int connection_waiting_counter = 0;
 
 	// setup wifi module to station mode
@@ -88,7 +87,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 	WiFi.persistent(true);
 
 	// led indication
-	pinMode(connection_indicating_led, OUTPUT);
+	pinMode(CONNECTION_INDICATING_LED, OUTPUT);
 
 	int status = WL_IDLE_STATUS;
 	for (int i = 0; i < 300; i++) {
@@ -96,7 +95,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 		Serial.print(status);
 
 		// led indication
-		digitalWrite(connection_indicating_led,
+		digitalWrite(CONNECTION_INDICATING_LED,
 			((connection_waiting_counter++ / 10) % 2) ? LOW  : HIGH);
 
 		status = WiFi.status();
@@ -108,7 +107,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 	}
 
 	// turn off led
-	digitalWrite(connection_indicating_led, HIGH);
+	digitalWrite(CONNECTION_INDICATING_LED, HIGH);
 
 	if (status == WL_CONNECTED) {
 		Serial.println("Connected to AP...");
