@@ -5,7 +5,21 @@ import { Subscription } from "rxjs";
 import { Settings, LineOrder, SemaphoreLight } from "./settings";
 import { MainComponentEventBus } from './main/main.component';
 
-type Request = { control: string; value: string };
+enum ControlValue {
+  Clock = 1,
+  Semaphore = 2,
+  Lines = 3,
+  Siren = 4,
+  Countdown = 5,
+}
+
+const CONTROL_CAPABILITY: Record<ControlValue, string> = {
+  [ControlValue.Clock]: "clock",
+  [ControlValue.Semaphore]: "semaphore",
+  [ControlValue.Lines]: "lines",
+  [ControlValue.Siren]: "siren",
+  [ControlValue.Countdown]: "countdown",
+};
 
 @Injectable({
   providedIn: 'root'
@@ -129,18 +143,18 @@ export class RestClientController {
       return;
     }
 
-    this.control("clock", 1, encodedValue);
+    this.control(ControlValue.Clock, encodedValue);
 
     this.previousEncodedValue = encodedValue;
   }
 
   public updateSemaphores(semaphoreLight: SemaphoreLight) {
     this.semaphoreLight = semaphoreLight;
-    this.control("semaphore", 2, this.getEncodedValue());
+    this.control(ControlValue.Semaphore, this.getEncodedValue());
   }
 
   public updateLines(lines: LineOrder) {
-    this.control("lines", 3, lines);
+    this.control(ControlValue.Lines, lines);
   }
 
   private initAudio() {
@@ -169,7 +183,7 @@ export class RestClientController {
 
   public playSiren(count: number) {
     this.playAudio(count);
-    this.control("siren", 4, count);
+    this.control(ControlValue.Siren, count);
   }
 
   public countdown(count: number, start: boolean) {
@@ -177,11 +191,11 @@ export class RestClientController {
       count |
       (start ? 1 << 16 : 0) |
       (this.settings.brightness << 24);
-    this.control("countdown", 5, encodedValue);
+    this.control(ControlValue.Countdown, encodedValue);
   }
 
-  private control(clients: string, control: number, value: number) {
-    this.getClients(clients).forEach((address) => {
+  private control(control: ControlValue, value: number) {
+    this.getClients(CONTROL_CAPABILITY[control]).forEach((address) => {
       this.http
         .post("http://" + address + "/control", {
           control: control,
