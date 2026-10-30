@@ -1,11 +1,13 @@
-BOARDCONFIG := esp8266:esp8266:d1:eesz=4M1M
-ESP32_BOARD_CONFIG ?= esp32:esp32:esp32
+ESP8266_BOARDCONFIG := esp8266:esp8266:d1:eesz=4M1M
+ESP8266_CORE_VERSION ?= 3.1.2
+ESP32_BOARDCONFIG ?= esp32:esp32:esp32:PartitionScheme=default
 ESP32_CORE_VERSION ?= 3.3.0
+ESP32_SPIFFS_BLOCK_SIZE ?= 4096
+ESP32_SPIFFS_PAGE_SIZE ?= 256
 ARDUINO_CLI ?= arduino-cli
 MKSPIFFS    ?= mkspiffs
 BC          ?= bc
 DEVICE      := /dev/ttyUSB0
-ESP32_DEVICE ?= $(DEVICE)
 ESPTOOL_PY  := ${HOME}/.arduino15/packages/esp8266/hardware/esp8266/3.1.2/tools/esptool/esptool.py
 UID         ?= $(shell id -u)
 GID         ?= $(shell id -g)
@@ -18,6 +20,7 @@ NG           := node_modules/.bin/ng
 # DEPENDENCISE AND PREREQUISITES
 .PHONY: install_common install_deps serve_ng setup_ng build_webapp build test clean build-fs flash-fs \
 	install_deps_esp32 build_p10x3_ng install_p10x3_ng \
+	build-fs-esp32 flash-fs-esp32 \
 	install_p5 install_p5_new install_p10x3 install_p10 install_siren install_p10_semaphore \
 	build_devcontainer rebuild_devcontainer devcontainer deploy_testing userguide
 
@@ -28,7 +31,7 @@ install_common:
 install_deps: install_common
 	$(ARDUINO_CLI) config init --overwrite
 	$(ARDUINO_CLI) config add board_manager.additional_urls https://arduino.esp8266.com/stable/package_esp8266com_index.json
-	$(ARDUINO_CLI) core install esp8266:esp8266@3.1.2
+	$(ARDUINO_CLI) core install esp8266:esp8266@$(ESP8266_CORE_VERSION)
 	$(ARDUINO_CLI) config set library.enable_unsafe_install true
 	$(ARDUINO_CLI) lib install --git-url https://github.com/bblanchon/ArduinoJson.git#1cd478f48e7c4cd142a0bd26ee17d63d70d04e3f
 	$(ARDUINO_CLI) lib install --git-url https://github.com/me-no-dev/ESPAsyncTCP.git#191bdeb2555bf86e213ecb816227d125753b608e
@@ -69,11 +72,11 @@ test:
 	cd app/webapp/semaforky && $(NG) test --watch=false
 
 clean:
-	rm -rf app/data app/webapp/semaforky/.angular app/webapp/semaforky/dist app/webapp/semaforky/out-tsc filesystem.bin app/webapp/semaforky/src/app/version.ts
+	rm -rf app/data app/webapp/semaforky/.angular app/webapp/semaforky/dist app/webapp/semaforky/out-tsc filesystem.bin filesystem-esp32.bin app/webapp/semaforky/src/app/version.ts
 
 # CREATE WEBAPP FILESYSTEM PACKAGE
 filesystem.bin: app/data/main.js
-	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) --show-properties devices/p5); \
+	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(ESP8266_BOARDCONFIG) --show-properties devices/p5); \
 	BUILD_SPIFFS_BLOCKSIZE=$$(echo "$$PROPS"|grep "^build.spiffs_blocksize"|cut -d= -f2); \
 	BUILD_SPIFFS_END=$$(echo "$$PROPS"|grep "^build.spiffs_end"|cut -d= -f2| sed 's/x//'); \
 	BUILD_SPIFFS_PAGESIZE=$$(echo "$$PROPS"|grep "^build.spiffs_pagesize"|cut -d= -f2); \
@@ -84,11 +87,16 @@ filesystem.bin: app/data/main.js
 	echo BUILD_SPIFFS_PAGESIZE=$${BUILD_SPIFFS_PAGESIZE}; \
 	echo BUILD_SPIFFS_START=$${BUILD_SPIFFS_START}; \
 	echo BUILD_SPIFFS_SIZE=$${BUILD_SPIFFS_SIZE}; \
-	$(MKSPIFFS) -c app/data -p $$BUILD_SPIFFS_PAGESIZE -b $$BUILD_SPIFFS_BLOCKSIZE -s $$BUILD_SPIFFS_SIZE $@
+	$(MKSPIFFS) \
+	  -c app/data \
+	  -p $$BUILD_SPIFFS_PAGESIZE \
+	  -b $$BUILD_SPIFFS_BLOCKSIZE \
+	  -s $$BUILD_SPIFFS_SIZE $@; \
+	echo "Created $@ for SPIFFS at $$BUILD_SPIFFS_START (size $$BUILD_SPIFFS_SIZE)"
 
 # FLASH WEBAPP FILESYSTEM
 flash-fs: filesystem.bin
-	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) --show-properties devices/p5); \
+	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(ESP8266_BOARDCONFIG) --show-properties devices/p5); \
 	BUILD_SPIFFS_START=$$(echo "$$PROPS"|grep "^build.spiffs_start"|cut -d= -f2); \
 	UPLOAD_SPEED=$$(echo "$$PROPS"|grep "^upload.speed"|cut -d= -f2); \
 	echo BUILD_SPIFFS_START=$${BUILD_SPIFFS_START}; \
@@ -103,6 +111,47 @@ flash-fs: filesystem.bin
 
 build-fs: build_webapp filesystem.bin
 
+# CREATE ESP32 WEBAPP FILESYSTEM PACKAGE
+filesystem-esp32.bin: app/data/main.js
+	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(ESP32_BOARDCONFIG) --show-properties devices/p10x3_ng); \
+	BUILD_SPIFFS_BLOCKSIZE=$$(echo "$$PROPS"|grep "^build.spiffs_blocksize"|cut -d= -f2); \
+	BUILD_SPIFFS_PAGESIZE=$$(echo "$$PROPS"|grep "^build.spiffs_pagesize"|cut -d= -f2); \
+	PLATFORM_PATH=$$(printf '%s\n' "$$PROPS" | sed -n 's/^runtime.platform.path=//p'); \
+	PARTITION_NAME=$$(printf '%s\n' "$$PROPS" | sed -n 's/^build.partitions=//p'); \
+	PARTITIONS_FILE="$$PLATFORM_PATH/tools/partitions/$$PARTITION_NAME.csv"; \
+	SPIFFS_LINE=$$(awk -F, '$$1 ~ /^[[:space:]]*spiffs[[:space:]]*$$/ { print; exit }' "$$PARTITIONS_FILE"); \
+	SPIFFS_OFFSET=$$(printf '%s\n' "$$SPIFFS_LINE" | cut -d, -f4 | tr -d '[:space:]'); \
+	SPIFFS_SIZE=$$(printf '%s\n' "$$SPIFFS_LINE" | cut -d, -f5 | tr -d '[:space:]'); \
+	MKSPIFFS_PATH=$$(printf '%s\n' "$$PROPS" | sed -n 's/^runtime.tools.mkspiffs.path=//p'); \
+	test -n "$$SPIFFS_OFFSET" && test -n "$$SPIFFS_SIZE" && test -n "$$MKSPIFFS_PATH"; \
+	"$$MKSPIFFS_PATH/mkspiffs" \
+	  -c app/data \
+	  -b $(ESP32_SPIFFS_BLOCK_SIZE) \
+	  -p $(ESP32_SPIFFS_PAGE_SIZE) \
+	  -s $$SPIFFS_SIZE $@; \
+	echo "Created $@ for SPIFFS at $$SPIFFS_OFFSET (size $$SPIFFS_SIZE)"
+
+build-fs-esp32: build_webapp filesystem-esp32.bin
+
+# FLASH ESP32 WEBAPP FILESYSTEM
+flash-fs-esp32: filesystem-esp32.bin
+	PROPS=$$($(ARDUINO_CLI) compile --fqbn $(ESP32_BOARDCONFIG) --show-properties devices/p10x3_ng); \
+	UPLOAD_SPEED=$$(echo "$$PROPS"|grep "^upload.speed"|cut -d= -f2); \
+	PLATFORM_PATH=$$(printf '%s\n' "$$PROPS" | sed -n 's/^runtime.platform.path=//p'); \
+	PARTITION_NAME=$$(printf '%s\n' "$$PROPS" | sed -n 's/^build.partitions=//p'); \
+	PARTITIONS_FILE="$$PLATFORM_PATH/tools/partitions/$$PARTITION_NAME.csv"; \
+	SPIFFS_LINE=$$(awk -F, '$$1 ~ /^[[:space:]]*spiffs[[:space:]]*$$/ { print; exit }' "$$PARTITIONS_FILE"); \
+	SPIFFS_OFFSET=$$(printf '%s\n' "$$SPIFFS_LINE" | cut -d, -f4 | tr -d '[:space:]'); \
+	ESPTOOL_PATH=$$(printf '%s\n' "$$PROPS" | sed -n 's/^runtime.tools.esptool_py.path=//p'); \
+	test -n "$$SPIFFS_OFFSET" && test -n "$$ESPTOOL_PATH"; \
+	"$$ESPTOOL_PATH/esptool" \
+	  --chip $$(printf '%s\n' "$$PROPS" | sed -n 's/^build.mcu=//p') \
+	  --port $(DEVICE) \
+	  --baud $$UPLOAD_SPEED \
+	  --before default-reset \
+	  --after hard-reset \
+	  write-flash $$SPIFFS_OFFSET filesystem-esp32.bin
+
 # BUILD AND INSTALL APPLICATIONS
 install_p5: DIR=p5
 install_p5_new: DIR=p5_new
@@ -112,19 +161,19 @@ install_siren: DIR=siren
 install_p10_semaphore: DIR=p10_semaphore
 
 build_p10x3_ng:
-	$(ARDUINO_CLI) compile --fqbn $(ESP32_BOARD_CONFIG) devices/p10x3_ng
+	$(ARDUINO_CLI) compile --fqbn $(ESP32_BOARDCONFIG) devices/p10x3_ng
 
 install_p10x3_ng:
 	rm -fr $(PWD)/devices/p10x3_ng/data
 	ln -s $(PWD)/app/data $(PWD)/devices/p10x3_ng/data
-	$(ARDUINO_CLI) compile --fqbn $(ESP32_BOARD_CONFIG) devices/p10x3_ng
-	$(ARDUINO_CLI) upload -p $(ESP32_DEVICE) --fqbn $(ESP32_BOARD_CONFIG) devices/p10x3_ng
+	$(ARDUINO_CLI) compile --fqbn $(ESP32_BOARDCONFIG) devices/p10x3_ng
+	$(ARDUINO_CLI) upload -p $(DEVICE) --fqbn $(ESP32_BOARDCONFIG) devices/p10x3_ng
 
 install_p5 install_p5_new install_p10x3 install_siren install_p10_semaphore:
 	rm -fr $(PWD)/devices/${DIR}/data
 	ln -s $(PWD)/app/data $(PWD)/devices/${DIR}/data
-	$(ARDUINO_CLI) compile --fqbn $(BOARDCONFIG) devices/${DIR}
-	$(ARDUINO_CLI) upload -p ${DEVICE} --fqbn $(BOARDCONFIG) devices/${DIR}
+	$(ARDUINO_CLI) compile --fqbn $(ESP8266_BOARDCONFIG) devices/${DIR}
+	$(ARDUINO_CLI) upload -p ${DEVICE} --fqbn $(ESP8266_BOARDCONFIG) devices/${DIR}
 
 build_devcontainer:
 	docker build \
@@ -140,7 +189,6 @@ rebuild_devcontainer:
 
 devcontainer:
 	docker run \
-	--rm \
 	-it \
 	-v $(PWD)/..:/tmp/home \
 	-v semaforky-arduino:/home/myuser/.arduino15 \
