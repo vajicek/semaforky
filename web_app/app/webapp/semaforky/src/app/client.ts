@@ -11,6 +11,7 @@ enum ControlValue {
   Lines = 3,
   Siren = 4,
   Countdown = 5,
+  Display = 6,
 }
 
 const CONTROL_CAPABILITY: Record<ControlValue, string> = {
@@ -19,6 +20,13 @@ const CONTROL_CAPABILITY: Record<ControlValue, string> = {
   [ControlValue.Lines]: "lines",
   [ControlValue.Siren]: "siren",
   [ControlValue.Countdown]: "countdown",
+  [ControlValue.Display]: "display",
+};
+
+export type RgbImage = {
+  width: number;
+  height: number;
+  data: Uint8Array;
 };
 
 @Injectable({
@@ -192,6 +200,35 @@ export class RestClientController {
       (start ? 1 << 16 : 0) |
       (this.settings.brightness << 24);
     this.control(ControlValue.Countdown, encodedValue);
+  }
+
+  public show(image: RgbImage) {
+    const encoded = this.encodeRgbImage(image);
+    this.getClients(CONTROL_CAPABILITY[ControlValue.Display]).forEach((address) => {
+      this.http
+        .post("http://" + address + "/control", {
+          control: ControlValue.Display,
+          value: encoded,
+        })
+        .subscribe();
+    });
+  }
+
+  private encodeRgbImage(image: RgbImage): string {
+    const expected = image.width * image.height * 3;
+    const data = image.data.length > expected
+      ? image.data.subarray(0, expected)
+      : image.data;
+    return `${image.width}x${image.height}:${this.toBase64(data)}`;
+  }
+
+  private toBase64(data: Uint8Array): string {
+    let binary = "";
+    const chunk = 0x8000;
+    for (let i = 0; i < data.length; i += chunk) {
+      binary += String.fromCharCode(...data.subarray(i, i + chunk));
+    }
+    return btoa(binary);
   }
 
   private control(control: ControlValue, value: number) {

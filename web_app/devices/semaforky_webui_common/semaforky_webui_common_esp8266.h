@@ -199,10 +199,6 @@ void Siren::Execute() {
 
 ///////////////////////////////////////
 
-static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
-	return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
-}
-
 class Px : public Base {
  protected:
 	PxMATRIX *display;
@@ -349,9 +345,12 @@ class P5 : public Px {
  protected:
 	PxMATRIX display;
 	scan_patterns scanPatterns;
+	String oldDisplayValue;
 
 	void drawDigits();
 	void drawLetters();
+	void drawDisplay();
+	void updateDisplay() override;
 
  public:
 	P5(BaseSettings *baseSettings, scan_patterns scanPatterns);
@@ -366,6 +365,54 @@ void P5::drawDigits() {
 void P5::drawLetters() {
 	display.setFont(&FixedWidthAbcd);
 	Px::drawLetters();
+}
+
+void P5::drawDisplay() {
+	int colon = displayValue.indexOf(':');
+	int separator = displayValue.indexOf('x');
+	if (separator <= 0 || colon <= separator) {
+		return;
+	}
+
+	int width = displayValue.substring(0, separator).toInt();
+	int height = displayValue.substring(separator + 1, colon).toInt();
+	if (width <= 0 || width > 64 || height <= 0 || height > 32) {
+		return;
+	}
+
+	size_t rgbSize = (size_t)width * (size_t)height * 3;
+	uint8_t *rgb = (uint8_t *)malloc(rgbSize);
+	if (!rgb) {
+		return;
+	}
+
+	const char *encoded = displayValue.c_str() + colon + 1;
+	size_t encodedSize = displayValue.length() - (size_t)colon - 1;
+	size_t decodedSize = decodeBase64(encoded, encodedSize, rgb, rgbSize);
+	display.fillScreen(color565(0, 0, 0));
+	for (int y = 0; y < height; y++) {
+		for (int x = 0; x < width; x++) {
+			size_t offset = ((size_t)y * (size_t)width + (size_t)x) * 3;
+			if (offset + 2 >= decodedSize) {
+				continue;
+			}
+			display.drawPixel(x, y, color565(
+				rgb[offset], rgb[offset + 1], rgb[offset + 2]));
+		}
+	}
+	display.showBuffer();
+	free(rgb);
+}
+
+void P5::updateDisplay() {
+	if (controlValue == CONTROL_VALUE_DISPLAY) {
+		if (oldDisplayValue != displayValue) {
+			oldDisplayValue = displayValue;
+			drawDisplay();
+		}
+		return;
+	}
+	Px::updateDisplay();
 }
 
 P5::P5(BaseSettings *baseSettings, scan_patterns scanPatterns=LINE)

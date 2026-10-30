@@ -135,10 +135,12 @@ private:
 	Siren siren;
 
 	int oldValue = -1;
+	String oldDisplayValue;
 
 	void updateDisplay();
 	void drawDigits();
 	void drawLetters();
+	void drawRgbImage();
 	void copyCanvas();
 	void executeSiren();
 	void executeSemaphore();
@@ -198,6 +200,44 @@ void P10x3::copyCanvas() {
 	}
 }
 
+void P10x3::drawRgbImage() {
+	int colon = displayValue.indexOf(':');
+	int xSep = displayValue.indexOf('x');
+	if (colon < 0 || xSep < 0 || xSep >= colon) {
+		return;
+	}
+
+	int width = displayValue.substring(0, xSep).toInt();
+	int height = displayValue.substring(xSep + 1, colon).toInt();
+	if (width <= 0 || height <= 0) {
+		return;
+	}
+
+	size_t rgbLen = (size_t)width * (size_t)height * 3;
+	uint8_t *rgb = (uint8_t *)malloc(rgbLen);
+	if (!rgb) {
+		return;
+	}
+	memset(rgb, 0, rgbLen);
+
+	const char *b64 = displayValue.c_str() + colon + 1;
+	size_t b64Len = displayValue.length() - (size_t)colon - 1;
+	decodeBase64(b64, b64Len, rgb, rgbLen);
+
+	for (int16_t y = 0; y < 32; y++) {
+		for (int16_t x = 0; x < 48; x++) {
+			uint16_t colorToDraw = 0;
+			if (x < width && y < height) {
+				size_t i = ((size_t)y * (size_t)width + (size_t)x) * 3;
+				colorToDraw = color565(rgb[i], rgb[i + 1], rgb[i + 2]);
+			}
+			display.drawPixel(y, 48 - x, colorToDraw);
+		}
+	}
+	free(rgb);
+	display.display();
+}
+
 void P10x3::updateDisplay() {
 	if (controlValue == CONTROL_VALUE_LINES) {
 		if (oldValue != value) {
@@ -208,6 +248,11 @@ void P10x3::updateDisplay() {
 		if (oldValue != value) {
 			oldValue = value;
 			drawDigits();
+		}
+	} else if (controlValue == CONTROL_VALUE_DISPLAY) {
+		if (oldDisplayValue != displayValue) {
+			oldDisplayValue = displayValue;
+			drawRgbImage();
 		}
 	}
 }

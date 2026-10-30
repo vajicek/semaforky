@@ -43,6 +43,7 @@
 #define CONTROL_VALUE_LINES 3
 #define CONTROL_VALUE_SIRENE 4
 #define CONTROL_VALUE_COUNTDOWN 5
+#define CONTROL_VALUE_DISPLAY 6
 
 void computeDigits(int *digits, int digit_count, int value) {
 	int divider = 1;
@@ -105,8 +106,6 @@ void connectToHotspot(const char *ssid, const char *password) {
 
 		delay(100);
 	}
-
-	// turn off led
 	digitalWrite(CONNECTION_INDICATING_LED, HIGH);
 
 	if (status == WL_CONNECTED) {
@@ -213,6 +212,7 @@ class Base {
 	int stations;
 	int controlValue = CONTROL_VALUE_CLOCK;
 	int value = 0;
+	String displayValue;
 	bool hotspot = false;
 
 	const BaseSettings *settings;
@@ -258,12 +258,16 @@ void Base::control(AsyncWebServerRequest * request, JsonVariant & json) {
 		setCrossOrigin(response);
 		request->send(response);
 		controlValue = postObj[F("control")];
-		value = postObj[F("value")];
+		if (controlValue == CONTROL_VALUE_DISPLAY) {
+			displayValue = postObj[F("value")].as<String>();
+		} else {
+			value = postObj[F("value")];
+		}
 
-		Serial.print("controlValue=");
-		Serial.print(controlValue);
-		Serial.print(", value=");
-		Serial.println(value);
+		// Serial.print("controlValue=");
+		// Serial.print(controlValue);
+		// Serial.print(", value=");
+		// Serial.println(value);
 	}
 }
 
@@ -289,10 +293,14 @@ void Base::restServerRouting() {
 		this->sendCrossOriginHeader(request);
 	};
 
-	server.addHandler(new AsyncCallbackJsonWebHandler("/control",
+	auto *controlHandler = new AsyncCallbackJsonWebHandler("/control",
 		[this](AsyncWebServerRequest *request, JsonVariant &json) {
 			this->control(request, json);
-		}));
+		});
+#if defined(ESP32)
+	controlHandler->setMaxContentLength(16384);
+#endif
+	server.addHandler(controlHandler);
 	server.on("/control", HTTP_OPTIONS, optionsCallback);
 
 	server.addHandler(new AsyncCallbackJsonWebHandler("/capabilities",
@@ -346,4 +354,53 @@ void Base::Execute() {
 	}
 
 	//MDNS.update();
+}
+
+
+static int8_t decodeBase64Char(char c) {
+	if (c >= 'A' && c <= 'Z') {
+		return c - 'A';
+	}
+	if (c >= 'a' && c <= 'z') {
+		return c - 'a' + 26;
+	}
+	if (c >= '0' && c <= '9') {
+		return c - '0' + 52;
+	}
+	if (c == '+') {
+		return 62;
+	}
+	if (c == '/') {
+		return 63;
+	}
+	return -1;
+}
+
+static size_t decodeBase64(const char *src, size_t srcLen, uint8_t *dst, size_t dstMax) {
+	size_t out = 0;
+	uint32_t acc = 0;
+	int bits = 0;
+	for (size_t i = 0; i < srcLen; i++) {
+		char c = src[i];
+		if (c == '=' || c == '\n' || c == '\r') {
+			continue;
+		}
+		int8_t v = decodeBase64Char(c);
+		if (v < 0) {
+			continue;
+		}
+		acc = (acc << 6) | (uint32_t)v;
+		bits += 6;
+		if (bits >= 8) {
+			bits -= 8;
+			if (out < dstMax) {
+				dst[out++] = (acc >> bits) & 0xFF;
+			}
+		}
+	}
+	return out;
+}
+
+static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
+	return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
 }
