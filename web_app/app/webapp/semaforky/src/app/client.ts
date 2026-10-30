@@ -214,6 +214,27 @@ export class RestClientController {
     });
   }
 
+  public showCheckerboard() {
+    const width = 64;
+    const height = 32;
+    const squareSize = 8;
+    const data = new Uint8Array(width * height * 3);
+
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        const color = ((Math.floor(x / squareSize) + Math.floor(y / squareSize)) % 2 === 0)
+          ? 255
+          : 0;
+        const offset = (y * width + x) * 3;
+        data[offset] = color;
+        data[offset + 1] = color;
+        data[offset + 2] = color;
+      }
+    }
+
+    this.show({ width, height, data });
+  }
+
   private encodeRgbImage(image: RgbImage): string {
     const expected = image.width * image.height * 3;
     const data = image.data.length > expected

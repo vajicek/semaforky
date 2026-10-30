@@ -51,6 +51,10 @@ export class ManualControlComponent {
     this.restClientController.countdown(countdown, true);
   }
 
+  public onShowCheckerboard() {
+    this.restClientController.showCheckerboard();
+  }
+
   public onBackToMain() {
     this.router.navigate(['/main']);
   }
