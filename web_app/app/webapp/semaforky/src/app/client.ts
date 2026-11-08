@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from "@angular/common/http";
-import { Subscription } from "rxjs";
+import { HttpClient } from "@angular/common/http";
+import { Subscription, timeout } from "rxjs";
 
 import { Settings, LineOrder, SemaphoreLight } from "./settings";
 import { MainComponentEventBus } from './main/main.component';
+
+const DEVICE_PORT = 80;
 
 enum ControlValue {
   Clock = 1,
@@ -12,6 +14,7 @@ enum ControlValue {
   Siren = 4,
   Countdown = 5,
   Display = 6,
+  Time = 7,
 }
 
 const CONTROL_CAPABILITY: Record<ControlValue, string> = {
@@ -21,6 +24,7 @@ const CONTROL_CAPABILITY: Record<ControlValue, string> = {
   [ControlValue.Siren]: "siren",
   [ControlValue.Countdown]: "countdown",
   [ControlValue.Display]: "display",
+  [ControlValue.Time]: "time",
 };
 
 export type RgbImage = {
@@ -87,9 +91,8 @@ export class RestClientController {
   protected queryCapabilities(address: string) {
     var self = this;
     var subscription = this.http
-      .post("http://" + address + "/capabilities", {
-        headers: new HttpHeaders({ timeout: `${5000}` }),
-      })
+      .post(`http://${address}:${DEVICE_PORT}/capabilities`, {})
+      .pipe(timeout(5000))
       .subscribe({
         next(response: any) {
           self.updateCapabilitiesMap(address, response.capabilities.toString());
@@ -97,6 +100,7 @@ export class RestClientController {
           self.updateProgress();
         },
         error(error) {
+          console.warn(`Capability request failed for ${address}`, error);
           self.scanProcess.delete(address);
           self.updateProgress();
         }
@@ -202,11 +206,25 @@ export class RestClientController {
     this.control(ControlValue.Countdown, encodedValue);
   }
 
+  public showTime() {
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes();
+    this.getClients(CONTROL_CAPABILITY[ControlValue.Time]).forEach((address) => {
+      this.http.post(`http://${address}:${DEVICE_PORT}/control`, {
+        control: ControlValue.Time,
+        hours: hours,
+        minutes: minutes,
+        brightness: this.settings.brightness
+      }).subscribe();
+    });
+  }
+
   public show(image: RgbImage) {
     const encoded = this.encodeRgbImage(image);
     this.getClients(CONTROL_CAPABILITY[ControlValue.Display]).forEach((address) => {
       this.http
-        .post("http://" + address + "/control", {
+        .post(`http://${address}:${DEVICE_PORT}/control`, {
           control: ControlValue.Display,
           value: encoded,
         })
@@ -235,6 +253,32 @@ export class RestClientController {
     this.show({ width, height, data });
   }
 
+  public showCheckerboardInColors() {
+    const width = 64;
+    const height = 32;
+    const squareSize = 8;
+    const data = new Uint8Array(width * height * 3);
+
+    for (let squareY = 0; squareY < height; squareY += squareSize) {
+      for (let squareX = 0; squareX < width; squareX += squareSize) {
+        const red = Math.floor(Math.random() * 256);
+        const green = Math.floor(Math.random() * 256);
+        const blue = Math.floor(Math.random() * 256);
+
+        for (let y = squareY; y < squareY + squareSize; y++) {
+          for (let x = squareX; x < squareX + squareSize; x++) {
+            const offset = (y * width + x) * 3;
+            data[offset] = red;
+            data[offset + 1] = green;
+            data[offset + 2] = blue;
+          }
+        }
+      }
+    }
+
+    this.show({ width, height, data });
+  }
+
   private encodeRgbImage(image: RgbImage): string {
     const expected = image.width * image.height * 3;
     const data = image.data.length > expected
@@ -255,7 +299,7 @@ export class RestClientController {
   private control(control: ControlValue, value: number) {
     this.getClients(CONTROL_CAPABILITY[control]).forEach((address) => {
       this.http
-        .post("http://" + address + "/control", {
+        .post(`http://${address}:${DEVICE_PORT}/control`, {
           control: control,
           value: value,
         })

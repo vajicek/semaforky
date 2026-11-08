@@ -287,7 +287,8 @@ void Px::Init() {
 	display->begin(8);
 
 	display->clearDisplay();
-	displayTicker.attach_ms(4, [this]() { this->display->display(); });
+	displayTicker.attach_ms(2, [this]() { this->display->display(); });
+	display->setFastUpdate(true);
 }
 
 void Px::Execute() {
@@ -326,6 +327,7 @@ P10::P10(BaseSettings *baseSettings)
 
 #include "digits_font.h"
 #include "abcd_font.h"
+#include "time_font.h"
 
 #define P5_LAT 16
 #define P5_A 5
@@ -345,17 +347,119 @@ class P5 : public Px {
  protected:
 	PxMATRIX display;
 	scan_patterns scanPatterns;
-	String oldDisplayValue;
+
+	int brightness = 255;
+
+	JsonString displayValue;
+	bool displayValueChanged;
+
+	int hours = 0;
+	int minutes = 0;
+	bool timeChanged = false;
+
+	void drawDisplay();
+	void drawTime();
 
 	void drawDigits();
 	void drawLetters();
-	void drawDisplay();
 	void updateDisplay() override;
+	void control(AsyncWebServerRequest * request, JsonVariant & json) override;
 
  public:
 	P5(BaseSettings *baseSettings, scan_patterns scanPatterns);
 	virtual void Init();
 };
+
+void P5::drawDisplay() {
+	if (displayValue.isNull()) {
+		return;
+	}
+
+	const char *rawDisplayValue = displayValue.c_str();
+	size_t rawDisplayValueSize = displayValue.size();
+
+	if (rawDisplayValue == nullptr) {
+		return;
+	}
+
+	const char *separator = strchr(rawDisplayValue, 'x');
+	const char *colon = strchr(rawDisplayValue, ':');
+	if (separator == rawDisplayValue || separator == nullptr || colon == nullptr || colon <= separator) {
+		return;
+	}
+
+	int width = atoi(rawDisplayValue);
+	int height = atoi(separator + 1);
+	if (width <= 0 || width > 64 || height <= 0 || height > 32) {
+		return;
+	}
+	const char *encoded = colon + 1;
+
+	display.setBrightness(10);
+
+	Serial.println("Start decoding");
+
+	size_t pixelIndex = 0;
+	uint8_t pixel[3];
+	size_t pixelBytes = 0;
+	uint32_t acc = 0;
+	int bits = 0;
+	for (size_t i = 0; pixelIndex < width * height; i++) {
+
+		if (i %100 == 0) {
+			ESP.wdtFeed();
+		}
+
+		char c = encoded[i];
+		if (c == '=' || c == '\n' || c == '\r') {
+			continue;
+		}
+		int8_t v = decodeBase64Char(c);
+		if (v < 0) {
+			continue;
+		}
+		acc = (acc << 6) | (uint32_t)v;
+		bits += 6;
+		if (bits >= 8) {
+			bits -= 8;
+			pixel[pixelBytes++] = (acc >> bits) & 0xFF;
+			if (pixelBytes == 3) {
+				int x = pixelIndex % width;
+				int y = pixelIndex / width;
+				if (y < 32) {
+					display.drawPixel(x, y, color565(pixel[0], pixel[1], pixel[2]));
+				}
+
+				pixelBytes = 0;
+				pixelIndex++;
+			}
+		}
+	}
+
+	Serial.println("Decoding finished");
+	display.showBuffer();
+}
+
+void P5::control(AsyncWebServerRequest * request, JsonVariant & json) {
+	const JsonObject &postObj = json.as<JsonObject>();
+	int requestedControl = postObj[F("control")].as<int>();
+	if (requestedControl == CONTROL_VALUE_TIME || postObj.containsKey("value")) {
+		controlValue = postObj[F("control")];
+
+		if (controlValue == CONTROL_VALUE_DISPLAY) {
+			displayValue = postObj[F("value")].as<JsonString>();
+			displayValueChanged = true;
+		} else if (controlValue == CONTROL_VALUE_TIME) {
+			hours = postObj[F("hours")].as<int>();
+			minutes = postObj[F("minutes")].as<int>();
+			brightness = postObj[F("brightness")].as<int>();
+			if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
+				timeChanged = true;
+			}
+		}
+	}
+	Base::control(request, json);
+}
 
 void P5::drawDigits() {
 	display.setFont(&FixedWidthDigit);
@@ -367,48 +471,44 @@ void P5::drawLetters() {
 	Px::drawLetters();
 }
 
-void P5::drawDisplay() {
-	int colon = displayValue.indexOf(':');
-	int separator = displayValue.indexOf('x');
-	if (separator <= 0 || colon <= separator) {
-		return;
-	}
-
-	int width = displayValue.substring(0, separator).toInt();
-	int height = displayValue.substring(separator + 1, colon).toInt();
-	if (width <= 0 || width > 64 || height <= 0 || height > 32) {
-		return;
-	}
-
-	size_t rgbSize = (size_t)width * (size_t)height * 3;
-	uint8_t *rgb = (uint8_t *)malloc(rgbSize);
-	if (!rgb) {
-		return;
-	}
-
-	const char *encoded = displayValue.c_str() + colon + 1;
-	size_t encodedSize = displayValue.length() - (size_t)colon - 1;
-	size_t decodedSize = decodeBase64(encoded, encodedSize, rgb, rgbSize);
+void P5::drawTime() {
+	display.setFont(&TimeFont);
 	display.fillScreen(color565(0, 0, 0));
-	for (int y = 0; y < height; y++) {
-		for (int x = 0; x < width; x++) {
-			size_t offset = ((size_t)y * (size_t)width + (size_t)x) * 3;
-			if (offset + 2 >= decodedSize) {
-				continue;
-			}
-			display.drawPixel(x, y, color565(
-				rgb[offset], rgb[offset + 1], rgb[offset + 2]));
-		}
-	}
+	display.setBrightness(brightness);
+
+	char timeText[] = {
+		(char)('0' + hours / 10),
+		(char)('0' + hours % 10),
+		':',
+		(char)('0' + minutes / 10),
+		(char)('0' + minutes % 10),
+		'\0'
+	};
+	int16_t x1;
+	int16_t y1;
+	uint16_t textWidth;
+	uint16_t textHeight;
+	display.setTextSize(1);
+	display.getTextBounds(timeText, 0, 0, &x1, &y1, &textWidth, &textHeight);
+
+	display.setCursor(0, // zero is better then (64 - textWidth) / 2 - x1,
+		(32 - textHeight) / 2 - y1);
+	display.setTextColor(P5_COLORS[0]);
+	display.print(timeText);
 	display.showBuffer();
-	free(rgb);
 }
 
 void P5::updateDisplay() {
-	if (controlValue == CONTROL_VALUE_DISPLAY) {
-		if (oldDisplayValue != displayValue) {
-			oldDisplayValue = displayValue;
+	if (controlValue == CONTROL_VALUE_TIME) {
+		if (timeChanged) {
+			drawTime();
+			timeChanged = false;
+		}
+		return;
+	} else if (controlValue == CONTROL_VALUE_DISPLAY) {
+		if (displayValueChanged) {
 			drawDisplay();
+			displayValueChanged = false;
 		}
 		return;
 	}

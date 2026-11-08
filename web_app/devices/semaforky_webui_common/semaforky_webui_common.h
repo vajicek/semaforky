@@ -44,6 +44,7 @@
 #define CONTROL_VALUE_SIRENE 4
 #define CONTROL_VALUE_COUNTDOWN 5
 #define CONTROL_VALUE_DISPLAY 6
+#define CONTROL_VALUE_TIME 7
 
 void computeDigits(int *digits, int digit_count, int value) {
 	int divider = 1;
@@ -86,6 +87,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 	WiFi.begin(ssid, password);
 	WiFi.setAutoReconnect(true);
 	WiFi.persistent(true);
+	WiFi.setSleepMode(WIFI_NONE_SLEEP);
 
 	// led indication
 	pinMode(CONNECTION_INDICATING_LED, OUTPUT);
@@ -212,14 +214,13 @@ class Base {
 	int stations;
 	int controlValue = CONTROL_VALUE_CLOCK;
 	int value = 0;
-	String displayValue;
 	bool hotspot = false;
 
 	const BaseSettings *settings;
 
 	void setCrossOrigin(AsyncWebServerResponse *response);
 	void sendCrossOriginHeader(AsyncWebServerRequest *request);
-	void control(AsyncWebServerRequest *request, JsonVariant &json);
+	virtual void control(AsyncWebServerRequest *request, JsonVariant &json);
 	void capabilities(AsyncWebServerRequest *request, JsonVariant &json);
 	void restServerRouting();
 
@@ -258,16 +259,16 @@ void Base::control(AsyncWebServerRequest * request, JsonVariant & json) {
 		setCrossOrigin(response);
 		request->send(response);
 		controlValue = postObj[F("control")];
+
+		Serial.print("controlValue=");
+		Serial.print(controlValue);
+
 		if (controlValue == CONTROL_VALUE_DISPLAY) {
-			displayValue = postObj[F("value")].as<String>();
 		} else {
 			value = postObj[F("value")];
+			Serial.print(", value=");
+			Serial.println(value);
 		}
-
-		// Serial.print("controlValue=");
-		// Serial.print(controlValue);
-		// Serial.print(", value=");
-		// Serial.println(value);
 	}
 }
 
@@ -297,9 +298,7 @@ void Base::restServerRouting() {
 		[this](AsyncWebServerRequest *request, JsonVariant &json) {
 			this->control(request, json);
 		});
-#if defined(ESP32)
 	controlHandler->setMaxContentLength(16384);
-#endif
 	server.addHandler(controlHandler);
 	server.on("/control", HTTP_OPTIONS, optionsCallback);
 
@@ -356,7 +355,6 @@ void Base::Execute() {
 	//MDNS.update();
 }
 
-
 static int8_t decodeBase64Char(char c) {
 	if (c >= 'A' && c <= 'Z') {
 		return c - 'A';
@@ -374,31 +372,6 @@ static int8_t decodeBase64Char(char c) {
 		return 63;
 	}
 	return -1;
-}
-
-static size_t decodeBase64(const char *src, size_t srcLen, uint8_t *dst, size_t dstMax) {
-	size_t out = 0;
-	uint32_t acc = 0;
-	int bits = 0;
-	for (size_t i = 0; i < srcLen; i++) {
-		char c = src[i];
-		if (c == '=' || c == '\n' || c == '\r') {
-			continue;
-		}
-		int8_t v = decodeBase64Char(c);
-		if (v < 0) {
-			continue;
-		}
-		acc = (acc << 6) | (uint32_t)v;
-		bits += 6;
-		if (bits >= 8) {
-			bits -= 8;
-			if (out < dstMax) {
-				dst[out++] = (acc >> bits) & 0xFF;
-			}
-		}
-	}
-	return out;
 }
 
 static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {

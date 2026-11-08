@@ -74,6 +74,40 @@ class SetTiming {
   }
 }
 
+class TimeEvent extends Event {
+  private lastShownMinute: number | null = null;
+
+  constructor(
+    _time: Date,
+    private scheduler: Scheduler,
+    private restClientController: RestClientController) {
+    super(_time);
+  }
+
+  public run(this: TimeEvent): void {
+    const now = new Date();
+    const currentMinute = now.getHours() * 60 + now.getMinutes();
+    if (this.scheduler.currentState != null && (
+      this.scheduler.currentState.name == SemaforkyState.SET_STOPPED ||
+      this.scheduler.currentState.name == SemaforkyState.SET_CANCELED ||
+      this.scheduler.currentState.name == SemaforkyState.ROUND_STOPPED)) {
+      if (this.lastShownMinute !== currentMinute) {
+        this.restClientController.showTime();
+        this.lastShownMinute = currentMinute;
+      }
+    }
+    this.time = new Date(now.getTime() + 5000);
+    this.scheduler.addEvent(this);
+  }
+
+  public serialize(this: SemaphoreEvent): Object {
+    return {
+      type: "TimeEvent",
+      time: this.time
+    };
+  }
+}
+
 class SetClockEvent extends Event {
   previousValue: number = -1;
 
@@ -232,7 +266,7 @@ export class Scheduler {
     private settings: Settings,
     private restClientController: RestClientController,
     private mainComponentEventBus: MainComponentEventBus,
-    private semaforkyMachineEventBus: SemaforkyMachineEventBus
+    private semaforkyMachineEventBus: SemaforkyMachineEventBus,
   ) {
     semaforkyMachineEventBus.currentState.event$.subscribe((state: State) => {
       this.currentState = state;
@@ -244,7 +278,10 @@ export class Scheduler {
     this.loadState();
     setInterval(() => {
       self.timerHandler();
+      self.mainComponentEventBus.updateGui.emit();
     }, 50);
+
+    this.addEvent(new TimeEvent(new Date(), this, this.restClientController));
   }
 
   private storeState() {

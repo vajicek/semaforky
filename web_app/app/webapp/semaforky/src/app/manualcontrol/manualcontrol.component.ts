@@ -52,7 +52,11 @@ export class ManualControlComponent {
   }
 
   public onShowCheckerboard() {
-    this.restClientController.showCheckerboard();
+    this.restClientController.showCheckerboardInColors();
+  }
+
+  public onShowTime() {
+    this.restClientController.showTime();
   }
 
   public onBackToMain() {

@@ -173,7 +173,7 @@ install_p5 install_p5_new install_p10x3 install_siren install_p10_semaphore:
 	rm -fr $(PWD)/devices/${DIR}/data
 	ln -s $(PWD)/app/data $(PWD)/devices/${DIR}/data
 	$(ARDUINO_CLI) compile --fqbn $(ESP8266_BOARDCONFIG) devices/${DIR}
-	$(ARDUINO_CLI) upload -p ${DEVICE} --fqbn $(ESP8266_BOARDCONFIG) devices/${DIR}
+	$(ARDUINO_CLI) upload -p $(DEVICE) --fqbn $(ESP8266_BOARDCONFIG) devices/${DIR}
 
 build_devcontainer:
 	docker build \
@@ -196,7 +196,7 @@ devcontainer:
 	-w /tmp/home/web_app \
 	-p 4200:4200 \
 	-u $(UID):$(GID) \
-	$(if $(DOCKER_DEVICE),--device=$(DOCKER_DEVICE),) \
+	$(if $(DOCKER_DEVICE),--device=$(DOCKER_DEVICE) --group-add $$(stat -c '%g' $(DOCKER_DEVICE)),) \
 	$(DOCKER_IMAGE) /bin/bash
 
 deploy_testing:
@@ -208,3 +208,6 @@ userguide:
 	--pdf-options '{ "margin": "20mm 25mm 20mm 25mm", "printBackground": true }' \
 	--launch-options '{ "args": ["--no-sandbox"] }' \
 	UserGuide_cz.md
+
+monitor:
+	minicom -D ${DEVICE} -b 115200

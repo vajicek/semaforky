@@ -128,6 +128,11 @@ public:
 
 class P10x3 : public Base {
 private:
+	struct PixelContext {
+		P10x3 *display;
+		int width;
+	};
+
 	FthnLabsDisplay display;
 	GFXcanvas1 canvas;
 	TaskHandle_t displayTaskHandle = NULL;
@@ -135,12 +140,14 @@ private:
 	Siren siren;
 
 	int oldValue = -1;
-	String oldDisplayValue;
 
 	void updateDisplay();
 	void drawDigits();
 	void drawLetters();
-	void drawRgbImage();
+	void drawRgbImage(const char *rawDisplayValue, size_t rawDisplayValueLength);
+	static void drawPixelCallback(void *context, size_t pixelIndex,
+		uint8_t red, uint8_t green, uint8_t blue);
+	void control(AsyncWebServerRequest *request, JsonVariant &json) override;
 	void copyCanvas();
 	void executeSiren();
 	void executeSemaphore();
@@ -200,42 +207,59 @@ void P10x3::copyCanvas() {
 	}
 }
 
-void P10x3::drawRgbImage() {
-	int colon = displayValue.indexOf(':');
-	int xSep = displayValue.indexOf('x');
-	if (colon < 0 || xSep < 0 || xSep >= colon) {
+void P10x3::control(AsyncWebServerRequest *request, JsonVariant &json) {
+	const JsonObject &postObj = json.as<JsonObject>();
+	if (postObj.containsKey("value")) {
+		controlValue = postObj[F("control")];
+		if (controlValue == CONTROL_VALUE_DISPLAY) {
+			JsonString displayValue = postObj[F("value")].as<JsonString>();
+			if (!displayValue.isNull()) {
+				drawRgbImage(displayValue.c_str(), displayValue.size());
+			}
+		}
+	}
+	Base::control(request, json);
+}
+
+void P10x3::drawRgbImage(const char *rawDisplayValue, size_t rawDisplayValueLength) {
+	if (rawDisplayValue == nullptr) {
 		return;
 	}
 
-	int width = displayValue.substring(0, xSep).toInt();
-	int height = displayValue.substring(xSep + 1, colon).toInt();
-	if (width <= 0 || height <= 0) {
+	const char *xSep = strchr(rawDisplayValue, 'x');
+	const char *colon = strchr(rawDisplayValue, ':');
+	if (xSep == rawDisplayValue || xSep == nullptr || colon == nullptr || colon <= xSep) {
 		return;
 	}
 
-	size_t rgbLen = (size_t)width * (size_t)height * 3;
-	uint8_t *rgb = (uint8_t *)malloc(rgbLen);
-	if (!rgb) {
+	int width = atoi(rawDisplayValue);
+	int height = atoi(xSep + 1);
+	if (width <= 0 || width > 48 || height <= 0 || height > 32) {
 		return;
 	}
-	memset(rgb, 0, rgbLen);
-
-	const char *b64 = displayValue.c_str() + colon + 1;
-	size_t b64Len = displayValue.length() - (size_t)colon - 1;
-	decodeBase64(b64, b64Len, rgb, rgbLen);
 
 	for (int16_t y = 0; y < 32; y++) {
 		for (int16_t x = 0; x < 48; x++) {
-			uint16_t colorToDraw = 0;
-			if (x < width && y < height) {
-				size_t i = ((size_t)y * (size_t)width + (size_t)x) * 3;
-				colorToDraw = color565(rgb[i], rgb[i + 1], rgb[i + 2]);
-			}
-			display.drawPixel(y, 48 - x, colorToDraw);
+			display.drawPixel(y, 48 - x, 0);
 		}
 	}
-	free(rgb);
+
+	PixelContext context{this, width};
+	const char *encoded = colon + 1;
+	size_t encodedSize = rawDisplayValueLength - (size_t)(encoded - rawDisplayValue);
+	decodeBase64(encoded, encodedSize, drawPixelCallback, &context);
 	display.display();
+}
+
+void P10x3::drawPixelCallback(void *context, size_t pixelIndex,
+	uint8_t red, uint8_t green, uint8_t blue) {
+	PixelContext *drawContext = static_cast<PixelContext *>(context);
+	int x = pixelIndex % drawContext->width;
+	int y = pixelIndex / drawContext->width;
+	if (x < 48 && y < 32) {
+		drawContext->display->display.drawPixel(y, 48 - x,
+			color565(red, green, blue));
+	}
 }
 
 void P10x3::updateDisplay() {
@@ -250,10 +274,6 @@ void P10x3::updateDisplay() {
 			drawDigits();
 		}
 	} else if (controlValue == CONTROL_VALUE_DISPLAY) {
-		if (oldDisplayValue != displayValue) {
-			oldDisplayValue = displayValue;
-			drawRgbImage();
-		}
 	}
 }
 
