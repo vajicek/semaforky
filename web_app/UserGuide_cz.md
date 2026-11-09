@@ -37,6 +37,7 @@ Doporučení pro ovládání ze smartphonu: nastavte si telefon tak, aby neusín
 	* "Jas" - Jas hodin. Má vliv na dobu provozu na baterii. Je možné přizpůsobit světelným podmínkám a vzdálenosti umístění.
 	* "Zvuk" - zda má **ovladač** přehrávat zvukové znamení (prostředky webového prohlížeče). Vhodné v případě, že nemáte dedikovanou sirénu.
 	* "Síť" - síť (adresa /24 sítě končí .0, na rozdíl od adresy zařízení) na které se mají hledat připojená zařízení.
+	* "Obrázek" - nahrání obrázku pro zobrazování na displeji. Obrázek musí mít přesně rozměry 64×32 pixelů. Obrázek se ukládá lokálně v prohlížeči a není odesílán na server.
 	* Tlačítko
 		* "OK" aplikuje změny a naviguje na hlavní obrazovku.
 		* "Zrušit" zapomene provedené změny a naviguje na hlavní obrazovku.
@@ -45,20 +46,37 @@ Doporučení pro ovládání ze smartphonu: nastavte si telefon tak, aby neusín
 	* "Odložený" - Začne první sadu kola v daný čas lokálního času. Na hodinách poběží odpočet do začátku.
 	* "Nepřetržitý" - Postupně spustí daný počet kol o daném počtu sad podle nastavení (viz výše). Pro účely testování, stability a výdrže baterie.
 	* "Zrušit" - zavře dialog.
-7) V průběhu kola a sady, uživatelské rozhraní aktivuje a deaktivuje **Ovládací Tlačítka** podle toho, co je možné udělat ("Start..", "Pauza", "Pokračovat", ..):
+
+7) V průběhu kola a sady uživatelské rozhraní aktivuje a deaktivuje **Ovládací tlačítka** podle toho, co je možné udělat:
 	* "Konec sady" - Ukončení sady před uplynutím nastaveného času.
 	* "Začátek sady" - Začátek druhé, třetí a každé další sady v daném kole.
 	* "Konec kola" - Pro ukončení kola, resp. ukončení poslední sady v ukončovaném kole před koncem nastaveného času na sadu.
 	* "Odražený šíp..." - během střelby označí odražený šíp. Po dokončení aktuální linie se otevře dialog, ve kterém lze nastavit čas odraženého šípu. Volba "Start" spustí vloženou sadu, volba "Přeskočit" pokračuje bez ní. Odražené šípy lze řešit i během dostřelů odražených šípů.
 	* "Zrušit sadu" - Ukončení sady, pokud dojde v výjimečné situaci před začátkem střelby. Nedojde k rotaci řad jako v případě normálního (předčasného) ukončení sady.
 	* "Pauza"/"Pokračovat" - Zastavení a pokračování v odpočtu, pro účely řešení výjimečných situací.
-8) **Informační Panel** ukazuje počty a typy ovládaných zařízení. Některá zařízení naplňují více funkcí (jeden klient může fungovat jako semafor a hodiny zároveň):
+
+8) **Informační panel** ukazuje počty a typy ovládaných zařízení. Jedno zařízení může naplňovat více funkcí:
 	* Klienti - celkový počet hardwarových zařízení.
-	* Semaforky - počet zařízení ukazující trojici semaforových barev.
-	* Řady - počet zařízení ukazující, která řada střílí.
-	* Hodiny - počet zařízení, která ukazují zbývající čas.
+	* Hodiny - počet zařízení, která zobrazují zbývající čas sady.
+	* Semaforky - počet zařízení zobrazujících trojici semaforových barev.
 	* Sirény - počet zařízení, která zajišťují zvukovou signalizaci.
-	* Odpočet - počet zařízení, která provádí autonomní odpočet (alternativa k Hodiny).
+	* Řady - počet zařízení zobrazujících, která řada střílí.
+	* Čas - počet zařízení schopných zobrazit aktuální čas ve formátu HH:MM.
+	* Displej - počet zařízení schopných zobrazovat obrázky.
+
+## Manuální ovládání
+
+Obrazovka **Ruční ovládání** slouží k testování jednotlivých zařízení a funkcí:
+
+* **Semafory** - ruční rozsvícení červené, zelené nebo žluté barvy, případně vypnutí.
+* **Siréna** - přehrání jednoho až čtyř zvukových znamení.
+* **Hodiny** - odeslání testovací hodnoty zbývajícího času.
+* **Řady** - zobrazení řady AB nebo CD.
+* **Odpočet hodin** - spuštění autonomního odpočtu na 10, 30, 120 nebo 240 sekund.
+* **Displej/Čas**:
+	* **Šachovnice** - zobrazí barevnou šachovnici s náhodnými barvami.
+	* **Aktuální čas** - zobrazí na podporovaných zařízeních aktuální čas ve formátu HH:MM.
+	* **Obrázek** - zobrazí dříve nahraný obrázek. Tlačítko je aktivní pouze tehdy, pokud byl v Nastavení úspěšně nahrán obrázek.
 
 ## Řešení problémů
 
@@ -70,3 +88,9 @@ Doporučení pro ovládání ze smartphonu: nastavte si telefon tak, aby neusín
 #### Skenování nenalezne všechna zařízení (klienty).
 * Ujistěte se, že zařízení jsou zapnuta a jejich napájení je v pořádku.
 * Vypněte a zapněte chybějící zařízení, pár sekund počkejte a zkuste sken znovu.
+
+#### Obrázek nelze nahrát nebo zobrazit.
+* Ověřte, že obrázek má přesně 64×32 pixelů.
+* Po výběru obrázku stiskněte v Nastavení tlačítko "OK".
+* Na obrazovce Ruční ovládání musí být tlačítko "Obrázek" aktivní.
+* Ověřte, že skenování nalezlo zařízení s funkcí "Displej".
