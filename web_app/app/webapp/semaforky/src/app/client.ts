@@ -92,7 +92,7 @@ export class RestClientController {
     var self = this;
     var subscription = this.http
       .post(`http://${address}:${DEVICE_PORT}/capabilities`, {})
-      .pipe(timeout(5000))
+      .pipe(timeout(20000))
       .subscribe({
         next(response: any) {
           self.updateCapabilitiesMap(address, response.capabilities.toString());
@@ -221,15 +221,37 @@ export class RestClientController {
   }
 
   public show(image: RgbImage) {
-    const encoded = this.encodeRgbImage(image);
+    console.log("Show image");
     this.getClients(CONTROL_CAPABILITY[ControlValue.Display]).forEach((address) => {
-      this.http
-        .post(`http://${address}:${DEVICE_PORT}/control`, {
-          control: ControlValue.Display,
-          value: encoded,
-        })
-        .subscribe();
+      for (let tileY = 0; tileY < image.height; tileY += 16) {
+        for (let tileX = 0; tileX < image.width; tileX += 16) {
+          const encoded = this.encodeTile(image, tileX, tileY);
+          this.http.post(`http://${address}:${DEVICE_PORT}/control`, {
+            control: ControlValue.Display,
+            image: encoded,
+            brightness: this.settings.brightness
+          }).subscribe();
+        }
+      }
     });
+  }
+
+  private encodeTile(image: RgbImage, tileX: number, tileY: number): string {
+    const tileData = new Uint8Array(16 * 16 * 3);
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 16; x++) {
+        const sourceX = tileX + x;
+        const sourceY = tileY + y;
+        const targetOffset = (y * 16 + x) * 3;
+        if (sourceX < image.width && sourceY < image.height) {
+          const sourceOffset = (sourceY * image.width + sourceX) * 3;
+          tileData[targetOffset] = image.data[sourceOffset] ?? 0;
+          tileData[targetOffset + 1] = image.data[sourceOffset + 1] ?? 0;
+          tileData[targetOffset + 2] = image.data[sourceOffset + 2] ?? 0;
+        }
+      }
+    }
+    return `16x16@${tileX},${tileY}:${this.toBase64(tileData)}`;
   }
 
   public showCheckerboard() {
@@ -277,14 +299,6 @@ export class RestClientController {
     }
 
     this.show({ width, height, data });
-  }
-
-  private encodeRgbImage(image: RgbImage): string {
-    const expected = image.width * image.height * 3;
-    const data = image.data.length > expected
-      ? image.data.subarray(0, expected)
-      : image.data;
-    return `${image.width}x${image.height}:${this.toBase64(data)}`;
   }
 
   private toBase64(data: Uint8Array): string {

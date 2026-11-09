@@ -252,24 +252,19 @@ void Base::sendCrossOriginHeader(AsyncWebServerRequest * request) {
 
 void Base::control(AsyncWebServerRequest * request, JsonVariant & json) {
 	const JsonObject &postObj = json.as<JsonObject>();
-	if (!postObj.containsKey("value")) {
-		request->send(200);
-	} else {
-		AsyncWebServerResponse *response = request->beginResponse(200);
-		setCrossOrigin(response);
-		request->send(response);
+	int requestedControl = postObj[F("control")].as<int>();
+	if (postObj.containsKey("value") && postObj.containsKey("control")) {
 		controlValue = postObj[F("control")];
-
 		Serial.print("controlValue=");
 		Serial.print(controlValue);
 
-		if (controlValue == CONTROL_VALUE_DISPLAY) {
-		} else {
-			value = postObj[F("value")];
-			Serial.print(", value=");
-			Serial.println(value);
-		}
+		value = postObj[F("value")];
+		Serial.print(", value=");
+		Serial.println(value);
 	}
+	AsyncWebServerResponse *response = request->beginResponse(200);
+	setCrossOrigin(response);
+	request->send(response);
 }
 
 void Base::capabilities(AsyncWebServerRequest * request, JsonVariant & json) {
@@ -298,7 +293,7 @@ void Base::restServerRouting() {
 		[this](AsyncWebServerRequest *request, JsonVariant &json) {
 			this->control(request, json);
 		});
-	controlHandler->setMaxContentLength(16384);
+	controlHandler->setMaxContentLength(10240);
 	server.addHandler(controlHandler);
 	server.on("/control", HTTP_OPTIONS, optionsCallback);
 

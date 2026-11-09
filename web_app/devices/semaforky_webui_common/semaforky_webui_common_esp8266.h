@@ -287,7 +287,7 @@ void Px::Init() {
 	display->begin(8);
 
 	display->clearDisplay();
-	displayTicker.attach_ms(2, [this]() { this->display->display(); });
+	displayTicker.attach_ms(1, [this]() { this->display->display(); });
 	display->setFastUpdate(true);
 }
 
@@ -350,18 +350,18 @@ class P5 : public Px {
 
 	int brightness = 255;
 
-	JsonString displayValue;
-	bool displayValueChanged;
-
 	int hours = 0;
 	int minutes = 0;
 	bool timeChanged = false;
 
-	void drawDisplay();
-	void drawTime();
+	uint8_t displayTileCount = 0;
+	unsigned long displayLastTileTime = 0;
 
+	void drawDisplay(const char *rawDisplayValue, size_t rawDisplayValueSize);
+	void drawTime();
 	void drawDigits();
 	void drawLetters();
+
 	void updateDisplay() override;
 	void control(AsyncWebServerRequest * request, JsonVariant & json) override;
 
@@ -370,41 +370,56 @@ class P5 : public Px {
 	virtual void Init();
 };
 
-void P5::drawDisplay() {
-	if (displayValue.isNull()) {
-		return;
-	}
-
-	const char *rawDisplayValue = displayValue.c_str();
-	size_t rawDisplayValueSize = displayValue.size();
-
+void P5::drawDisplay(const char *rawDisplayValue, size_t rawDisplayValueSize) {
 	if (rawDisplayValue == nullptr) {
 		return;
 	}
 
+	const unsigned long now = millis();
+	if (now - displayLastTileTime > 1000) {
+		displayTileCount = 0;
+	}
+	displayLastTileTime = now;
+
 	const char *separator = strchr(rawDisplayValue, 'x');
+	const char *location = strchr(rawDisplayValue, '@');
 	const char *colon = strchr(rawDisplayValue, ':');
-	if (separator == rawDisplayValue || separator == nullptr || colon == nullptr || colon <= separator) {
+	if (separator == rawDisplayValue || separator == nullptr || location == nullptr ||
+		colon == nullptr || location <= separator || colon <= location) {
 		return;
 	}
 
 	int width = atoi(rawDisplayValue);
 	int height = atoi(separator + 1);
-	if (width <= 0 || width > 64 || height <= 0 || height > 32) {
+	const char *comma = strchr(location, ',');
+	if (comma == nullptr || comma >= colon) {
+		return;
+	}
+	int originX = atoi(location + 1);
+	int originY = atoi(comma + 1);
+	if (width != 16 || height != 16 || originX < 0 || originX > 48 ||
+		originY < 0 || originY > 16 || originX % 16 != 0 || originY % 16 != 0) {
 		return;
 	}
 	const char *encoded = colon + 1;
-
-	display.setBrightness(10);
-
-	Serial.println("Start decoding");
+	size_t encodedSize = rawDisplayValueSize - (size_t)(encoded - rawDisplayValue);
+	Serial.print("Image tile: ");
+	Serial.print(width);
+	Serial.print("x");
+	Serial.print(height);
+	Serial.print(" @ ");
+	Serial.print(originX);
+	Serial.print(",");
+	Serial.print(originY);
+	Serial.print(", encoded bytes=");
+	Serial.println(encodedSize);
 
 	size_t pixelIndex = 0;
 	uint8_t pixel[3];
 	size_t pixelBytes = 0;
 	uint32_t acc = 0;
 	int bits = 0;
-	for (size_t i = 0; pixelIndex < width * height; i++) {
+	for (size_t i = 0; i < encodedSize && pixelIndex < width * height; i++) {
 
 		if (i %100 == 0) {
 			ESP.wdtFeed();
@@ -424,10 +439,10 @@ void P5::drawDisplay() {
 			bits -= 8;
 			pixel[pixelBytes++] = (acc >> bits) & 0xFF;
 			if (pixelBytes == 3) {
-				int x = pixelIndex % width;
-				int y = pixelIndex / width;
-				if (y < 32) {
-					display.drawPixel(x, y, color565(pixel[0], pixel[1], pixel[2]));
+				int x = originX + pixelIndex % width;
+				int y = originY + pixelIndex / width;
+				if (x < 64 && y < 32) {
+					display.drawPixel(x, y, color565(pixel[2], pixel[1], pixel[0]));
 				}
 
 				pixelBytes = 0;
@@ -436,19 +451,29 @@ void P5::drawDisplay() {
 		}
 	}
 
-	Serial.println("Decoding finished");
-	display.showBuffer();
+	displayTileCount++;
+	if (displayTileCount >= 8) {
+		displayTileCount = 0;
+		display.setBrightness(brightness);
+		display.showBuffer();
+	}
 }
 
 void P5::control(AsyncWebServerRequest * request, JsonVariant & json) {
 	const JsonObject &postObj = json.as<JsonObject>();
 	int requestedControl = postObj[F("control")].as<int>();
-	if (requestedControl == CONTROL_VALUE_TIME || postObj.containsKey("value")) {
+
+	if (requestedControl == CONTROL_VALUE_DISPLAY ||
+		requestedControl == CONTROL_VALUE_TIME) {
+
 		controlValue = postObj[F("control")];
 
 		if (controlValue == CONTROL_VALUE_DISPLAY) {
-			displayValue = postObj[F("value")].as<JsonString>();
-			displayValueChanged = true;
+			JsonString image = postObj[F("image")].as<JsonString>();
+			brightness = postObj[F("brightness")].as<int>();
+			if (!image.isNull()) {
+				drawDisplay(image.c_str(), image.size());
+			}
 		} else if (controlValue == CONTROL_VALUE_TIME) {
 			hours = postObj[F("hours")].as<int>();
 			minutes = postObj[F("minutes")].as<int>();
@@ -506,10 +531,6 @@ void P5::updateDisplay() {
 		}
 		return;
 	} else if (controlValue == CONTROL_VALUE_DISPLAY) {
-		if (displayValueChanged) {
-			drawDisplay();
-			displayValueChanged = false;
-		}
 		return;
 	}
 	Px::updateDisplay();

@@ -1,6 +1,7 @@
 import { CookieService } from "ngx-cookie-service";
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import type { RgbImage } from './client';
 
 export enum LinesRotation {
   BYROUND = "BYROUND",
@@ -25,6 +26,7 @@ export enum SemaphoreLight {
   providedIn: 'root'
 })
 export class Settings {
+  public image: RgbImage | null = null;
   public language: string = "en";
   public roundSets: number = 10;
   public setTime: number = 120;
@@ -88,6 +90,7 @@ export class Settings {
     this.soundEnabled = this.get("soundEnabled", this.soundEnabled.toString()) === "true";
     this.clientsByCapability = new Map<string, string[]>(JSON.parse(this.get("clientsByCapability", "[]")));
     this.language = this.get("language", this.language)
+    this.loadImage();
 
     this.translate.use(this.language);
   }
@@ -108,5 +111,54 @@ export class Settings {
     this.set("soundEnabled", this.soundEnabled.toString());
     this.set("clientsByCapability", JSON.stringify(Array.from(this.clientsByCapability.entries())));
     this.set("language", this.language);
+    this.storeImage();
+  }
+
+  private loadImage() {
+    try {
+      const stored = localStorage.getItem("semaforky.image");
+      if (!stored) {
+        this.image = null;
+        return;
+      }
+
+      const parsed = JSON.parse(stored) as {
+        width: number;
+        height: number;
+        data: string;
+      };
+      if (parsed.width !== 64 || parsed.height !== 32) {
+        this.image = null;
+        return;
+      }
+
+      const binary = atob(parsed.data);
+      const data = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index++) {
+        data[index] = binary.charCodeAt(index);
+      }
+      if (data.length !== 64 * 32 * 3) {
+        this.image = null;
+        return;
+      }
+      this.image = { width: 64, height: 32, data };
+    } catch {
+      this.image = null;
+    }
+  }
+
+  private storeImage() {
+    if (!this.image) {
+      localStorage.removeItem("semaforky.image");
+      return;
+    }
+
+    let binary = "";
+    this.image.data.forEach((value) => binary += String.fromCharCode(value));
+    localStorage.setItem("semaforky.image", JSON.stringify({
+      width: this.image.width,
+      height: this.image.height,
+      data: btoa(binary),
+    }));
   }
 };

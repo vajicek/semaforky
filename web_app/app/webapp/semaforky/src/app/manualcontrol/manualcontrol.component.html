@@ -50,11 +50,12 @@
 		<button type="button" (click)="onSetClockCountdown(240)" clickable>240</button>
 	</div>
 	<div>
-		{{ 'Display' | translate }}
+		{{ 'Display/Time' | translate }}
 	</div>
 	<div class="actions">
 		<button type="button" (click)="onShowCheckerboard()" clickable>{{ 'Checkerboard' | translate }}</button>
 		<button type="button" (click)="onShowTime()" clickable>{{ 'Current time' | translate }}</button>
+		<button type="button" [disabled]="!settings.image" (click)="onShowImage()" clickable>{{ 'Image' | translate }}</button>
 	</div>
 	<div>
 		<hr />

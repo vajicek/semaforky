@@ -55,8 +55,12 @@
 			<hr />
 		</div>
 		<div class="left">{{ 'Network' | translate }}</div>
-		<div class="right">
+	<div class="right">
 			<input [(ngModel)]="settings.network" type="string">
+		</div>
+		<div class="left">{{ 'Image' | translate }}</div>
+		<div class="right">
+			<input type="file" accept="image/*" (change)="onImageSelected($event)">
 		</div>
 	</div>
 	<div>

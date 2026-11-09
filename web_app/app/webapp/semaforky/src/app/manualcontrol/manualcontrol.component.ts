@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { RestClientController } from "../client";
-import { LineOrder, SemaphoreLight } from "../settings";
+import { LineOrder, SemaphoreLight, Settings } from "../settings";
 
 @Component({
   selector: 'app-manualcontrol',
@@ -24,7 +24,8 @@ export class ManualControlComponent {
 
   constructor(
     private router: Router,
-    private restClientController: RestClientController
+    private restClientController: RestClientController,
+    public settings: Settings
   ) {
   }
 
@@ -57,6 +58,12 @@ export class ManualControlComponent {
 
   public onShowTime() {
     this.restClientController.showTime();
+  }
+
+  public onShowImage() {
+    if (this.settings.image) {
+      this.restClientController.show(this.settings.image);
+    }
   }
 
   public onBackToMain() {

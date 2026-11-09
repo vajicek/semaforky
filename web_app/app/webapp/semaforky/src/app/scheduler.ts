@@ -79,7 +79,9 @@ class TimeEvent extends Event {
 
   constructor(
     _time: Date,
+    private imageShown: boolean,
     private scheduler: Scheduler,
+    private settings: Settings,
     private restClientController: RestClientController) {
     super(_time);
   }
@@ -87,10 +89,22 @@ class TimeEvent extends Event {
   public run(this: TimeEvent): void {
     const now = new Date();
     const currentMinute = now.getHours() * 60 + now.getMinutes();
+
+    // show & update image
+    if (this.scheduler.currentState != null && (
+      this.scheduler.currentState.name == SemaforkyState.STARTED ||
+      this.scheduler.currentState.name == SemaforkyState.ROUND_STOPPED)) {
+      if (this.lastShownMinute !== currentMinute && this.settings.image && !this.imageShown) {
+        this.lastShownMinute = currentMinute;
+        this.imageShown = true;
+        this.restClientController.show(this.settings.image);
+      }
+    }
+
+    // show & update time
     if (this.scheduler.currentState != null && (
       this.scheduler.currentState.name == SemaforkyState.SET_STOPPED ||
-      this.scheduler.currentState.name == SemaforkyState.SET_CANCELED ||
-      this.scheduler.currentState.name == SemaforkyState.ROUND_STOPPED)) {
+      this.scheduler.currentState.name == SemaforkyState.SET_CANCELED)) {
       if (this.lastShownMinute !== currentMinute) {
         this.restClientController.showTime();
         this.lastShownMinute = currentMinute;
@@ -281,7 +295,7 @@ export class Scheduler {
       self.mainComponentEventBus.updateGui.emit();
     }, 50);
 
-    this.addEvent(new TimeEvent(new Date(), this, this.restClientController));
+    this.addEvent(new TimeEvent(new Date(), false, this, this.settings, this.restClientController));
   }
 
   private storeState() {
@@ -318,6 +332,15 @@ export class Scheduler {
           new Date(event["time"]),
           event["nextState"],
           this.semaforkyMachineEventBus
+        );
+      }
+      case "TimeEvent": {
+        return new TimeEvent(
+          new Date(event["time"]),
+          true,
+          this,
+          this.settings,
+          this.restClientController
         );
       }
       default: {

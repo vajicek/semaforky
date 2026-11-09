@@ -1,4 +1,4 @@
-const uint8_t TimerFontBitmaps[] PROGMEM = {
+const uint8_t TimeFontBitmaps[] PROGMEM = {
   0x1F, 0x03, 0xFC, 0x79, 0xE7, 0x0E, 0x70, 0xEE, 0x07, 0xE0, 0x7E, 0x07,
   0xE0, 0x7E, 0x07, 0xE0, 0x7E, 0x07, 0xE0, 0x7E, 0x07, 0xE0, 0x7E, 0x07,
   0xE0, 0x77, 0x0E, 0x70, 0xE7, 0x9E, 0x3F, 0xC1, 0xF8, 0x03, 0x00, 0xF0,
@@ -30,7 +30,7 @@ const uint8_t TimerFontBitmaps[] PROGMEM = {
   0x00, 0x00, 0x3F, 0xE0
 };
 
-const GFXglyph TimerFontGlyphs[] PROGMEM = {
+const GFXglyph TimeFontGlyphs[] PROGMEM = {
   {     0,  12,  22,  14,    1,  -21 },   // 0x30 '0'
   {    33,  12,  22,  14,    2,  -21 },   // 0x31 '1'
   {    66,  12,  22,  14,    1,  -21 },   // 0x32 '2'
@@ -44,8 +44,8 @@ const GFXglyph TimerFontGlyphs[] PROGMEM = {
   {   333,   3,  17,   7,    2,  -16 }    // 0x3A ':'
 };
 
-const GFXfont TimerFont PROGMEM = {
-  (uint8_t  *)TimerFontBitmaps,
-  (GFXglyph *)TimerFontGlyphs, 0x30, 0x3A,  42 };
+const GFXfont TimeFont PROGMEM = {
+  (uint8_t  *)TimeFontBitmaps,
+  (GFXglyph *)TimeFontGlyphs, 0x30, 0x3A,  42 };
 
 // Approx. 3441 bytes
