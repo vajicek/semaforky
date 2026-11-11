@@ -53,9 +53,8 @@
 		{{ 'Display/Time' | translate }}
 	</div>
 	<div class="actions">
-		<button type="button" (click)="onShowCheckerboard()" clickable>{{ 'Checkerboard' | translate }}</button>
+		<button type="button" (click)="onShowImage()" clickable>{{ 'Image' | translate }}</button>
 		<button type="button" (click)="onShowTime()" clickable>{{ 'Current time' | translate }}</button>
-		<button type="button" [disabled]="!settings.image" (click)="onShowImage()" clickable>{{ 'Image' | translate }}</button>
 	</div>
 	<div>
 		<hr />

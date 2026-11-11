@@ -52,18 +52,12 @@ export class ManualControlComponent {
     this.restClientController.countdown(countdown, true);
   }
 
-  public onShowCheckerboard() {
-    this.restClientController.showCheckerboardInColors();
-  }
-
   public onShowTime() {
     this.restClientController.showTime();
   }
 
   public onShowImage() {
-    if (this.settings.image) {
-      this.restClientController.show(this.settings.image);
-    }
+    this.restClientController.show();
   }
 
   public onBackToMain() {

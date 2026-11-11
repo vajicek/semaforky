@@ -81,7 +81,6 @@ class TimeEvent extends Event {
     _time: Date,
     private imageShown: boolean,
     private scheduler: Scheduler,
-    private settings: Settings,
     private restClientController: RestClientController) {
     super(_time);
   }
@@ -94,10 +93,10 @@ class TimeEvent extends Event {
     if (this.scheduler.currentState != null && (
       this.scheduler.currentState.name == SemaforkyState.STARTED ||
       this.scheduler.currentState.name == SemaforkyState.ROUND_STOPPED)) {
-      if (this.lastShownMinute !== currentMinute && this.settings.image && !this.imageShown) {
+      if (this.lastShownMinute !== currentMinute && !this.imageShown) {
         this.lastShownMinute = currentMinute;
         this.imageShown = true;
-        this.restClientController.show(this.settings.image);
+        this.restClientController.show();
       }
     }
 
@@ -295,7 +294,7 @@ export class Scheduler {
       self.mainComponentEventBus.updateGui.emit();
     }, 50);
 
-    this.addEvent(new TimeEvent(new Date(), false, this, this.settings, this.restClientController));
+    self.restartTimeEvents();
   }
 
   private storeState() {
@@ -339,7 +338,6 @@ export class Scheduler {
           new Date(event["time"]),
           true,
           this,
-          this.settings,
           this.restClientController
         );
       }
@@ -510,4 +508,10 @@ export class Scheduler {
     this.removeAllEventsByClass(SemaphoreEvent);
     this.removeAllEventsByClass(SetClockEvent);
   }
+
+  public restartTimeEvents() {
+    this.removeAllEventsByClass(TimeEvent);
+    this.addEvent(new TimeEvent(new Date(), false, this, this.restClientController));
+  }
+
 }

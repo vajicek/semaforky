@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 import { Settings } from "../settings";
-import { RestClientController } from "../client";
+import { RestClientController, RgbImage } from "../client";
 
 @Component({
   selector: 'app-settings',
@@ -67,12 +67,12 @@ export class SettingsComponent {
         data[target + 1] = pixels[source + 1];
         data[target + 2] = pixels[source + 2];
       }
-      this.settings.image = { width: 64, height: 32, data };
-      console.log("Loaded image", {
-        width: 64,
-        height: 32,
-        data: Array.from(data),
-      });
+      const rgbImage: RgbImage = { width: 64, height: 32, data };
+      this.settings.image = rgbImage;
+      if (rgbImage) {
+        this.restClientController.store(rgbImage);
+        this.restClientController.show();
+      }
     };
     image.src = URL.createObjectURL(file);
   }

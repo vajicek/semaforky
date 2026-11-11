@@ -354,10 +354,14 @@ class P5 : public Px {
 	int minutes = 0;
 	bool timeChanged = false;
 
-	uint8_t displayTileCount = 0;
-	unsigned long displayLastTileTime = 0;
+	uint8_t storedTileCount = 0;
+	unsigned long storeLastTileTime = 0;
+	bool showImage = false;
+	bool clearImage = false;
 
-	void drawDisplay(const char *rawDisplayValue, size_t rawDisplayValueSize);
+	void storeImage(const char *rawDisplayValue, size_t rawDisplayValueSize);
+	void loadImage();
+
 	void drawTime();
 	void drawDigits();
 	void drawLetters();
@@ -370,16 +374,29 @@ class P5 : public Px {
 	virtual void Init();
 };
 
-void P5::drawDisplay(const char *rawDisplayValue, size_t rawDisplayValueSize) {
+void P5::storeImage(const char *rawDisplayValue, size_t rawDisplayValueSize) {
 	if (rawDisplayValue == nullptr) {
 		return;
 	}
 
 	const unsigned long now = millis();
-	if (now - displayLastTileTime > 1000) {
-		displayTileCount = 0;
+	if (now - storeLastTileTime > 5000 || !SPIFFS.exists("/image.rgb")) {
+		Serial.println("Writing new file tile by tile");
+		storedTileCount = 0;
+		showImage = false;
+		clearImage = true;
+		File file = SPIFFS.open("/image.rgb", "w");
+		if (!file) {
+			Serial.println("Cannot create /image.rgb");
+			return;
+		}
+		uint8_t zeros[64] = {};
+		for (size_t offset = 0; offset < 64 * 32 * 3; offset += sizeof(zeros)) {
+			file.write(zeros, sizeof(zeros));
+		}
+		file.close();
 	}
-	displayLastTileTime = now;
+	storeLastTileTime = now;
 
 	const char *separator = strchr(rawDisplayValue, 'x');
 	const char *location = strchr(rawDisplayValue, '@');
@@ -389,20 +406,28 @@ void P5::drawDisplay(const char *rawDisplayValue, size_t rawDisplayValueSize) {
 		return;
 	}
 
-	int width = atoi(rawDisplayValue);
-	int height = atoi(separator + 1);
 	const char *comma = strchr(location, ',');
 	if (comma == nullptr || comma >= colon) {
 		return;
 	}
+	int width = atoi(rawDisplayValue);
+	int height = atoi(separator + 1);
 	int originX = atoi(location + 1);
 	int originY = atoi(comma + 1);
 	if (width != 16 || height != 16 || originX < 0 || originX > 48 ||
 		originY < 0 || originY > 16 || originX % 16 != 0 || originY % 16 != 0) {
 		return;
 	}
+
 	const char *encoded = colon + 1;
 	size_t encodedSize = rawDisplayValueSize - (size_t)(encoded - rawDisplayValue);
+	uint8_t tile[16 * 16 * 3];
+	size_t pixelIndex = 0;
+	size_t pixelBytes = 0;
+	uint8_t pixel[3];
+	uint32_t acc = 0;
+	int bits = 0;
+
 	Serial.print("Image tile: ");
 	Serial.print(width);
 	Serial.print("x");
@@ -411,52 +436,87 @@ void P5::drawDisplay(const char *rawDisplayValue, size_t rawDisplayValueSize) {
 	Serial.print(originX);
 	Serial.print(",");
 	Serial.print(originY);
+	Serial.print(",storedTileCount=");
+	Serial.print(storedTileCount);
 	Serial.print(", encoded bytes=");
 	Serial.println(encodedSize);
 
-	size_t pixelIndex = 0;
-	uint8_t pixel[3];
-	size_t pixelBytes = 0;
-	uint32_t acc = 0;
-	int bits = 0;
 	for (size_t i = 0; i < encodedSize && pixelIndex < width * height; i++) {
-
-		if (i %100 == 0) {
-			ESP.wdtFeed();
-		}
-
 		char c = encoded[i];
 		if (c == '=' || c == '\n' || c == '\r') {
 			continue;
 		}
-		int8_t v = decodeBase64Char(c);
-		if (v < 0) {
+		int8_t value = decodeBase64Char(c);
+		if (value < 0) {
 			continue;
 		}
-		acc = (acc << 6) | (uint32_t)v;
+		acc = (acc << 6) | (uint32_t)value;
 		bits += 6;
 		if (bits >= 8) {
 			bits -= 8;
 			pixel[pixelBytes++] = (acc >> bits) & 0xFF;
 			if (pixelBytes == 3) {
-				int x = originX + pixelIndex % width;
-				int y = originY + pixelIndex / width;
-				if (x < 64 && y < 32) {
-					display.drawPixel(x, y, color565(pixel[2], pixel[1], pixel[0]));
-				}
-
+				tile[pixelIndex * 3] = pixel[0];
+				tile[pixelIndex * 3 + 1] = pixel[1];
+				tile[pixelIndex * 3 + 2] = pixel[2];
 				pixelBytes = 0;
 				pixelIndex++;
 			}
 		}
 	}
-
-	displayTileCount++;
-	if (displayTileCount >= 8) {
-		displayTileCount = 0;
-		display.setBrightness(brightness);
-		display.showBuffer();
+	if (pixelIndex != width * height) {
+		return;
 	}
+
+	File file = SPIFFS.open("/image.rgb", "r+");
+	if (!file) {
+		Serial.println("Cannot open /image.rgb for update");
+		return;
+	}
+	const size_t tileRowBytes = 16 * 3;
+	for (size_t row = 0; row < 16; row++) {
+		size_t rowOffset = ((size_t)(originY + row) * 64 + (size_t)originX) * 3;
+		file.seek(rowOffset, SeekSet);
+		file.write(tile + row * tileRowBytes, tileRowBytes);
+	}
+	file.close();
+
+	storedTileCount++;
+	if (storedTileCount >= 8) {
+		Serial.println("Last tile loaded");
+	}
+}
+
+void P5::loadImage() {
+	if (!SPIFFS.exists("/image.rgb")) {
+		return;
+	}
+
+	File file = SPIFFS.open("/image.rgb", "r");
+	if (!file || file.size() != 64 * 32 * 3) {
+		if (file) {
+			file.close();
+		}
+		Serial.println("Invalid /image.rgb");
+		return;
+	}
+
+	display.fillScreen(color565(0, 0, 0));
+	uint8_t pixel[3];
+	for (int y = 0; y < 32; y++) {
+		for (int x = 0; x < 64; x++) {
+			if (file.read(pixel, sizeof(pixel)) != sizeof(pixel)) {
+				file.close();
+				Serial.println("Cannot read /image.rgb");
+				return;
+			}
+			display.drawPixel(x, y, color565(pixel[2], pixel[1], pixel[0]));
+		}
+	}
+	file.close();
+
+	display.setBrightness(brightness);
+	display.showBuffer();
 }
 
 void P5::control(AsyncWebServerRequest * request, JsonVariant & json) {
@@ -470,9 +530,11 @@ void P5::control(AsyncWebServerRequest * request, JsonVariant & json) {
 
 		if (controlValue == CONTROL_VALUE_DISPLAY) {
 			JsonString image = postObj[F("image")].as<JsonString>();
-			brightness = postObj[F("brightness")].as<int>();
 			if (!image.isNull()) {
-				drawDisplay(image.c_str(), image.size());
+				storeImage(image.c_str(), image.size());
+			} else {
+				brightness = postObj[F("brightness")].as<int>();
+				showImage = true;
 			}
 		} else if (controlValue == CONTROL_VALUE_TIME) {
 			hours = postObj[F("hours")].as<int>();
@@ -531,6 +593,15 @@ void P5::updateDisplay() {
 		}
 		return;
 	} else if (controlValue == CONTROL_VALUE_DISPLAY) {
+		if (clearImage) {
+			display.fillScreen(color565(0, 0, 0));
+			display.showBuffer();
+			clearImage = false;
+		}
+		if (showImage) {
+			loadImage();
+			showImage = false;
+		}
 		return;
 	}
 	Px::updateDisplay();
@@ -546,6 +617,7 @@ void P5::Init() {
 	display.setScanPattern(scanPatterns);
 	display.setFont(&FixedWidthDigit);
 	display.setTextWrap(false);
+	loadImage();
 }
 
 //////////////////////////

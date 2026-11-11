@@ -115,6 +115,10 @@ export class MainComponent {
     eventBus.scanEnabled
       .event$
       .subscribe(scanEnabled => {
+        if (!this.scanEnabled && scanEnabled) {
+          // restart when scan state changes
+          this.scheduler.restartTimeEvents();
+        }
         this.scanEnabled = scanEnabled;
       });
     eventBus.pausedState

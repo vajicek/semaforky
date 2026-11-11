@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from "@angular/common/http";
-import { Subscription, timeout } from "rxjs";
+import { Subscription, concatMap, from, timeout, concatWith } from "rxjs";
 
 import { Settings, LineOrder, SemaphoreLight } from "./settings";
 import { MainComponentEventBus } from './main/main.component';
@@ -14,7 +14,7 @@ enum ControlValue {
   Siren = 4,
   Countdown = 5,
   Display = 6,
-  Time = 7,
+  Time = 7
 }
 
 const CONTROL_CAPABILITY: Record<ControlValue, string> = {
@@ -24,7 +24,7 @@ const CONTROL_CAPABILITY: Record<ControlValue, string> = {
   [ControlValue.Siren]: "siren",
   [ControlValue.Countdown]: "countdown",
   [ControlValue.Display]: "display",
-  [ControlValue.Time]: "time",
+  [ControlValue.Time]: "time"
 };
 
 export type RgbImage = {
@@ -220,19 +220,47 @@ export class RestClientController {
     });
   }
 
-  public show(image: RgbImage) {
-    console.log("Show image");
+  public store(image: RgbImage) {
     this.getClients(CONTROL_CAPABILITY[ControlValue.Display]).forEach((address) => {
+      const tiles: Array<{ tileX: number; tileY: number }> = [];
       for (let tileY = 0; tileY < image.height; tileY += 16) {
         for (let tileX = 0; tileX < image.width; tileX += 16) {
-          const encoded = this.encodeTile(image, tileX, tileY);
-          this.http.post(`http://${address}:${DEVICE_PORT}/control`, {
-            control: ControlValue.Display,
-            image: encoded,
-            brightness: this.settings.brightness
-          }).subscribe();
+          tiles.push({ tileX, tileY });
         }
       }
+
+      from(tiles)
+        .pipe(
+          concatMap(({ tileX, tileY }) => {
+            const encoded = this.encodeTile(image, tileX, tileY);
+            return this.http.post(`http://${address}:${DEVICE_PORT}/control`, {
+              control: ControlValue.Display,
+              image: encoded,
+            });
+          }),
+          concatWith(
+          this.http.post(`http://${address}:${DEVICE_PORT}/control`, {
+            control: ControlValue.Display,
+            brightness: this.settings.brightness
+          }))
+        )
+        .subscribe({
+          next: () => console.log("Image tile stored:", address),
+          error: (error) => console.error("Image tile store failed:", address, error),
+          complete: () => console.log("All image tiles stored:", address),
+        });
+    });
+  }
+
+  public show() {
+    this.getClients(CONTROL_CAPABILITY[ControlValue.Display]).forEach((address) => {
+      this.http.post(`http://${address}:${DEVICE_PORT}/control`, {
+        control: ControlValue.Display,
+        brightness: this.settings.brightness
+      }).subscribe({
+        next: () => console.log("Stored image shown:", address),
+        error: (error) => console.error("Stored image show failed:", address, error),
+      });
     });
   }
 
@@ -252,53 +280,6 @@ export class RestClientController {
       }
     }
     return `16x16@${tileX},${tileY}:${this.toBase64(tileData)}`;
-  }
-
-  public showCheckerboard() {
-    const width = 64;
-    const height = 32;
-    const squareSize = 8;
-    const data = new Uint8Array(width * height * 3);
-
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        const color = ((Math.floor(x / squareSize) + Math.floor(y / squareSize)) % 2 === 0)
-          ? 255
-          : 0;
-        const offset = (y * width + x) * 3;
-        data[offset] = color;
-        data[offset + 1] = color;
-        data[offset + 2] = color;
-      }
-    }
-
-    this.show({ width, height, data });
-  }
-
-  public showCheckerboardInColors() {
-    const width = 64;
-    const height = 32;
-    const squareSize = 8;
-    const data = new Uint8Array(width * height * 3);
-
-    for (let squareY = 0; squareY < height; squareY += squareSize) {
-      for (let squareX = 0; squareX < width; squareX += squareSize) {
-        const red = Math.floor(Math.random() * 256);
-        const green = Math.floor(Math.random() * 256);
-        const blue = Math.floor(Math.random() * 256);
-
-        for (let y = squareY; y < squareY + squareSize; y++) {
-          for (let x = squareX; x < squareX + squareSize; x++) {
-            const offset = (y * width + x) * 3;
-            data[offset] = red;
-            data[offset + 1] = green;
-            data[offset + 2] = blue;
-          }
-        }
-      }
-    }
-
-    this.show({ width, height, data });
   }
 
   private toBase64(data: Uint8Array): string {
