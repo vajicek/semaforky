@@ -498,13 +498,6 @@ export class SemaforkyMachine {
           self.restClientController.countdown(0, false);
 
           self.mainComponentEventBus.updateSetClocks.emit(0);
-
-          // show Lines with a delay
-          window.setTimeout(() => {
-            self.restClientController
-              .updateLines(self.getCurrentLineOrder());
-            self.mainComponentEventBus.updateGui.emit();
-          }, 2000);
         }
 
         updateRoundSetAndLine() {
