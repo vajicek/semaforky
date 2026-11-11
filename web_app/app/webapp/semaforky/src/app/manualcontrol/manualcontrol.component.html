@@ -50,6 +50,13 @@
 		<button type="button" (click)="onSetClockCountdown(240)" clickable>240</button>
 	</div>
 	<div>
+		{{ 'Display/Time' | translate }}
+	</div>
+	<div class="actions">
+		<button type="button" (click)="onShowImage()" clickable>{{ 'Image' | translate }}</button>
+		<button type="button" (click)="onShowTime()" clickable>{{ 'Current time' | translate }}</button>
+	</div>
+	<div>
 		<hr />
 	</div>
 	<div class="actions">

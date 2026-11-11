@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 
 import { RestClientController } from "../client";
-import { LineOrder, SemaphoreLight } from "../settings";
+import { LineOrder, SemaphoreLight, Settings } from "../settings";
 
 @Component({
   selector: 'app-manualcontrol',
@@ -49,6 +49,14 @@ export class ManualControlComponent {
 
   public onSetClockCountdown(countdown: number) {
     this.restClientController.countdown(countdown, true);
+  }
+
+  public onShowTime() {
+    this.restClientController.showTime();
+  }
+
+  public onShowImage() {
+    this.restClientController.show();
   }
 
   public onBackToMain() {

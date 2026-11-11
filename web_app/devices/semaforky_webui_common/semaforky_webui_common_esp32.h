@@ -1,27 +1,158 @@
 /// Copyright (C) 2026, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+#define CLOCK_EOPIN 22
+#define CLOCK_CLKPIN 18
+#define CLOCK_LATPIN 2
+#define CLOCK_APIN 19
+#define CLOCK_BPIN 21
+#define CLOCK_RDATAPIN 23
+
+#define CONNECTION_INDICATING_LED 17
+
+#define SIREN_TONE_LENGTH 300
+#define SIREN_PAUSE_LENGTH 300
+#define SIREN_AUDIO_PIN 5
+
+#define SEMAPHORE_RED_PIN 25
+#define SEMAPHORE_GREEN_PIN 26
+#define SEMAPHORE_ORANGE_PIN 27
+
 #include "semaforky_webui_common.h"
 
 #include "digits32_font.h"
 #include "abcd32_font.h"
 
+class Semaphore {
+private:
+	uint8_t pins[3];
+	int state = 0;
+
+public:
+	Semaphore(uint8_t redPin, uint8_t greenPin, uint8_t orangePin)
+		: pins{redPin, greenPin, orangePin} {}
+
+	void init() {
+		for (uint8_t pin : pins) {
+			pinMode(pin, OUTPUT);
+		}
+		state = -1;
+		execute();
+	}
+
+	void setColor(int nextState){
+		if (nextState < 0 || nextState > 3) {
+			nextState = 0;
+		}
+		if (state == nextState) {
+			return;
+		}
+
+		state = nextState;
+	}
+
+	void execute() {
+		for (int i = 0; i < 3; i++) {
+			digitalWrite(pins[i], state == i + 1 ? HIGH : LOW);
+		}
+	}
+};
+
+class Siren {
+private:
+	enum class Phase {
+		IDLE,
+		TONE,
+		PAUSE,
+	};
+
+	uint8_t audioPin;
+	Phase phase = Phase::IDLE;
+	unsigned long phaseStart = 0;
+	int pulsesRemaining = 0;
+
+public:
+	Siren(uint8_t audioPin) : audioPin(audioPin) {}
+
+	void init() {
+		pinMode(audioPin, OUTPUT);
+		digitalWrite(audioPin, LOW);
+	}
+
+	void start(int pulseCount) {
+		if (phase != Phase::IDLE || pulseCount <= 0) {
+			return;
+		}
+
+		pulsesRemaining = pulseCount;
+		phase = Phase::TONE;
+		phaseStart = millis();
+		digitalWrite(audioPin, HIGH);
+	}
+
+	void execute() {
+		if (phase == Phase::IDLE) {
+			return;
+		}
+
+		const unsigned long now = millis();
+		const unsigned long phaseLength = phase == Phase::TONE
+			? SIREN_TONE_LENGTH
+			: SIREN_PAUSE_LENGTH;
+		if (now - phaseStart < phaseLength) {
+			return;
+		}
+
+		phaseStart = now;
+
+		if (phase == Phase::TONE) {
+			// The tone finished; switch to the silent part of this pulse.
+			phase = Phase::PAUSE;
+			digitalWrite(audioPin, LOW);
+			return;
+		}
+
+		// The pause finished, so the current pulse is complete.
+		pulsesRemaining--;
+		if (pulsesRemaining == 0) {
+			// All requested pulses have completed.
+			phase = Phase::IDLE;
+			return;
+		}
+
+		// More pulses remain; start the next tone.
+		phase = Phase::TONE;
+		digitalWrite(audioPin, HIGH);
+	}
+};
+
 class P10x3 : public Base {
 private:
+	struct PixelContext {
+		P10x3 *display;
+		int width;
+	};
+
 	FthnLabsDisplay display;
 	GFXcanvas1 canvas;
 	TaskHandle_t displayTaskHandle = NULL;
+	Semaphore semaphore;
+	Siren siren;
 
 	int oldValue = -1;
 
 	void updateDisplay();
 	void drawDigits();
 	void drawLetters();
+	void drawRgbImage(const char *rawDisplayValue, size_t rawDisplayValueLength);
+	static void drawPixelCallback(void *context, size_t pixelIndex,
+		uint8_t red, uint8_t green, uint8_t blue);
+	void control(AsyncWebServerRequest *request, JsonVariant &json) override;
 	void copyCanvas();
+	void executeSiren();
+	void executeSemaphore();
 
 public:
-	void redrawDisplay();
-
 	void Init();
 	void Execute();
 
@@ -76,6 +207,61 @@ void P10x3::copyCanvas() {
 	}
 }
 
+void P10x3::control(AsyncWebServerRequest *request, JsonVariant &json) {
+	const JsonObject &postObj = json.as<JsonObject>();
+	if (postObj.containsKey("value")) {
+		controlValue = postObj[F("control")];
+		if (controlValue == CONTROL_VALUE_DISPLAY) {
+			JsonString displayValue = postObj[F("value")].as<JsonString>();
+			if (!displayValue.isNull()) {
+				drawRgbImage(displayValue.c_str(), displayValue.size());
+			}
+		}
+	}
+	Base::control(request, json);
+}
+
+void P10x3::drawRgbImage(const char *rawDisplayValue, size_t rawDisplayValueLength) {
+	if (rawDisplayValue == nullptr) {
+		return;
+	}
+
+	const char *xSep = strchr(rawDisplayValue, 'x');
+	const char *colon = strchr(rawDisplayValue, ':');
+	if (xSep == rawDisplayValue || xSep == nullptr || colon == nullptr || colon <= xSep) {
+		return;
+	}
+
+	int width = atoi(rawDisplayValue);
+	int height = atoi(xSep + 1);
+	if (width <= 0 || width > 48 || height <= 0 || height > 32) {
+		return;
+	}
+
+	for (int16_t y = 0; y < 32; y++) {
+		for (int16_t x = 0; x < 48; x++) {
+			display.drawPixel(y, 48 - x, 0);
+		}
+	}
+
+	PixelContext context{this, width};
+	const char *encoded = colon + 1;
+	size_t encodedSize = rawDisplayValueLength - (size_t)(encoded - rawDisplayValue);
+	decodeBase64(encoded, encodedSize, drawPixelCallback, &context);
+	display.display();
+}
+
+void P10x3::drawPixelCallback(void *context, size_t pixelIndex,
+	uint8_t red, uint8_t green, uint8_t blue) {
+	PixelContext *drawContext = static_cast<PixelContext *>(context);
+	int x = pixelIndex % drawContext->width;
+	int y = pixelIndex / drawContext->width;
+	if (x < 48 && y < 32) {
+		drawContext->display->display.drawPixel(y, 48 - x,
+			color565(red, green, blue));
+	}
+}
+
 void P10x3::updateDisplay() {
 	if (controlValue == CONTROL_VALUE_LINES) {
 		if (oldValue != value) {
@@ -87,10 +273,8 @@ void P10x3::updateDisplay() {
 			oldValue = value;
 			drawDigits();
 		}
+	} else if (controlValue == CONTROL_VALUE_DISPLAY) {
 	}
-}
-
-void P10x3::redrawDisplay() {
 }
 
 void displayUpdateLoop(void *pvParameters) {
@@ -102,6 +286,8 @@ void displayUpdateLoop(void *pvParameters) {
 
 void P10x3::Init() {
 	Base::Init();
+	semaphore.init();
+	siren.init();
 	display.begin();
 
 	// Create the display task on Core 1
@@ -116,19 +302,35 @@ void P10x3::Init() {
 	);
 }
 
+void P10x3::executeSemaphore() {
+	if (controlValue == CONTROL_VALUE_SEMAPHORE) {
+		semaphore.setColor(decodeColorValue(value));
+	}
+	semaphore.execute();
+}
+
+void P10x3::executeSiren() {
+	if (controlValue == CONTROL_VALUE_SIRENE) {
+		controlValue = 0;
+		siren.start(value);
+	}
+	siren.execute();
+}
+
 void P10x3::Execute() {
 	Base::Execute();
+	executeSemaphore();
+	executeSiren();
 	updateDisplay();
-	redrawDisplay();
 }
 
 DisplayConfig getP10x3DisplayConfig() {
-	uint8_t oePin = 22;
-	uint8_t clkPin = 18;
-	uint8_t latPin = 2;
-	uint8_t aPin = 19;
-	uint8_t bPin = 21;
-	uint8_t rDataPin = 23;
+	uint8_t oePin = CLOCK_EOPIN;
+	uint8_t clkPin = CLOCK_CLKPIN;
+	uint8_t latPin = CLOCK_LATPIN;
+	uint8_t aPin = CLOCK_APIN;
+	uint8_t bPin = CLOCK_BPIN;
+	uint8_t rDataPin = CLOCK_RDATAPIN;
 
 	uint8_t panelWidth = 32;
 	uint8_t panelHeight = 48;
@@ -153,4 +355,6 @@ FthnLabsDisplay* P10x3::getDisplay() {
 }
 
 P10x3::P10x3(BaseSettings *baseSettings)
-	: Base(baseSettings), display(getP10x3DisplayConfig()), canvas(48, 32) {}
+	: Base(baseSettings), display(getP10x3DisplayConfig()), canvas(48, 32),
+	  semaphore(SEMAPHORE_RED_PIN, SEMAPHORE_GREEN_PIN, SEMAPHORE_ORANGE_PIN),
+	  siren(SIREN_AUDIO_PIN) {}

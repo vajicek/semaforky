@@ -1,6 +1,7 @@
 import { CookieService } from "ngx-cookie-service";
 import { Injectable } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
+import type { RgbImage } from './client';
 
 export enum LinesRotation {
   BYROUND = "BYROUND",
@@ -25,6 +26,7 @@ export enum SemaphoreLight {
   providedIn: 'root'
 })
 export class Settings {
+  public image: RgbImage | null = null;
   public language: string = "en";
   public roundSets: number = 10;
   public setTime: number = 120;

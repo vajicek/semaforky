@@ -1,6 +1,8 @@
 /// Copyright (C) 2023, Vajsoft
 /// Author: Vaclav Krajicek <vajicek@volny.cz>
 
+#define CONNECTION_INDICATING_LED D4
+
 #include "semaforky_webui_common.h"
 
 struct StackedDMD : public SPIDMD {
@@ -197,10 +199,6 @@ void Siren::Execute() {
 
 ///////////////////////////////////////
 
-static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
-	return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
-}
-
 class Px : public Base {
  protected:
 	PxMATRIX *display;
@@ -289,7 +287,8 @@ void Px::Init() {
 	display->begin(8);
 
 	display->clearDisplay();
-	displayTicker.attach_ms(4, [this]() { this->display->display(); });
+	displayTicker.attach_ms(1, [this]() { this->display->display(); });
+	display->setFastUpdate(true);
 }
 
 void Px::Execute() {
@@ -328,6 +327,7 @@ P10::P10(BaseSettings *baseSettings)
 
 #include "digits_font.h"
 #include "abcd_font.h"
+#include "time_font.h"
 
 #define P5_LAT 16
 #define P5_A 5
@@ -348,13 +348,205 @@ class P5 : public Px {
 	PxMATRIX display;
 	scan_patterns scanPatterns;
 
+	int brightness = 255;
+
+	int hours = 0;
+	int minutes = 0;
+	bool timeChanged = false;
+
+	uint8_t storedTileCount = 0;
+	unsigned long storeLastTileTime = 0;
+	bool showImage = false;
+	bool clearImage = false;
+
+	void storeImage(const char *rawDisplayValue, size_t rawDisplayValueSize);
+	void loadImage();
+
+	void drawTime();
 	void drawDigits();
 	void drawLetters();
+
+	void updateDisplay() override;
+	void control(AsyncWebServerRequest * request, JsonVariant & json) override;
 
  public:
 	P5(BaseSettings *baseSettings, scan_patterns scanPatterns);
 	virtual void Init();
 };
+
+void P5::storeImage(const char *rawDisplayValue, size_t rawDisplayValueSize) {
+	if (rawDisplayValue == nullptr) {
+		return;
+	}
+
+	const unsigned long now = millis();
+	if (now - storeLastTileTime > 5000 || !SPIFFS.exists("/image.rgb")) {
+		Serial.println("Writing new file tile by tile");
+		storedTileCount = 0;
+		showImage = false;
+		clearImage = true;
+		File file = SPIFFS.open("/image.rgb", "w");
+		if (!file) {
+			Serial.println("Cannot create /image.rgb");
+			return;
+		}
+		uint8_t zeros[64] = {};
+		for (size_t offset = 0; offset < 64 * 32 * 3; offset += sizeof(zeros)) {
+			file.write(zeros, sizeof(zeros));
+		}
+		file.close();
+	}
+	storeLastTileTime = now;
+
+	const char *separator = strchr(rawDisplayValue, 'x');
+	const char *location = strchr(rawDisplayValue, '@');
+	const char *colon = strchr(rawDisplayValue, ':');
+	if (separator == rawDisplayValue || separator == nullptr || location == nullptr ||
+		colon == nullptr || location <= separator || colon <= location) {
+		return;
+	}
+
+	const char *comma = strchr(location, ',');
+	if (comma == nullptr || comma >= colon) {
+		return;
+	}
+	int width = atoi(rawDisplayValue);
+	int height = atoi(separator + 1);
+	int originX = atoi(location + 1);
+	int originY = atoi(comma + 1);
+	if (width != 16 || height != 16 || originX < 0 || originX > 48 ||
+		originY < 0 || originY > 16 || originX % 16 != 0 || originY % 16 != 0) {
+		return;
+	}
+
+	const char *encoded = colon + 1;
+	size_t encodedSize = rawDisplayValueSize - (size_t)(encoded - rawDisplayValue);
+	uint8_t tile[16 * 16 * 3];
+	size_t pixelIndex = 0;
+	size_t pixelBytes = 0;
+	uint8_t pixel[3];
+	uint32_t acc = 0;
+	int bits = 0;
+
+	Serial.print("Image tile: ");
+	Serial.print(width);
+	Serial.print("x");
+	Serial.print(height);
+	Serial.print(" @ ");
+	Serial.print(originX);
+	Serial.print(",");
+	Serial.print(originY);
+	Serial.print(",storedTileCount=");
+	Serial.print(storedTileCount);
+	Serial.print(", encoded bytes=");
+	Serial.println(encodedSize);
+
+	for (size_t i = 0; i < encodedSize && pixelIndex < width * height; i++) {
+		char c = encoded[i];
+		if (c == '=' || c == '\n' || c == '\r') {
+			continue;
+		}
+		int8_t value = decodeBase64Char(c);
+		if (value < 0) {
+			continue;
+		}
+		acc = (acc << 6) | (uint32_t)value;
+		bits += 6;
+		if (bits >= 8) {
+			bits -= 8;
+			pixel[pixelBytes++] = (acc >> bits) & 0xFF;
+			if (pixelBytes == 3) {
+				tile[pixelIndex * 3] = pixel[0];
+				tile[pixelIndex * 3 + 1] = pixel[1];
+				tile[pixelIndex * 3 + 2] = pixel[2];
+				pixelBytes = 0;
+				pixelIndex++;
+			}
+		}
+	}
+	if (pixelIndex != width * height) {
+		return;
+	}
+
+	File file = SPIFFS.open("/image.rgb", "r+");
+	if (!file) {
+		Serial.println("Cannot open /image.rgb for update");
+		return;
+	}
+	const size_t tileRowBytes = 16 * 3;
+	for (size_t row = 0; row < 16; row++) {
+		size_t rowOffset = ((size_t)(originY + row) * 64 + (size_t)originX) * 3;
+		file.seek(rowOffset, SeekSet);
+		file.write(tile + row * tileRowBytes, tileRowBytes);
+	}
+	file.close();
+
+	storedTileCount++;
+	if (storedTileCount >= 8) {
+		Serial.println("Last tile loaded");
+	}
+}
+
+void P5::loadImage() {
+	if (!SPIFFS.exists("/image.rgb")) {
+		return;
+	}
+
+	File file = SPIFFS.open("/image.rgb", "r");
+	if (!file || file.size() != 64 * 32 * 3) {
+		if (file) {
+			file.close();
+		}
+		Serial.println("Invalid /image.rgb");
+		return;
+	}
+
+	display.fillScreen(color565(0, 0, 0));
+	uint8_t pixel[3];
+	for (int y = 0; y < 32; y++) {
+		for (int x = 0; x < 64; x++) {
+			if (file.read(pixel, sizeof(pixel)) != sizeof(pixel)) {
+				file.close();
+				Serial.println("Cannot read /image.rgb");
+				return;
+			}
+			display.drawPixel(x, y, color565(pixel[2], pixel[1], pixel[0]));
+		}
+	}
+	file.close();
+
+	display.setBrightness(brightness);
+	display.showBuffer();
+}
+
+void P5::control(AsyncWebServerRequest * request, JsonVariant & json) {
+	const JsonObject &postObj = json.as<JsonObject>();
+	int requestedControl = postObj[F("control")].as<int>();
+
+	if (requestedControl == CONTROL_VALUE_DISPLAY ||
+		requestedControl == CONTROL_VALUE_TIME) {
+
+		controlValue = postObj[F("control")];
+
+		if (controlValue == CONTROL_VALUE_DISPLAY) {
+			JsonString image = postObj[F("image")].as<JsonString>();
+			if (!image.isNull()) {
+				storeImage(image.c_str(), image.size());
+			} else {
+				brightness = postObj[F("brightness")].as<int>();
+				showImage = true;
+			}
+		} else if (controlValue == CONTROL_VALUE_TIME) {
+			hours = postObj[F("hours")].as<int>();
+			minutes = postObj[F("minutes")].as<int>();
+			brightness = postObj[F("brightness")].as<int>();
+			if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60) {
+				timeChanged = true;
+			}
+		}
+	}
+	Base::control(request, json);
+}
 
 void P5::drawDigits() {
 	display.setFont(&FixedWidthDigit);
@@ -364,6 +556,55 @@ void P5::drawDigits() {
 void P5::drawLetters() {
 	display.setFont(&FixedWidthAbcd);
 	Px::drawLetters();
+}
+
+void P5::drawTime() {
+	display.setFont(&TimeFont);
+	display.fillScreen(color565(0, 0, 0));
+	display.setBrightness(brightness);
+
+	char timeText[] = {
+		(char)('0' + hours / 10),
+		(char)('0' + hours % 10),
+		':',
+		(char)('0' + minutes / 10),
+		(char)('0' + minutes % 10),
+		'\0'
+	};
+	int16_t x1;
+	int16_t y1;
+	uint16_t textWidth;
+	uint16_t textHeight;
+	display.setTextSize(1);
+	display.getTextBounds(timeText, 0, 0, &x1, &y1, &textWidth, &textHeight);
+
+	display.setCursor(0, // zero is better then (64 - textWidth) / 2 - x1,
+		(32 - textHeight) / 2 - y1);
+	display.setTextColor(P5_COLORS[0]);
+	display.print(timeText);
+	display.showBuffer();
+}
+
+void P5::updateDisplay() {
+	if (controlValue == CONTROL_VALUE_TIME) {
+		if (timeChanged) {
+			drawTime();
+			timeChanged = false;
+		}
+		return;
+	} else if (controlValue == CONTROL_VALUE_DISPLAY) {
+		if (clearImage) {
+			display.fillScreen(color565(0, 0, 0));
+			display.showBuffer();
+			clearImage = false;
+		}
+		if (showImage) {
+			loadImage();
+			showImage = false;
+		}
+		return;
+	}
+	Px::updateDisplay();
 }
 
 P5::P5(BaseSettings *baseSettings, scan_patterns scanPatterns=LINE)
@@ -376,6 +617,7 @@ void P5::Init() {
 	display.setScanPattern(scanPatterns);
 	display.setFont(&FixedWidthDigit);
 	display.setTextWrap(false);
+	loadImage();
 }
 
 //////////////////////////

@@ -43,6 +43,8 @@
 #define CONTROL_VALUE_LINES 3
 #define CONTROL_VALUE_SIRENE 4
 #define CONTROL_VALUE_COUNTDOWN 5
+#define CONTROL_VALUE_DISPLAY 6
+#define CONTROL_VALUE_TIME 7
 
 void computeDigits(int *digits, int digit_count, int value) {
 	int divider = 1;
@@ -76,7 +78,6 @@ bool networkExist(String target_ssid) {
 }
 
 void connectToHotspot(const char *ssid, const char *password) {
-	int connection_indicating_led = D4;
 	int connection_waiting_counter = 0;
 
 	// setup wifi module to station mode
@@ -86,9 +87,10 @@ void connectToHotspot(const char *ssid, const char *password) {
 	WiFi.begin(ssid, password);
 	WiFi.setAutoReconnect(true);
 	WiFi.persistent(true);
+	WiFi.setSleepMode(WIFI_NONE_SLEEP);
 
 	// led indication
-	pinMode(connection_indicating_led, OUTPUT);
+	pinMode(CONNECTION_INDICATING_LED, OUTPUT);
 
 	int status = WL_IDLE_STATUS;
 	for (int i = 0; i < 300; i++) {
@@ -96,7 +98,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 		Serial.print(status);
 
 		// led indication
-		digitalWrite(connection_indicating_led,
+		digitalWrite(CONNECTION_INDICATING_LED,
 			((connection_waiting_counter++ / 10) % 2) ? LOW  : HIGH);
 
 		status = WiFi.status();
@@ -106,9 +108,7 @@ void connectToHotspot(const char *ssid, const char *password) {
 
 		delay(100);
 	}
-
-	// turn off led
-	digitalWrite(connection_indicating_led, HIGH);
+	digitalWrite(CONNECTION_INDICATING_LED, HIGH);
 
 	if (status == WL_CONNECTED) {
 		Serial.println("Connected to AP...");
@@ -220,7 +220,7 @@ class Base {
 
 	void setCrossOrigin(AsyncWebServerResponse *response);
 	void sendCrossOriginHeader(AsyncWebServerRequest *request);
-	void control(AsyncWebServerRequest *request, JsonVariant &json);
+	virtual void control(AsyncWebServerRequest *request, JsonVariant &json);
 	void capabilities(AsyncWebServerRequest *request, JsonVariant &json);
 	void restServerRouting();
 
@@ -252,20 +252,19 @@ void Base::sendCrossOriginHeader(AsyncWebServerRequest * request) {
 
 void Base::control(AsyncWebServerRequest * request, JsonVariant & json) {
 	const JsonObject &postObj = json.as<JsonObject>();
-	if (!postObj.containsKey("value")) {
-		request->send(200);
-	} else {
-		AsyncWebServerResponse *response = request->beginResponse(200);
-		setCrossOrigin(response);
-		request->send(response);
+	int requestedControl = postObj[F("control")].as<int>();
+	if (postObj.containsKey("value") && postObj.containsKey("control")) {
 		controlValue = postObj[F("control")];
-		value = postObj[F("value")];
-
 		Serial.print("controlValue=");
 		Serial.print(controlValue);
+
+		value = postObj[F("value")];
 		Serial.print(", value=");
 		Serial.println(value);
 	}
+	AsyncWebServerResponse *response = request->beginResponse(200);
+	setCrossOrigin(response);
+	request->send(response);
 }
 
 void Base::capabilities(AsyncWebServerRequest * request, JsonVariant & json) {
@@ -290,10 +289,12 @@ void Base::restServerRouting() {
 		this->sendCrossOriginHeader(request);
 	};
 
-	server.addHandler(new AsyncCallbackJsonWebHandler("/control",
+	auto *controlHandler = new AsyncCallbackJsonWebHandler("/control",
 		[this](AsyncWebServerRequest *request, JsonVariant &json) {
 			this->control(request, json);
-		}));
+		});
+	controlHandler->setMaxContentLength(10240);
+	server.addHandler(controlHandler);
 	server.on("/control", HTTP_OPTIONS, optionsCallback);
 
 	server.addHandler(new AsyncCallbackJsonWebHandler("/capabilities",
@@ -347,4 +348,27 @@ void Base::Execute() {
 	}
 
 	//MDNS.update();
+}
+
+static int8_t decodeBase64Char(char c) {
+	if (c >= 'A' && c <= 'Z') {
+		return c - 'A';
+	}
+	if (c >= 'a' && c <= 'z') {
+		return c - 'a' + 26;
+	}
+	if (c >= '0' && c <= '9') {
+		return c - '0' + 52;
+	}
+	if (c == '+') {
+		return 62;
+	}
+	if (c == '/') {
+		return 63;
+	}
+	return -1;
+}
+
+static uint16_t color565(uint8_t r, uint8_t g, uint8_t b) {
+	return ((b & 0xF8) << 8) | ((g & 0xFC) << 3) | (r >> 3);
 }

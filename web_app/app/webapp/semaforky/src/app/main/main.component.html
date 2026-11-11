@@ -113,8 +113,12 @@
 			<div class="clients-row">
 				<div class="left">{{ 'Lines' | translate }}</div>
 				<div class="right">{{restClientController.getClients('lines').length}}</div>
-				<div class="left">{{ 'Countdown' | translate }}</div>
-				<div class="right">{{restClientController.getClients('countdown').length}}</div>
+				<div class="left">{{ 'Time' | translate }}</div>
+				<div class="right">{{restClientController.getClients('time').length}}</div>
+			</div>
+			<div class="clients-row">
+				<div class="left">{{ 'Display' | translate }}</div>
+				<div class="right">{{restClientController.getClients('display').length}}</div>
 			</div>
 		</div>
 	</div>

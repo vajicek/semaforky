@@ -74,6 +74,57 @@ class SetTiming {
   }
 }
 
+class TimeEvent extends Event {
+  private lastShownMinute: number | null = null;
+
+  constructor(
+    _time: Date,
+    private imageShown: boolean,
+    private scheduler: Scheduler,
+    private restClientController: RestClientController) {
+    super(_time);
+  }
+
+  public run(this: TimeEvent): void {
+    const now = new Date();
+    const currentMinute = now.getHours() * 60 + now.getMinutes();
+
+    // show & update image
+    if (this.scheduler.currentState != null && (
+      this.scheduler.currentState.name == SemaforkyState.STARTED ||
+      this.scheduler.currentState.name == SemaforkyState.ROUND_STOPPED)) {
+      if (this.lastShownMinute !== currentMinute && !this.imageShown) {
+        this.lastShownMinute = currentMinute;
+        this.imageShown = true;
+        this.restClientController.show();
+      }
+    } else {
+      // reset for other states
+      this.imageShown = false;
+    }
+
+    // show & update time
+    if (this.scheduler.currentState != null && (
+      this.scheduler.currentState.name == SemaforkyState.SET_STOPPED ||
+      this.scheduler.currentState.name == SemaforkyState.SET_CANCELED)) {
+      if (this.lastShownMinute !== currentMinute) {
+        this.restClientController.showTime();
+        this.lastShownMinute = currentMinute;
+      }
+    }
+    this.time = new Date(now.getTime() + 5000);
+    this.scheduler.addEvent(this);
+  }
+
+  public serialize(this: TimeEvent): Object {
+    return {
+      type: "TimeEvent",
+      time: this.time,
+      imageShown: this.imageShown
+    };
+  }
+}
+
 class SetClockEvent extends Event {
   previousValue: number = -1;
 
@@ -244,7 +295,10 @@ export class Scheduler {
     this.loadState();
     setInterval(() => {
       self.timerHandler();
+      self.mainComponentEventBus.updateGui.emit();
     }, 50);
+
+    self.restartTimeEvents();
   }
 
   private storeState() {
@@ -281,6 +335,14 @@ export class Scheduler {
           new Date(event["time"]),
           event["nextState"],
           this.semaforkyMachineEventBus
+        );
+      }
+      case "TimeEvent": {
+        return new TimeEvent(
+          new Date(event["time"]),
+          true,
+          this,
+          this.restClientController
         );
       }
       default: {
@@ -450,4 +512,10 @@ export class Scheduler {
     this.removeAllEventsByClass(SemaphoreEvent);
     this.removeAllEventsByClass(SetClockEvent);
   }
+
+  public restartTimeEvents() {
+    this.removeAllEventsByClass(TimeEvent);
+    this.addEvent(new TimeEvent(new Date(), false, this, this.restClientController));
+  }
+
 }

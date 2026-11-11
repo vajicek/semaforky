@@ -9,7 +9,7 @@ BaseSettings baseSettings {
 	"p5-02", // dns
 	"semaforky", // ssid
 	"semaforky", // password
-	"clock,semaphore,lines" }; // capabilities
+	"clock,semaphore,display,lines" }; // capabilities
 P5 client(&baseSettings, WZAGZIG2);
 
 void setup(void) { client.Init(); }

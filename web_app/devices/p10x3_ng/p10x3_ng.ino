@@ -5,7 +5,7 @@ BaseSettings baseSettings{true,               // serve spa
                           "p10x3-01",         // dns
                           "semaforky",        // ssid
                           "semaforky",        // password
-                          "clock,lines"};     // capabilities
+                          "clock,lines,semaphore,siren"};     // capabilities
 P10x3 client(&baseSettings);
 
 void setup(void) { client.Init(); }

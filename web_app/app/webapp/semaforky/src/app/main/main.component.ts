@@ -2,7 +2,8 @@ import {
   Injectable,
   Component,
   ViewChild,
-  ElementRef
+  ElementRef,
+  ChangeDetectorRef
 } from "@angular/core";
 import { FormsModule } from "@angular/forms";
 import { CommonModule } from "@angular/common";
@@ -88,7 +89,8 @@ export class MainComponent {
     public settings: Settings,
     public scheduler: Scheduler,
     public machine: SemaforkyMachine,
-    private eventBus: MainComponentEventBus
+    private eventBus: MainComponentEventBus,
+    private changeDetectionRef: ChangeDetectorRef
   ) {
     this.scheduler.init();
     this.machine.init();
@@ -113,6 +115,10 @@ export class MainComponent {
     eventBus.scanEnabled
       .event$
       .subscribe(scanEnabled => {
+        if (!this.scanEnabled && scanEnabled) {
+          // restart when scan state changes
+          this.scheduler.restartTimeEvents();
+        }
         this.scanEnabled = scanEnabled;
       });
     eventBus.pausedState
@@ -196,8 +202,10 @@ export class MainComponent {
     } else if (stateName == SemaforkyState.WARNING) {
       this.semaphoreLight = SemaphoreLight.YELLOW;
     } else if (stateName != SemaforkyState.SET_PAUSED) {
-      this.semaphoreLight = SemaphoreLight.NONE;
+      this.semaphoreLight = SemaphoreLight.RED;
     }
+
+    this.changeDetectionRef.markForCheck(); // HACK
   }
 
   private updateSet() {

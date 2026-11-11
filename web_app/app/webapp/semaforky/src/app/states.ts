@@ -246,6 +246,7 @@ export class SemaforkyMachine {
       this.restClientController.countdown(this.countdown, false);
       window.setTimeout(() => {
         this.restClientController.updateLines(this.getCurrentLineOrder());
+        this.mainComponentEventBus.updateGui.emit();
       }, 2000);
 
       if (this.settings.continuous) {
@@ -502,6 +503,7 @@ export class SemaforkyMachine {
           window.setTimeout(() => {
             self.restClientController
               .updateLines(self.getCurrentLineOrder());
+            self.mainComponentEventBus.updateGui.emit();
           }, 2000);
         }
 
